@@ -1,74 +1,165 @@
-import { Image, StyleSheet, Platform } from 'react-native';
+import React, { useEffect, useState } from "react";
+import { StyleSheet, FlatList, View, ActivityIndicator } from "react-native";
+import { router } from "expo-router";
 
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+import { ThemedView } from "@/components/ThemedView";
+import { ThemedText } from "@/components/ThemedText";
+import { TalkHeader } from "@/components/note/TalkHeader";
+import { NoteInput } from "@/components/note/NoteInput";
+import { NoteItem } from "@/components/note/NoteItem";
+import { useApp } from "@/context/AppContext";
+import { Note } from "@/types";
 
-export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12'
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          Tap the Explore tab to learn more about what's included in this starter app.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          When you're ready, run{' '}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
-  );
+export default function NotesScreen() {
+    const {
+        currentConference,
+        activeTalk,
+        notes,
+        addTextNote,
+        addImageNote,
+        addAudioNote,
+        stopAudioRecording,
+        deleteNote,
+        getNotesForTalk,
+        isLoading,
+    } = useApp();
+
+    const [talkNotes, setTalkNotes] = useState<Note[]>([]);
+    const [isRecording, setIsRecording] = useState(false);
+
+    useEffect(() => {
+        if (activeTalk) {
+            const notesForTalk = getNotesForTalk(activeTalk.id);
+            setTalkNotes(notesForTalk);
+        } else {
+            setTalkNotes([]);
+        }
+    }, [activeTalk, notes, getNotesForTalk]);
+
+    const handleNewTalk = () => {
+        router.push("/modals/new-talk");
+    };
+
+    const handleSubmitText = async (text: string) => {
+        if (!text.trim()) return;
+        await addTextNote(text);
+    };
+
+    const handleTakePhoto = async () => {
+        await addImageNote();
+    };
+
+    const handleRecordAudio = async () => {
+        if (isRecording) {
+            setIsRecording(false);
+            await stopAudioRecording();
+        } else {
+            const result = await addAudioNote();
+            if (result !== null) {
+                setIsRecording(true);
+            }
+        }
+    };
+
+    const handleDeleteNote = async (noteId: string) => {
+        await deleteNote(noteId);
+    };
+
+    const renderEmptyState = () => (
+        <View style={styles.emptyStateContainer}>
+            <ThemedText style={styles.emptyStateTitle}>
+                No Active Talk
+            </ThemedText>
+            <ThemedText style={styles.emptyStateDescription}>
+                Create a new talk to start taking notes
+            </ThemedText>
+        </View>
+    );
+
+    if (isLoading) {
+        return (
+            <ThemedView style={styles.loadingContainer}>
+                <ActivityIndicator size="large" />
+            </ThemedView>
+        );
+    }
+
+    return (
+        <ThemedView style={styles.container}>
+            <TalkHeader
+                conferenceName={currentConference?.name || "My Conference"}
+                talk={activeTalk}
+                onNewTalk={handleNewTalk}
+            />
+
+            {activeTalk ? (
+                <FlatList
+                    data={talkNotes}
+                    keyExtractor={(item) => item.id}
+                    renderItem={({ item }) => (
+                        <NoteItem note={item} onDelete={handleDeleteNote} />
+                    )}
+                    contentContainerStyle={styles.notesList}
+                    ListEmptyComponent={() => (
+                        <View style={styles.emptyNotesContainer}>
+                            <ThemedText style={styles.emptyNotesText}>
+                                No notes yet. Start taking notes for this talk.
+                            </ThemedText>
+                        </View>
+                    )}
+                />
+            ) : (
+                renderEmptyState()
+            )}
+
+            <NoteInput
+                onSubmitText={handleSubmitText}
+                onTakePhoto={handleTakePhoto}
+                onRecordAudio={handleRecordAudio}
+                isRecording={isRecording}
+                disabled={!activeTalk}
+            />
+        </ThemedView>
+    );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-  },
+    container: {
+        flex: 1,
+    },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+    },
+    notesList: {
+        flexGrow: 1,
+        paddingBottom: 16,
+    },
+    emptyStateContainer: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        paddingHorizontal: 24,
+    },
+    emptyStateTitle: {
+        fontSize: 22,
+        fontWeight: "bold",
+        marginBottom: 8,
+        textAlign: "center",
+    },
+    emptyStateDescription: {
+        fontSize: 16,
+        textAlign: "center",
+        opacity: 0.7,
+    },
+    emptyNotesContainer: {
+        padding: 24,
+        alignItems: "center",
+    },
+    emptyNotesText: {
+        fontSize: 16,
+        textAlign: "center",
+        opacity: 0.7,
+    },
 });
