@@ -28,10 +28,6 @@ jest.mock('../../storage', () => ({
   initializeFileSystem: jest.fn().mockResolvedValue(undefined),
 }));
 
-jest.mock('nanoid', () => ({
-  nanoid: () => 'test-id-123',
-}));
-
 jest.mock('@/hooks/useThemeColor', () => ({
   useThemeColor: () => '#000000',
 }));
@@ -140,7 +136,10 @@ describe('Note Taking Flow Integration', () => {
     
     // Delete the note
     await act(async () => {
-      fireEvent.press(getByTestId('delete-note-test-id-123'));
+      // We need to get the ID from the context after adding the note
+      // For test purposes, we'll just find and click the first delete button
+      const deleteButtons = screen.getAllByText('Delete');
+      fireEvent.press(deleteButtons[0]);
     });
     
     // Verify the note was deleted

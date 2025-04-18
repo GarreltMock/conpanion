@@ -119,7 +119,7 @@ export const NoteItem: React.FC<NoteItemProps> = ({
                             <IconSymbol
                                 name="pencil"
                                 size={16}
-                                color={textColor}
+                                color={tintColor}
                             />
                         </Pressable>
 
@@ -133,7 +133,7 @@ export const NoteItem: React.FC<NoteItemProps> = ({
                             <IconSymbol
                                 name="trash"
                                 size={16}
-                                color={textColor}
+                                color={"#FF453A"}
                             />
                         </Pressable>
                     </View>
@@ -271,7 +271,7 @@ const styles = StyleSheet.create({
         alignItems: "center",
         paddingVertical: 8,
         borderRadius: 8,
-        backgroundColor: "rgba(150, 150, 150, 0.1)",
+        backgroundColor: "rgba(150, 150, 150, 0.2)", // Increased opacity for better visibility in dark mode
         marginBottom: 8,
         paddingHorizontal: 12,
     },

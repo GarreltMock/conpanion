@@ -1,8 +1,3 @@
-// Mock nanoid
-jest.mock('nanoid', () => ({
-  nanoid: () => 'test-id-123',
-}));
-
 // Mock expo-router
 jest.mock('expo-router', () => ({
   router: {

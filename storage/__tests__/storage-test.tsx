@@ -25,11 +25,6 @@ jest.mock('expo-file-system', () => ({
   copyAsync: jest.fn(),
 }));
 
-// Mock nanoid
-jest.mock('nanoid', () => ({
-  nanoid: () => 'test-id-123',
-}));
-
 describe('Storage Utilities', () => {
   beforeEach(() => {
     jest.clearAllMocks();

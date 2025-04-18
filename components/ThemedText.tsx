@@ -15,7 +15,9 @@ export function ThemedText({
   type = 'default',
   ...rest
 }: ThemedTextProps) {
-  const color = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
+  // Use text color by default, but use tint color for links
+  const colorKey = type === 'link' ? 'tint' : 'text';
+  const color = useThemeColor({ light: lightColor, dark: darkColor }, colorKey);
 
   return (
     <Text
@@ -55,6 +57,6 @@ const styles = StyleSheet.create({
   link: {
     lineHeight: 30,
     fontSize: 16,
-    color: '#0a7ea4',
+    // This color will be overridden by the useThemeColor in light/dark mode
   },
 });

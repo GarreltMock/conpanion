@@ -22,11 +22,11 @@ export default function NotesScreen() {
         deleteNote,
         getNotesForTalk,
         isLoading,
-        isRecording, // Get the recording state directly from context
+        isRecording,
     } = useApp();
 
     const [talkNotes, setTalkNotes] = useState<Note[]>([]);
-    
+
     useEffect(() => {
         if (activeTalk) {
             const notesForTalk = getNotesForTalk(activeTalk.id);

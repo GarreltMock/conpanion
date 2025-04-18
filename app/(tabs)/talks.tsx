@@ -5,8 +5,9 @@ import {
     View,
     TouchableOpacity,
     ActivityIndicator,
+    Text,
 } from "react-native";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import { format } from "date-fns";
 
 import { ThemedView } from "@/components/ThemedView";
@@ -17,12 +18,31 @@ import { Talk } from "@/types";
 import { useThemeColor } from "@/hooks/useThemeColor";
 
 export default function TalksScreen() {
-    const { currentConference, activeTalk, getAllTalks, isLoading } = useApp();
+    const {
+        currentConference,
+        activeTalk,
+        talks: appTalks,
+        getAllTalks,
+        isLoading,
+    } = useApp();
 
     const [talks, setTalks] = useState<Talk[]>([]);
     const [refreshing, setRefreshing] = useState(false);
 
     const tintColor = useThemeColor({}, "tint");
+    const backgroundColor = useThemeColor({}, "background");
+
+    // Update local talks state from app context
+    useEffect(() => {
+        // Only update if appTalks is not empty (to avoid clearing our list unnecessarily)
+        if (appTalks && appTalks.length > 0) {
+            // Sort talks by start time (newest first)
+            const sortedTalks = [...appTalks].sort(
+                (a, b) => b.startTime.getTime() - a.startTime.getTime()
+            );
+            setTalks(sortedTalks);
+        }
+    }, [appTalks]);
 
     const loadTalks = useCallback(async () => {
         try {
@@ -42,9 +62,20 @@ export default function TalksScreen() {
         }
     }, [getAllTalks]);
 
+    // Load talks when the component mounts
     useEffect(() => {
         loadTalks();
     }, [loadTalks]);
+
+    // Reload talks when the screen comes into focus
+    useFocusEffect(
+        useCallback(() => {
+            loadTalks();
+            return () => {
+                // Cleanup if needed
+            };
+        }, [loadTalks])
+    );
 
     const handleRefresh = () => {
         loadTalks();
@@ -95,7 +126,7 @@ export default function TalksScreen() {
                         <ThemedText
                             style={styles.activeText}
                             lightColor="#fff"
-                            darkColor="#fff"
+                            darkColor={backgroundColor}
                         >
                             Active
                         </ThemedText>
@@ -153,14 +184,12 @@ export default function TalksScreen() {
                     onPress={handleNewTalk}
                     activeOpacity={0.8}
                 >
-                    <IconSymbol name="plus" size={22} color="#fff" />
-                    <ThemedText
-                        style={styles.buttonText}
-                        lightColor="#fff"
-                        darkColor="#fff"
+                    <IconSymbol name="plus" size={22} color={backgroundColor} />
+                    <Text
+                        style={[styles.buttonText, { color: backgroundColor }]}
                     >
                         New Talk
-                    </ThemedText>
+                    </Text>
                 </TouchableOpacity>
             </View>
 
