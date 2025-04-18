@@ -54,8 +54,9 @@ interface AppContextType {
     deleteNote: (noteId: string) => Promise<void>;
     getNotesForTalk: (talkId: string) => Note[];
 
-    // Loading state
+    // States
     isLoading: boolean;
+    isRecording: boolean;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -381,6 +382,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         getNotesForTalk,
 
         isLoading,
+        isRecording,
     };
 
     return (

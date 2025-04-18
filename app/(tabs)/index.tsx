@@ -22,11 +22,11 @@ export default function NotesScreen() {
         deleteNote,
         getNotesForTalk,
         isLoading,
+        isRecording, // Get the recording state directly from context
     } = useApp();
 
     const [talkNotes, setTalkNotes] = useState<Note[]>([]);
-    const [isRecording, setIsRecording] = useState(false);
-
+    
     useEffect(() => {
         if (activeTalk) {
             const notesForTalk = getNotesForTalk(activeTalk.id);
@@ -51,13 +51,9 @@ export default function NotesScreen() {
 
     const handleRecordAudio = async () => {
         if (isRecording) {
-            setIsRecording(false);
             await stopAudioRecording();
         } else {
-            const result = await addAudioNote();
-            if (result !== null) {
-                setIsRecording(true);
-            }
+            await addAudioNote();
         }
     };
 
