@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="de">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Manuelle Perspektivkorrektur</title>
+        <script
+            async
+            src="https://docs.opencv.org/4.x/opencv.js"
+            type="text/javascript"
+        ></script>
+        <style>
+            canvas {
+                border: 1px solid #aaa;
+                margin: 10px;
+            }
+            #srcCanvas {
+                cursor: crosshair;
+            }
+        </style>
+    </head>
+    <body>
+        <h2>Manuelle Perspektivkorrektur mit OpenCV.js</h2>
+        <input type="file" id="fileInput" />
+        <p>
+            Klicke vier Punkte im Uhrzeigersinn: oben links → oben rechts →
+            unten rechts → unten links
+        </p>
+        <canvas id="srcCanvas"></canvas>
+        <canvas id="dstCanvas" width="1280" height="720"></canvas>
+
+        <script>
+            let srcCanvas = document.getElementById("srcCanvas");
+            let dstCanvas = document.getElementById("dstCanvas");
+            let fileInput = document.getElementById("fileInput");
+            let points = [];
+
+            let ctx = srcCanvas.getContext("2d");
+
+            let image = new Image();
+
+            fileInput.addEventListener("change", (e) => {
+                let file = e.target.files[0];
+                if (!file) return;
+
+                image.onload = () => {
+                    srcCanvas.width = image.width;
+                    srcCanvas.height = image.height;
+                    ctx.drawImage(image, 0, 0);
+                    points = [];
+                };
+
+                image.src = URL.createObjectURL(file);
+            });
+
+            srcCanvas.addEventListener("click", async (e) => {
+                if (points.length >= 4) return;
+
+                const rect = srcCanvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+
+                points.push({ x, y });
+
+                // Punkt einzeichnen
+                ctx.fillStyle = "red";
+                ctx.beginPath();
+                ctx.arc(x, y, 5, 0, 2 * Math.PI);
+                ctx.fill();
+
+                if (points.length === 4) {
+                    console.log("Punkte:", points);
+                    transformImage();
+                }
+            });
+
+            async function transformImage() {
+                cv = cv instanceof Promise ? await cv : cv;
+
+                const src = cv.imread(srcCanvas);
+                const dsize = new cv.Size(1280, 720);
+
+                const srcTri = cv.matFromArray(4, 1, cv.CV_32FC2, [
+                    points[0].x,
+                    points[0].y,
+                    points[1].x,
+                    points[1].y,
+                    points[2].x,
+                    points[2].y,
+                    points[3].x,
+                    points[3].y,
+                ]);
+
+                const dstTri = cv.matFromArray(4, 1, cv.CV_32FC2, [
+                    0,
+                    0,
+                    dsize.width,
+                    0,
+                    dsize.width,
+                    dsize.height,
+                    0,
+                    dsize.height,
+                ]);
+
+                const M = cv.getPerspectiveTransform(srcTri, dstTri);
+                const dst = new cv.Mat();
+
+                cv.warpPerspective(
+                    src,
+                    dst,
+                    M,
+                    dsize,
+                    cv.INTER_LINEAR,
+                    cv.BORDER_CONSTANT,
+                    new cv.Scalar()
+                );
+                cv.imshow(dstCanvas, dst);
+
+                // Clean up
+                src.delete();
+                dst.delete();
+                srcTri.delete();
+                dstTri.delete();
+                M.delete();
+            }
+        </script>
+    </body>
+</html>
