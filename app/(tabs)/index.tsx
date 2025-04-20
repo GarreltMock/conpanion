@@ -15,10 +15,10 @@ export default function NotesScreen() {
         currentConference,
         activeTalk,
         notes,
-        addTextNote,
         addImageNote,
         addAudioNote,
         stopAudioRecording,
+        addCombinedNote,
         deleteNote,
         getNotesForTalk,
         isLoading,
@@ -40,20 +40,38 @@ export default function NotesScreen() {
         router.push("/modals/new-talk");
     };
 
-    const handleSubmitText = async (text: string) => {
-        if (!text.trim()) return;
-        await addTextNote(text);
+    // Handle combined note submission (text, images, audio)
+    const handleSubmitNote = async (text: string, images: string[], audioRecordings: string[]) => {
+        if (!text.trim() && images.length === 0 && audioRecordings.length === 0) return;
+        await addCombinedNote(text, images, audioRecordings);
     };
 
-    const handleTakePhoto = async () => {
-        await addImageNote();
+    // Handle taking a photo
+    const handleTakePhoto = async (): Promise<string> => {
+        try {
+            return await addImageNote();
+        } catch (error) {
+            console.error("Error taking photo:", error);
+            throw error;
+        }
     };
 
-    const handleRecordAudio = async () => {
-        if (isRecording) {
-            await stopAudioRecording();
-        } else {
-            await addAudioNote();
+    // Handle audio recording
+    const handleRecordAudio = async (): Promise<string | null> => {
+        try {
+            if (isRecording) {
+                // When stopping, return the URI of the recorded audio
+                const audioUri = await stopAudioRecording();
+                console.log("Audio recording stopped, URI:", audioUri);
+                return audioUri;
+            } else {
+                // Start recording
+                await addAudioNote();
+                return null;
+            }
+        } catch (error) {
+            console.error("Error with audio recording:", error);
+            return null;
         }
     };
 
@@ -110,7 +128,7 @@ export default function NotesScreen() {
             )}
 
             <NoteInput
-                onSubmitText={handleSubmitText}
+                onSubmitNote={handleSubmitNote}
                 onTakePhoto={handleTakePhoto}
                 onRecordAudio={handleRecordAudio}
                 isRecording={isRecording}

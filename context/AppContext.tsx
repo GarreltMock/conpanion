@@ -47,9 +47,10 @@ interface AppContextType {
     // Note Management
     notes: Note[];
     addTextNote: (text: string) => Promise<Note>;
-    addImageNote: () => Promise<Note | null>;
+    addImageNote: () => Promise<string>; // Returns image URI instead of creating note
     addAudioNote: () => Promise<Note | null>;
-    stopAudioRecording: () => Promise<Note | null>;
+    stopAudioRecording: () => Promise<string | null>; // Returns audio URI instead of creating note
+    addCombinedNote: (text: string, images: string[], audioRecordings: string[]) => Promise<Note>;
     updateNote: (note: Note) => Promise<void>;
     deleteNote: (noteId: string) => Promise<void>;
     getNotesForTalk: (talkId: string) => Note[];
@@ -211,7 +212,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         return newNote;
     };
 
-    const addImageNote = async (): Promise<Note | null> => {
+    const addImageNote = async (): Promise<string> => {
         if (!activeTalk) {
             throw new Error("No active talk to add note to");
         }
@@ -220,7 +221,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         const { status } = await ImagePicker.requestCameraPermissionsAsync();
         if (status !== "granted") {
             console.error("Camera permission not granted");
-            return null;
+            throw new Error("Camera permission not granted");
         }
 
         // Launch camera
@@ -231,29 +232,15 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         });
 
         if (result.canceled || !result.assets || result.assets.length === 0) {
-            return null;
+            throw new Error("No image selected");
         }
 
         // Save image to file system
         const imageUri = result.assets[0].uri;
         const savedImagePath = await saveImage(imageUri);
 
-        // Create and save note
-        const newNote: Note = {
-            id: generateId(),
-            talkId: activeTalk.id,
-            textContent: "",
-            images: [savedImagePath],
-            audioRecordings: [],
-            timestamp: new Date(),
-        };
-
-        await saveNote(newNote);
-
-        // Update state
-        setNotes((prevNotes) => [...prevNotes, newNote]);
-
-        return newNote;
+        // Just return the saved image path
+        return savedImagePath;
     };
 
     const addAudioNote = async (): Promise<Note | null> => {
@@ -290,8 +277,8 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         }
     };
 
-    // Function to stop audio recording
-    const stopAudioRecording = async (): Promise<Note | null> => {
+    // Function to stop audio recording and return the URI
+    const stopAudioRecording = async (): Promise<string | null> => {
         if (!recording || !isRecording || !activeTalk) {
             return null;
         }
@@ -312,30 +299,40 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
             }
 
             const savedAudioPath = await saveAudio(uri);
-
-            // Create and save note
-            const newNote: Note = {
-                id: generateId(),
-                talkId: activeTalk.id,
-                textContent: "",
-                images: [],
-                audioRecordings: [savedAudioPath],
-                timestamp: new Date(),
-            };
-
-            await saveNote(newNote);
-
-            // Update state
-            setNotes((prevNotes) => [...prevNotes, newNote]);
             setRecording(null);
 
-            return newNote;
+            // Return the saved audio path
+            return savedAudioPath;
         } catch (error) {
             console.error("Error stopping audio recording:", error);
             setRecording(null);
             setIsRecording(false);
             return null;
         }
+    };
+    
+    // Function to create a note with combined content (text, images, audio)
+    const addCombinedNote = async (text: string, images: string[], audioRecordings: string[]): Promise<Note> => {
+        if (!activeTalk) {
+            throw new Error("No active talk to add note to");
+        }
+
+        // Create the new note with all content
+        const newNote: Note = {
+            id: generateId(),
+            talkId: activeTalk.id,
+            textContent: text,
+            images: images,
+            audioRecordings: audioRecordings,
+            timestamp: new Date(),
+        };
+
+        await saveNote(newNote);
+
+        // Update state
+        setNotes((prevNotes) => [...prevNotes, newNote]);
+
+        return newNote;
     };
 
     const updateNote = async (updatedNote: Note): Promise<void> => {
@@ -377,6 +374,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         addImageNote,
         addAudioNote,
         stopAudioRecording,
+        addCombinedNote,
         updateNote,
         deleteNote: deleteNoteById,
         getNotesForTalk,
