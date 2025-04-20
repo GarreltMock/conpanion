@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
     View,
     TextInput,
@@ -7,7 +7,6 @@ import {
     Keyboard,
     ActivityIndicator,
     Platform,
-    KeyboardAvoidingView,
 } from "react-native";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { useThemeColor } from "@/hooks/useThemeColor";
@@ -72,88 +71,121 @@ export const NoteInput: React.FC<NoteInputProps> = ({
         }
     };
 
+    const [keyboardSpace, setKeyboardSpace] = useState(0);
+
+    // Handle keyboard events to manage space below input
+    useEffect(() => {
+        const keyboardWillShowListener = Keyboard.addListener(
+            Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow",
+            (e) => {
+                const keyboardHeight = e.endCoordinates.height;
+
+                // Only add extra space on iOS
+                if (Platform.OS === "ios") {
+                    // Calculate how much space to add below the input
+                    // You may need to adjust this based on testing
+                    setKeyboardSpace(keyboardHeight - 60);
+                }
+            }
+        );
+
+        const keyboardWillHideListener = Keyboard.addListener(
+            Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide",
+            () => {
+                setKeyboardSpace(0);
+            }
+        );
+
+        return () => {
+            keyboardWillShowListener.remove();
+            keyboardWillHideListener.remove();
+        };
+    }, []);
+
     return (
-        <KeyboardAvoidingView
-            behavior={Platform.OS === "ios" ? "padding" : "height"}
-            keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
+        <View
+            style={[
+                styles.container,
+                {
+                    backgroundColor,
+                    paddingBottom: keyboardSpace > 0 ? keyboardSpace : 8,
+                },
+            ]}
         >
-            <View style={[styles.container, { backgroundColor }]}>
-                <View style={styles.inputContainer}>
-                    <TextInput
-                        ref={inputRef}
-                        style={[styles.textInput, { color: textColor }]}
-                        placeholder="Type a note..."
-                        placeholderTextColor={textColor + "80"}
-                        value={text}
-                        onChangeText={setText}
-                        multiline
-                        maxLength={500}
-                        editable={!disabled}
-                    />
+            <View style={styles.inputContainer}>
+                <TextInput
+                    ref={inputRef}
+                    style={[styles.textInput, { color: textColor }]}
+                    placeholder="Type a note..."
+                    placeholderTextColor={textColor + "80"}
+                    value={text}
+                    onChangeText={setText}
+                    multiline
+                    maxLength={500}
+                    editable={!disabled}
+                />
 
-                    <View style={styles.buttonsContainer}>
-                        <Pressable
-                            style={({ pressed }) => [
-                                styles.iconButton,
-                                pressed && styles.buttonPressed,
-                            ]}
-                            onPress={handleTakePhoto}
-                            disabled={disabled}
-                        >
+                <View style={styles.buttonsContainer}>
+                    <Pressable
+                        style={({ pressed }) => [
+                            styles.iconButton,
+                            pressed && styles.buttonPressed,
+                        ]}
+                        onPress={handleTakePhoto}
+                        disabled={disabled}
+                    >
+                        <IconSymbol
+                            name="camera.fill"
+                            size={22}
+                            color={disabled ? textColor + "40" : tintColor}
+                        />
+                    </Pressable>
+
+                    <Pressable
+                        style={({ pressed }) => [
+                            styles.iconButton,
+                            pressed && styles.buttonPressed,
+                            isRecording && styles.recordingButton,
+                        ]}
+                        onPress={handleRecordAudio}
+                        disabled={disabled}
+                    >
+                        <IconSymbol
+                            name="mic.fill"
+                            size={22}
+                            color={
+                                disabled
+                                    ? textColor + "40"
+                                    : isRecording
+                                    ? "#fff"
+                                    : tintColor
+                            }
+                        />
+                    </Pressable>
+
+                    <Pressable
+                        style={({ pressed }) => [
+                            styles.sendButton,
+                            { backgroundColor: tintColor },
+                            pressed && styles.buttonPressed,
+                            (!text.trim() || disabled) && styles.disabledButton,
+                        ]}
+                        onPress={handleSubmitText}
+                        disabled={!text.trim() || disabled}
+                    >
+                        {isSubmitting ? (
+                            <ActivityIndicator color="#fff" size="small" />
+                        ) : (
                             <IconSymbol
-                                name="camera.fill"
-                                size={22}
-                                color={disabled ? textColor + "40" : tintColor}
+                                name="arrow.up"
+                                size={20}
+                                color="#fff"
                             />
-                        </Pressable>
-
-                        <Pressable
-                            style={({ pressed }) => [
-                                styles.iconButton,
-                                pressed && styles.buttonPressed,
-                                isRecording && styles.recordingButton,
-                            ]}
-                            onPress={handleRecordAudio}
-                            disabled={disabled}
-                        >
-                            <IconSymbol
-                                name="mic.fill"
-                                size={22}
-                                color={
-                                    disabled
-                                        ? textColor + "40"
-                                        : isRecording
-                                        ? "#fff"
-                                        : tintColor
-                                }
-                            />
-                        </Pressable>
-
-                        <Pressable
-                            style={({ pressed }) => [
-                                styles.sendButton,
-                                { backgroundColor: tintColor },
-                                pressed && styles.buttonPressed,
-                                (!text.trim() || disabled) &&
-                                    styles.disabledButton,
-                            ]}
-                            onPress={handleSubmitText}
-                            disabled={!text.trim() || disabled}
-                        >
-                            {isSubmitting ? (
-                                <ActivityIndicator color="#fff" size="small" />
-                            ) : (
-                                <IconSymbol
-                                    name="arrow.up"
-                                    size={20}
-                                    color="#fff"
-                                />
-                            )}
-                        </Pressable>
-                    </View>
+                        )}
+                    </Pressable>
                 </View>
             </View>
-        </KeyboardAvoidingView>
+        </View>
     );
 };
 
@@ -162,6 +194,7 @@ const styles = StyleSheet.create({
         padding: 8,
         borderTopWidth: 1,
         borderTopColor: "rgba(150, 150, 150, 0.2)",
+        // Dynamic padding will be set by the component
     },
     inputContainer: {
         flexDirection: "row",

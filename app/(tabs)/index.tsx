@@ -96,6 +96,7 @@ export default function NotesScreen() {
                         <NoteItem note={item} onDelete={handleDeleteNote} />
                     )}
                     contentContainerStyle={styles.notesList}
+                    keyboardShouldPersistTaps="handled"
                     ListEmptyComponent={() => (
                         <View style={styles.emptyNotesContainer}>
                             <ThemedText style={styles.emptyNotesText}>
