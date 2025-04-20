@@ -269,6 +269,7 @@ export const NoteInput: React.FC<NoteInputProps> = ({
                 <ScrollView
                     horizontal
                     style={styles.attachmentsContainer}
+                    contentContainerStyle={styles.attachmentsContentContainer}
                     showsHorizontalScrollIndicator={false}
                 >
                     {/* Image previews */}
@@ -428,9 +429,13 @@ const styles = StyleSheet.create({
         // Dynamic padding will be set by the component
     },
     attachmentsContainer: {
-        flexDirection: "row",
         marginBottom: 8,
+    },
+    attachmentsContentContainer: {
+        flexDirection: "row",
         paddingHorizontal: 4,
+        paddingTop: 5,
+        paddingBottom: 4,
     },
     imagePreviewContainer: {
         position: "relative",
