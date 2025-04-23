@@ -51,14 +51,11 @@ export default function ImageViewModal() {
             savedTranslateX.value = translateX.value;
             savedTranslateY.value = translateY.value;
 
-            // Save the focal point of the pinch - this stays constant for the entire gesture
+            // Save the focal point of the pinch
             focalX.value = e.focalX;
             focalY.value = e.focalY;
         })
         .onUpdate((e) => {
-            // Important: use focal point from the start of the gesture, NOT the current e.focalX/Y
-            // This prevents the "drift to center" problem when fingers move during pinch
-
             // Calculate new scale
             let newScale = savedScale.value * e.scale;
 
@@ -78,15 +75,17 @@ export default function ImageViewModal() {
             // Calculate scale factor difference
             const scaleFactor = newScale / savedScale.value;
 
-            // Convert focal point to be relative to image center, considering current translation
+            // Convert the focal point to be relative to the image's current center
+            // This considers both the image center and the current translation
             const focusX = focalX.value - centerX - savedTranslateX.value;
             const focusY = focalY.value - centerY - savedTranslateY.value;
 
-            // Move image to keep the focal point fixed at the same position on screen
+            // Calculate new translation to keep the focal point fixed on screen
+            // This formula works for both zooming in and out
             translateX.value =
-                savedTranslateX.value + (1 - scaleFactor) * focusX;
+                savedTranslateX.value - (scaleFactor - 1) * focusX;
             translateY.value =
-                savedTranslateY.value + (1 - scaleFactor) * focusY;
+                savedTranslateY.value - (scaleFactor - 1) * focusY;
 
             // Apply the new scale
             scale.value = newScale;
