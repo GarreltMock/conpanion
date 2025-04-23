@@ -9,6 +9,7 @@ import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import "react-native-reanimated";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { AppProvider } from "@/context/AppContext";
@@ -33,39 +34,41 @@ export default function RootLayout() {
     }
 
     return (
-        <AppProvider>
-            <ThemeProvider
-                value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
-            >
-                <Stack>
-                    <Stack.Screen
-                        name="(tabs)"
-                        options={{ headerShown: false }}
-                    />
-                    <Stack.Screen name="+not-found" />
-                    <Stack.Screen
-                        name="(talk)/index"
-                        options={{ headerShown: false }}
-                    />
-                    <Stack.Screen
-                        name="modals/new-talk"
-                        options={{ presentation: "modal" }}
-                    />
-                    <Stack.Screen
-                        name="modals/edit-note"
-                        options={{ presentation: "modal" }}
-                    />
-                    <Stack.Screen
-                        name="modals/image-view"
-                        options={{ 
-                            presentation: "modal",
-                            headerShown: false,
-                            animation: "fade" 
-                        }}
-                    />
-                </Stack>
-                <StatusBar style="auto" />
-            </ThemeProvider>
-        </AppProvider>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+            <AppProvider>
+                <ThemeProvider
+                    value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
+                >
+                    <Stack>
+                        <Stack.Screen
+                            name="(tabs)"
+                            options={{ headerShown: false }}
+                        />
+                        <Stack.Screen name="+not-found" />
+                        <Stack.Screen
+                            name="(talk)/index"
+                            options={{ headerShown: false }}
+                        />
+                        <Stack.Screen
+                            name="modals/new-talk"
+                            options={{ presentation: "modal" }}
+                        />
+                        <Stack.Screen
+                            name="modals/edit-note"
+                            options={{ presentation: "modal" }}
+                        />
+                        <Stack.Screen
+                            name="modals/image-view"
+                            options={{ 
+                                presentation: "modal",
+                                headerShown: false,
+                                animation: "fade" 
+                            }}
+                        />
+                    </Stack>
+                    <StatusBar style="auto" />
+                </ThemeProvider>
+            </AppProvider>
+        </GestureHandlerRootView>
     );
 }
