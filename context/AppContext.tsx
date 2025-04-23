@@ -41,6 +41,7 @@ interface AppContextType {
     talks: Talk[];
     activeTalk: Talk | null;
     createTalk: (title: string) => Promise<Talk>;
+    endTalk: (talk: Talk) => Promise<void>;
     endCurrentTalk: () => Promise<void>;
     getAllTalks: () => Promise<Talk[]>;
 
@@ -50,7 +51,11 @@ interface AppContextType {
     addImageNote: () => Promise<string>; // Returns image URI instead of creating note
     addAudioNote: () => Promise<Note | null>;
     stopAudioRecording: () => Promise<string | null>; // Returns audio URI instead of creating note
-    addCombinedNote: (text: string, images: string[], audioRecordings: string[]) => Promise<Note>;
+    addCombinedNote: (
+        text: string,
+        images: string[],
+        audioRecordings: string[]
+    ) => Promise<Note>;
     updateNote: (note: Note) => Promise<void>;
     deleteNote: (noteId: string) => Promise<void>;
     getNotesForTalk: (talkId: string) => Note[];
@@ -162,9 +167,12 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
     const endCurrentTalk = async (): Promise<void> => {
         if (!activeTalk) return;
+        await endTalk(activeTalk);
+    };
 
+    const endTalk = async (talk: Talk): Promise<void> => {
         const updatedTalk: Talk = {
-            ...activeTalk,
+            ...talk,
             endTime: new Date(),
         };
 
@@ -228,7 +236,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         const result = await ImagePicker.launchCameraAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
             quality: 0.8,
-            allowsEditing: true,
         });
 
         if (result.canceled || !result.assets || result.assets.length === 0) {
@@ -310,9 +317,13 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
             return null;
         }
     };
-    
+
     // Function to create a note with combined content (text, images, audio)
-    const addCombinedNote = async (text: string, images: string[], audioRecordings: string[]): Promise<Note> => {
+    const addCombinedNote = async (
+        text: string,
+        images: string[],
+        audioRecordings: string[]
+    ): Promise<Note> => {
         if (!activeTalk) {
             throw new Error("No active talk to add note to");
         }
@@ -366,6 +377,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         talks,
         activeTalk,
         createTalk,
+        endTalk,
         endCurrentTalk,
         getAllTalks,
 

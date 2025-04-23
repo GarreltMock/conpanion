@@ -21,6 +21,7 @@ export default function NotesScreen() {
         addCombinedNote,
         deleteNote,
         getNotesForTalk,
+        endCurrentTalk,
         isLoading,
         isRecording,
     } = useApp();
@@ -36,13 +37,19 @@ export default function NotesScreen() {
         }
     }, [activeTalk, notes, getNotesForTalk]);
 
-    const handleNewTalk = () => {
+    const handleTalkDone = async () => {
+        await endCurrentTalk();
         router.push("/modals/new-talk");
     };
 
     // Handle combined note submission (text, images, audio)
-    const handleSubmitNote = async (text: string, images: string[], audioRecordings: string[]) => {
-        if (!text.trim() && images.length === 0 && audioRecordings.length === 0) return;
+    const handleSubmitNote = async (
+        text: string,
+        images: string[],
+        audioRecordings: string[]
+    ) => {
+        if (!text.trim() && images.length === 0 && audioRecordings.length === 0)
+            return;
         await addCombinedNote(text, images, audioRecordings);
     };
 
@@ -103,7 +110,7 @@ export default function NotesScreen() {
             <TalkHeader
                 conferenceName={currentConference?.name || "My Conference"}
                 talk={activeTalk}
-                onNewTalk={handleNewTalk}
+                onDone={handleTalkDone}
             />
 
             {activeTalk ? (

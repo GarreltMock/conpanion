@@ -32,6 +32,7 @@ export default function EditNoteModal() {
     const { notes, updateNote } = useApp();
 
     const tintColor = useThemeColor({}, "tint");
+    const backgroundColor = useThemeColor({}, "background");
     const textColor = useThemeColor({}, "text");
 
     useEffect(() => {
@@ -213,7 +214,7 @@ export default function EditNoteModal() {
                 <ThemedText style={styles.title}>Edit Note</ThemedText>
 
                 <TouchableOpacity
-                    style={styles.saveButton}
+                    style={[styles.saveButton, { backgroundColor: tintColor }]}
                     onPress={handleSave}
                     disabled={isSaving}
                 >
@@ -221,7 +222,10 @@ export default function EditNoteModal() {
                         <ActivityIndicator size="small" color="#fff" />
                     ) : (
                         <ThemedText
-                            style={styles.saveText}
+                            style={[
+                                styles.saveText,
+                                { color: backgroundColor },
+                            ]}
                             lightColor="#fff"
                             darkColor="#fff"
                         >
@@ -381,7 +385,6 @@ const styles = StyleSheet.create({
         fontSize: 17,
     },
     saveButton: {
-        backgroundColor: "#007AFF",
         paddingHorizontal: 16,
         paddingVertical: 8,
         borderRadius: 8,

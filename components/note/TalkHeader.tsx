@@ -1,33 +1,36 @@
 import React from "react";
 import { View, StyleSheet, Pressable, Text } from "react-native";
-import { router } from "expo-router";
 import { format } from "date-fns";
 
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { useThemeColor } from "@/hooks/useThemeColor";
+import { useApp } from "@/context/AppContext";
 import { Talk } from "@/types";
 
 interface TalkHeaderProps {
     conferenceName: string;
     talk: Talk | null;
-    onNewTalk?: () => void;
+    onDone?: () => void;
 }
 
 export const TalkHeader: React.FC<TalkHeaderProps> = ({
     conferenceName,
     talk,
-    onNewTalk,
+    onDone,
 }) => {
     const tintColor = useThemeColor({}, "tint");
     const backgroundColor = useThemeColor({}, "background");
 
-    const handleNewTalk = () => {
-        if (onNewTalk) {
-            onNewTalk();
+    const { endTalk } = useApp();
+
+    const handleDone = () => {
+        if (onDone) {
+            onDone();
         } else {
-            router.push("/modals/new-talk");
+            if (!talk) return;
+            endTalk(talk);
         }
     };
 
@@ -63,13 +66,17 @@ export const TalkHeader: React.FC<TalkHeaderProps> = ({
                             opacity: pressed ? 0.8 : 1,
                         },
                     ]}
-                    onPress={handleNewTalk}
+                    onPress={handleDone}
                 >
-                    <IconSymbol name="plus" size={22} color={backgroundColor} />
+                    <IconSymbol
+                        name={talk ? "checkmark" : "plus"}
+                        size={18}
+                        color={backgroundColor}
+                    />
                     <Text
                         style={[styles.buttonText, { color: backgroundColor }]}
                     >
-                        New Talk
+                        {talk ? "Done" : "New Talk"}
                     </Text>
                 </Pressable>
             </View>
