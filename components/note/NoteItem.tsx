@@ -153,7 +153,10 @@ export const NoteItem: React.FC<NoteItemProps> = ({
                             key={`image-${index}`}
                             activeOpacity={0.9}
                             onPress={() => {
-                                // TODO: Handle image preview/fullscreen
+                                router.push({
+                                    pathname: "/modals/image-view",
+                                    params: { imageUri: encodeURIComponent(imageUri) }
+                                });
                             }}
                         >
                             <Image

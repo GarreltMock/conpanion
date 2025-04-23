@@ -251,11 +251,21 @@ export default function EditNoteModal() {
                                     key={`image-${index}`}
                                     style={styles.imageWrapper}
                                 >
-                                    <Image
-                                        source={{ uri: imageUri }}
-                                        style={styles.image}
-                                        resizeMode="cover"
-                                    />
+                                    <TouchableOpacity
+                                        activeOpacity={0.9}
+                                        onPress={() => {
+                                            router.push({
+                                                pathname: "/modals/image-view",
+                                                params: { imageUri: encodeURIComponent(imageUri) }
+                                            });
+                                        }}
+                                    >
+                                        <Image
+                                            source={{ uri: imageUri }}
+                                            style={styles.image}
+                                            resizeMode="cover"
+                                        />
+                                    </TouchableOpacity>
                                     <TouchableOpacity
                                         style={styles.deleteImageButton}
                                         onPress={() => handleDeleteImage(index)}

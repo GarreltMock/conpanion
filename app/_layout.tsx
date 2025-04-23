@@ -55,6 +55,14 @@ export default function RootLayout() {
                         name="modals/edit-note"
                         options={{ presentation: "modal" }}
                     />
+                    <Stack.Screen
+                        name="modals/image-view"
+                        options={{ 
+                            presentation: "modal",
+                            headerShown: false,
+                            animation: "fade" 
+                        }}
+                    />
                 </Stack>
                 <StatusBar style="auto" />
             </ThemeProvider>
