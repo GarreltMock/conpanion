@@ -3,22 +3,16 @@ import {
     StyleSheet,
     View,
     TouchableOpacity,
-    Image,
     Dimensions,
     SafeAreaView,
 } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
-import { 
-    PinchGestureHandler, 
-    PanGestureHandler, 
-    State 
-} from "react-native-gesture-handler";
-import Animated, { 
-    useAnimatedStyle, 
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import Animated, {
+    useAnimatedStyle,
     useSharedValue,
     withTiming,
-    useAnimatedGestureHandler,
-    runOnJS
+    runOnJS,
 } from "react-native-reanimated";
 
 import { IconSymbol } from "@/components/ui/IconSymbol";
@@ -27,10 +21,15 @@ import { ThemedView } from "@/components/ThemedView";
 export default function ImageViewModal() {
     const { imageUri } = useLocalSearchParams<{ imageUri: string }>();
     const decodedUri = decodeURIComponent(imageUri as string);
-    
+
     const scale = useSharedValue(1);
     const translateX = useSharedValue(0);
     const translateY = useSharedValue(0);
+    const savedScale = useSharedValue(1);
+    const savedTranslateX = useSharedValue(0);
+    const savedTranslateY = useSharedValue(0);
+    const focalX = useSharedValue(0);
+    const focalY = useSharedValue(0);
 
     const handleClose = () => {
         router.back();
@@ -40,63 +39,66 @@ export default function ImageViewModal() {
         scale.value = withTiming(1);
         translateX.value = withTiming(0);
         translateY.value = withTiming(0);
+        savedScale.value = 1;
+        savedTranslateX.value = 0;
+        savedTranslateY.value = 0;
     };
 
-    // Pinch gesture handler
-    const pinchHandler = useAnimatedGestureHandler({
-        onStart: (_, ctx) => {
-            ctx.startScale = scale.value;
-        },
-        onActive: (event, ctx) => {
-            let newScale = ctx.startScale * event.scale;
-            
-            // Limit minimum scale to 1
-            if (newScale < 1) {
-                newScale = 1;
-            }
-            
-            // Limit maximum scale to 5
-            if (newScale > 5) {
-                newScale = 5;
-            }
-            
-            scale.value = newScale;
-        },
-        onEnd: () => {
-            if (scale.value < 1) {
-                scale.value = withTiming(1);
-            }
-        },
-    });
+    // Create a pinch gesture
+    const pinchGesture = Gesture.Pinch()
+        .onStart((e) => {
+            savedScale.value = scale.value;
+            focalX.value = e.focalX;
+            focalY.value = e.focalY;
+        })
+        .onUpdate((e) => {
+            // Calculate new scale
+            let newScale = savedScale.value * e.scale;
 
-    // Pan gesture handler
-    const panHandler = useAnimatedGestureHandler({
-        onStart: (_, ctx) => {
-            ctx.startX = translateX.value;
-            ctx.startY = translateY.value;
-        },
-        onActive: (event, ctx) => {
+            // Apply limits
+            if (newScale < 1) newScale = 1;
+            if (newScale > 5) newScale = 5;
+
+            scale.value = newScale;
+        });
+
+    // Create a pan gesture
+    const panGesture = Gesture.Pan()
+        .onStart(() => {
+            savedTranslateX.value = translateX.value;
+            savedTranslateY.value = translateY.value;
+        })
+        .onUpdate((e) => {
             // Only allow panning if zoomed in
             if (scale.value > 1) {
-                translateX.value = ctx.startX + event.translationX;
-                translateY.value = ctx.startY + event.translationY;
+                translateX.value = savedTranslateX.value + e.translationX;
+                translateY.value = savedTranslateY.value + e.translationY;
             }
-        },
-    });
+        });
+
+    // Double tap gesture for resetting zoom
+    const doubleTapGesture = Gesture.Tap()
+        .numberOfTaps(2)
+        .onEnd(() => {
+            runOnJS(resetImage)();
+        });
+
+    // Combine gestures
+    const combinedGestures = Gesture.Simultaneous(
+        pinchGesture,
+        panGesture,
+        doubleTapGesture
+    );
 
     const animatedImageStyle = useAnimatedStyle(() => {
         return {
             transform: [
                 { translateX: translateX.value },
                 { translateY: translateY.value },
-                { scale: scale.value }
-            ]
+                { scale: scale.value },
+            ],
         };
     });
-
-    const doubleTapHandler = () => {
-        resetImage();
-    };
 
     return (
         <ThemedView style={styles.container}>
@@ -110,34 +112,19 @@ export default function ImageViewModal() {
                     </TouchableOpacity>
                 </View>
 
-                <PanGestureHandler onGestureEvent={panHandler}>
+                <GestureDetector gesture={combinedGestures}>
                     <Animated.View style={styles.imageContainer}>
-                        <PinchGestureHandler onGestureEvent={pinchHandler}>
-                            <Animated.Image
-                                source={{ uri: decodedUri }}
-                                style={[styles.image, animatedImageStyle]}
-                                resizeMode="contain"
-                                onTouchEnd={(e) => {
-                                    // Double tap detection using timestamp
-                                    const currentTime = new Date().getTime();
-                                    const doubleTapTimeWindow = 300; // ms
-                                    
-                                    if (e.timeStamp - lastTapTimestamp < doubleTapTimeWindow) {
-                                        doubleTapHandler();
-                                    }
-                                    
-                                    lastTapTimestamp = e.timeStamp;
-                                }}
-                            />
-                        </PinchGestureHandler>
+                        <Animated.Image
+                            source={{ uri: decodedUri }}
+                            style={[styles.image, animatedImageStyle]}
+                            resizeMode="contain"
+                        />
                     </Animated.View>
-                </PanGestureHandler>
+                </GestureDetector>
             </SafeAreaView>
         </ThemedView>
     );
 }
-
-let lastTapTimestamp = 0;
 
 const { width, height } = Dimensions.get("window");
 
