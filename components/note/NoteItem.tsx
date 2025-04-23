@@ -228,7 +228,7 @@ export const NoteItem: React.FC<NoteItemProps> = ({
 
 const styles = StyleSheet.create({
     container: {
-        marginVertical: 8,
+        marginVertical: 4,
         marginHorizontal: 16,
         borderRadius: 12,
         overflow: "hidden",

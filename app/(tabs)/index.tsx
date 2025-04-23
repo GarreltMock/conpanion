@@ -157,6 +157,7 @@ const styles = StyleSheet.create({
     notesList: {
         flexGrow: 1,
         paddingBottom: 16,
+        paddingTop: 4,
     },
     emptyStateContainer: {
         flex: 1,

@@ -228,7 +228,7 @@ export const NoteInput: React.FC<NoteInputProps> = ({
                 // Only add extra space on iOS
                 if (Platform.OS === "ios") {
                     // Calculate how much space to add below the input
-                    setKeyboardSpace(keyboardHeight - 60);
+                    setKeyboardSpace(keyboardHeight - 74);
                 }
             }
         );
