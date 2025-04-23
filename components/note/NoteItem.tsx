@@ -155,7 +155,9 @@ export const NoteItem: React.FC<NoteItemProps> = ({
                             onPress={() => {
                                 router.push({
                                     pathname: "/modals/image-view",
-                                    params: { imageUri: encodeURIComponent(imageUri) }
+                                    params: {
+                                        imageUri: encodeURIComponent(imageUri),
+                                    },
                                 });
                             }}
                         >
@@ -263,8 +265,8 @@ const styles = StyleSheet.create({
         paddingHorizontal: 12,
     },
     image: {
-        width: 80,
         height: 80,
+        aspectRatio: 1.6,
         borderRadius: 8,
         marginRight: 8,
     },

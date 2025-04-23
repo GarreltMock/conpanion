@@ -9,7 +9,6 @@ import {
 } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 
-import { ThemedText } from "@/components/ThemedText";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { ThemedView } from "@/components/ThemedView";
 

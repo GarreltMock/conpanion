@@ -256,7 +256,12 @@ export default function EditNoteModal() {
                                         onPress={() => {
                                             router.push({
                                                 pathname: "/modals/image-view",
-                                                params: { imageUri: encodeURIComponent(imageUri) }
+                                                params: {
+                                                    imageUri:
+                                                        encodeURIComponent(
+                                                            imageUri
+                                                        ),
+                                                },
                                             });
                                         }}
                                     >
@@ -423,8 +428,8 @@ const styles = StyleSheet.create({
         marginRight: 12,
     },
     image: {
-        width: 140,
         height: 140,
+        aspectRatio: 1.6,
         borderRadius: 8,
     },
     deleteImageButton: {

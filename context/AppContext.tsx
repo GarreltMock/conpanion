@@ -236,7 +236,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         const result = await ImagePicker.launchCameraAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
             quality: 0.8,
-            allowsEditing: true,
+            allowsEditing: false,
         });
 
         if (result.canceled || !result.assets || result.assets.length === 0) {

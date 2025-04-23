@@ -442,8 +442,8 @@ const styles = StyleSheet.create({
         marginRight: 8,
     },
     imagePreview: {
-        width: 50,
         height: 50,
+        aspectRatio: 1.6,
         borderRadius: 8,
     },
     audioPreviewContainer: {
