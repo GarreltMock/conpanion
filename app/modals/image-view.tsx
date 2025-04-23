@@ -44,14 +44,21 @@ export default function ImageViewModal() {
         savedTranslateY.value = 0;
     };
 
-    // Create a pinch gesture
+    // Create a pinch gesture with focal point zooming
     const pinchGesture = Gesture.Pinch()
         .onStart((e) => {
             savedScale.value = scale.value;
+            savedTranslateX.value = translateX.value;
+            savedTranslateY.value = translateY.value;
+
+            // Save the focal point of the pinch - this stays constant for the entire gesture
             focalX.value = e.focalX;
             focalY.value = e.focalY;
         })
         .onUpdate((e) => {
+            // Important: use focal point from the start of the gesture, NOT the current e.focalX/Y
+            // This prevents the "drift to center" problem when fingers move during pinch
+
             // Calculate new scale
             let newScale = savedScale.value * e.scale;
 
@@ -59,6 +66,29 @@ export default function ImageViewModal() {
             if (newScale < 1) newScale = 1;
             if (newScale > 5) newScale = 5;
 
+            if (savedScale.value === 1 && newScale === 1) {
+                // Don't adjust translation if we're at minimum scale
+                return;
+            }
+
+            // Get the dimensions
+            const centerX = width / 2;
+            const centerY = height / 2;
+
+            // Calculate scale factor difference
+            const scaleFactor = newScale / savedScale.value;
+
+            // Convert focal point to be relative to image center, considering current translation
+            const focusX = focalX.value - centerX - savedTranslateX.value;
+            const focusY = focalY.value - centerY - savedTranslateY.value;
+
+            // Move image to keep the focal point fixed at the same position on screen
+            translateX.value =
+                savedTranslateX.value + focusX - focusX * scaleFactor;
+            translateY.value =
+                savedTranslateY.value + focusY - focusY * scaleFactor;
+
+            // Apply the new scale
             scale.value = newScale;
         });
 
