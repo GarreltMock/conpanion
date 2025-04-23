@@ -84,9 +84,9 @@ export default function ImageViewModal() {
 
             // Move image to keep the focal point fixed at the same position on screen
             translateX.value =
-                savedTranslateX.value + focusX - focusX * scaleFactor;
+                savedTranslateX.value + (1 - scaleFactor) * focusX;
             translateY.value =
-                savedTranslateY.value + focusY - focusY * scaleFactor;
+                savedTranslateY.value + (1 - scaleFactor) * focusY;
 
             // Apply the new scale
             scale.value = newScale;
