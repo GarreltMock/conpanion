@@ -30,6 +30,7 @@ export default function ImageViewModal() {
     const savedTranslateY = useSharedValue(0);
     const focalX = useSharedValue(0);
     const focalY = useSharedValue(0);
+    const isPinching = useSharedValue(false);
 
     const handleClose = () => {
         router.back();
@@ -47,6 +48,7 @@ export default function ImageViewModal() {
     // Create a pinch gesture with focal point zooming
     const pinchGesture = Gesture.Pinch()
         .onStart((e) => {
+            isPinching.value = true;
             savedScale.value = scale.value;
             savedTranslateX.value = translateX.value;
             savedTranslateY.value = translateY.value;
@@ -89,35 +91,36 @@ export default function ImageViewModal() {
 
             // Apply the new scale
             scale.value = newScale;
+        })
+        .onEnd(() => {
+            isPinching.value = false;
+
+            if (scale.value <= 1) {
+                // Reset if scale is less than 1
+                runOnJS(resetImage)();
+            }
         });
 
     // Create a pan gesture
     const panGesture = Gesture.Pan()
         .onStart(() => {
+            // Don't start pan if we're pinching
+            if (isPinching.value) return false;
+
             savedTranslateX.value = translateX.value;
             savedTranslateY.value = translateY.value;
+            return true;
         })
         .onUpdate((e) => {
-            // Only allow panning if zoomed in
-            if (scale.value > 1) {
+            // Only allow panning if zoomed in and not pinching
+            if (scale.value > 1 && !isPinching.value) {
                 translateX.value = savedTranslateX.value + e.translationX;
                 translateY.value = savedTranslateY.value + e.translationY;
             }
         });
 
-    // Double tap gesture for resetting zoom
-    const doubleTapGesture = Gesture.Tap()
-        .numberOfTaps(2)
-        .onEnd(() => {
-            runOnJS(resetImage)();
-        });
-
     // Combine gestures
-    const combinedGestures = Gesture.Simultaneous(
-        pinchGesture,
-        panGesture,
-        doubleTapGesture
-    );
+    const combinedGestures = Gesture.Simultaneous(pinchGesture, panGesture);
 
     const animatedImageStyle = useAnimatedStyle(() => {
         return {
