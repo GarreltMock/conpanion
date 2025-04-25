@@ -39,7 +39,7 @@ export default function RootLayout() {
                 <ThemeProvider
                     value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
                 >
-                    <Stack>
+                    <Stack initialRouteName="(tabs)">
                         <Stack.Screen
                             name="(tabs)"
                             options={{ headerShown: false }}
@@ -47,7 +47,19 @@ export default function RootLayout() {
                         <Stack.Screen name="+not-found" />
                         <Stack.Screen
                             name="(talk)/index"
-                            options={{ headerShown: false }}
+                            options={{ 
+                                headerShown: true,
+                                headerTitle: "Talk Details",
+                                headerBackTitle: "Back"
+                            }}
+                        />
+                        <Stack.Screen
+                            name="(conference)/index"
+                            options={{ 
+                                headerShown: true,
+                                headerTitle: "Conference Details",
+                                headerBackTitle: "Back" 
+                            }}
                         />
                         <Stack.Screen
                             name="modals/new-talk"
@@ -63,6 +75,27 @@ export default function RootLayout() {
                                 presentation: "modal",
                                 headerShown: false,
                                 animation: "fade" 
+                            }}
+                        />
+                        <Stack.Screen
+                            name="modals/new-conference"
+                            options={{ 
+                                presentation: "modal",
+                                title: "New Conference"
+                            }}
+                        />
+                        <Stack.Screen
+                            name="modals/edit-conference"
+                            options={{ 
+                                presentation: "modal",
+                                title: "Edit Conference"
+                            }}
+                        />
+                        <Stack.Screen
+                            name="modals/export-options"
+                            options={{ 
+                                presentation: "modal",
+                                title: "Export Conference"
                             }}
                         />
                     </Stack>

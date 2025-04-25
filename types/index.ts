@@ -1,9 +1,15 @@
+export type ConferenceStatus = 'active' | 'past' | 'upcoming';
+
 export interface Conference {
   id: string;
   name: string;
   startDate: Date;
   endDate: Date;
   location?: string;
+  description?: string;
+  status: ConferenceStatus;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface Talk {
@@ -21,4 +27,11 @@ export interface Note {
   images: string[];
   audioRecordings: string[];
   timestamp: Date;
+}
+
+export interface ExportOptions {
+  format: 'pdf' | 'markdown';
+  includeImages: boolean;
+  includeTalkIds: string[];
+  filename: string;
 }

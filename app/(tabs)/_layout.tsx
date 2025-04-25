@@ -12,6 +12,7 @@ export default function TabLayout() {
 
     return (
         <Tabs
+            initialRouteName="conferences"
             screenOptions={{
                 tabBarActiveTintColor: Colors[colorScheme ?? "light"].tint,
                 headerShown: false,
@@ -38,6 +39,19 @@ export default function TabLayout() {
                         <IconSymbol
                             size={28}
                             name="list.bullet"
+                            color={color}
+                        />
+                    ),
+                }}
+            />
+            <Tabs.Screen
+                name="conferences"
+                options={{
+                    title: "Conferences",
+                    tabBarIcon: ({ color }) => (
+                        <IconSymbol
+                            size={28}
+                            name="calendar"
                             color={color}
                         />
                     ),
