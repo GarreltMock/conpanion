@@ -4,8 +4,7 @@ import { Conference, Talk, Note, ExportOptions } from "../types";
 
 // Helper function to generate a random ID (replacing nanoid)
 function generateId(length = 8) {
-    const chars =
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
     let result = "";
     for (let i = 0; i < length; i++) {
         result += chars.charAt(Math.floor(Math.random() * chars.length));
@@ -26,10 +25,10 @@ export const AUDIO_DIRECTORY = FileSystem.documentDirectory + "audio/";
 export const EXPORTS_DIRECTORY = FileSystem.documentDirectory + "exports/";
 
 // Conference-specific directories
-const getConferenceImagesDirectory = (conferenceId: string) => 
+const getConferenceImagesDirectory = (conferenceId: string) =>
     `${FileSystem.documentDirectory}conferences/${conferenceId}/images/`;
 
-const getConferenceAudioDirectory = (conferenceId: string) => 
+const getConferenceAudioDirectory = (conferenceId: string) =>
     `${FileSystem.documentDirectory}conferences/${conferenceId}/audio/`;
 
 // Initialize directories
@@ -48,7 +47,7 @@ export const initializeFileSystem = async (): Promise<void> => {
             intermediates: true,
         });
     }
-    
+
     // Create exports directory
     const exportsDirInfo = await FileSystem.getInfoAsync(EXPORTS_DIRECTORY);
     if (!exportsDirInfo.exists) {
@@ -56,7 +55,7 @@ export const initializeFileSystem = async (): Promise<void> => {
             intermediates: true,
         });
     }
-    
+
     // Create conference base directory
     const conferencesBaseDir = `${FileSystem.documentDirectory}conferences/`;
     const conferencesBaseDirInfo = await FileSystem.getInfoAsync(conferencesBaseDir);
@@ -78,9 +77,9 @@ export const initializeConferenceDirectories = async (conferenceId: string): Pro
         console.error("Cannot initialize directories: conferenceId is undefined or null");
         throw new Error("Invalid conference ID");
     }
-    
+
     console.log(`Initializing directories for conference: ${conferenceId}`);
-    
+
     // First ensure the base conferences directory exists
     const conferencesBaseDir = `${FileSystem.documentDirectory}conferences/`;
     const conferencesBaseDirInfo = await FileSystem.getInfoAsync(conferencesBaseDir);
@@ -89,7 +88,7 @@ export const initializeConferenceDirectories = async (conferenceId: string): Pro
             intermediates: true,
         });
     }
-    
+
     // Create the conference specific directory
     const conferenceDir = `${FileSystem.documentDirectory}conferences/${conferenceId}/`;
     const conferenceDirInfo = await FileSystem.getInfoAsync(conferenceDir);
@@ -116,7 +115,7 @@ export const initializeConferenceDirectories = async (conferenceId: string): Pro
             intermediates: true,
         });
     }
-    
+
     console.log(`Successfully initialized directories for conference: ${conferenceId}`);
 };
 
@@ -124,7 +123,7 @@ export const initializeConferenceDirectories = async (conferenceId: string): Pro
 export const saveImage = async (uri: string, conferenceId?: string): Promise<string> => {
     const filename = generateUniqueFilename("jpg");
     let destination;
-    
+
     if (conferenceId) {
         const directory = getConferenceImagesDirectory(conferenceId);
         // Ensure directory exists
@@ -151,7 +150,7 @@ export const saveImage = async (uri: string, conferenceId?: string): Promise<str
 export const saveAudio = async (uri: string, conferenceId?: string): Promise<string> => {
     const filename = generateUniqueFilename("m4a");
     let destination;
-    
+
     if (conferenceId) {
         const directory = getConferenceAudioDirectory(conferenceId);
         // Ensure directory exists
@@ -221,11 +220,8 @@ export const saveConference = async (conference: Conference): Promise<void> => {
             conferences.push(updatedConference);
         }
 
-        await AsyncStorage.setItem(
-            CONFERENCES_KEY,
-            JSON.stringify(conferences)
-        );
-        
+        await AsyncStorage.setItem(CONFERENCES_KEY, JSON.stringify(conferences));
+
         console.log(`Conference saved: ${conference.id} - ${conference.name}`);
     } catch (error) {
         console.error("Error saving conference:", error);
@@ -237,23 +233,20 @@ export const deleteConference = async (conferenceId: string): Promise<void> => {
     try {
         const conferences = await getConferences();
         const updatedConferences = conferences.filter((conf) => conf.id !== conferenceId);
-        
-        await AsyncStorage.setItem(
-            CONFERENCES_KEY,
-            JSON.stringify(updatedConferences)
-        );
-        
+
+        await AsyncStorage.setItem(CONFERENCES_KEY, JSON.stringify(updatedConferences));
+
         // If the deleted conference was the active one, clear the active conference
         const activeConferenceId = await AsyncStorage.getItem(ACTIVE_CONFERENCE_KEY);
         if (activeConferenceId === conferenceId) {
             await AsyncStorage.removeItem(ACTIVE_CONFERENCE_KEY);
         }
-        
+
         // Delete conference directories (Note: This doesn't delete files inside the directories)
         // You might want to add more logic to delete files inside these directories
         const imagesDir = getConferenceImagesDirectory(conferenceId);
         const audioDir = getConferenceAudioDirectory(conferenceId);
-        
+
         try {
             await FileSystem.deleteAsync(imagesDir, { idempotent: true });
             await FileSystem.deleteAsync(audioDir, { idempotent: true });
@@ -295,14 +288,14 @@ export const initializeDefaultConference = async (): Promise<Conference> => {
             name: "My Conference",
             startDate: now,
             endDate: endDate,
-            status: 'active',
+            status: "active",
             createdAt: now,
             updatedAt: now,
         };
 
         // Create conference directories first
         await initializeConferenceDirectories(defaultConference.id);
-        
+
         // Save the conference to storage
         await saveConference(defaultConference);
         await setActiveConferenceId(defaultConference.id);
@@ -320,7 +313,7 @@ export const initializeDefaultConference = async (): Promise<Conference> => {
 
     // Return the active conference if it exists
     if (activeId) {
-        const activeConference = conferences.find(conf => conf.id === activeId);
+        const activeConference = conferences.find((conf) => conf.id === activeId);
         if (activeConference) {
             // Ensure this conference has directories
             await initializeConferenceDirectories(activeConference.id);
@@ -333,22 +326,22 @@ export const initializeDefaultConference = async (): Promise<Conference> => {
         await initializeConferenceDirectories(conferences[0].id);
         return conferences[0];
     }
-    
+
     // This should never happen, but just in case, create a fresh default
     const now = new Date();
     const endDate = new Date();
     endDate.setDate(now.getDate() + 3);
-    
+
     const defaultConference: Conference = {
         id: generateId(),
         name: "Default Conference",
         startDate: now,
         endDate: endDate,
-        status: 'active',
+        status: "active",
         createdAt: now,
         updatedAt: now,
     };
-    
+
     await initializeConferenceDirectories(defaultConference.id);
     await saveConference(defaultConference);
     await setActiveConferenceId(defaultConference.id);
@@ -501,12 +494,14 @@ export const generatePDF = async (
 ): Promise<string> => {
     // This will be implemented using react-native-pdf-lib
     // For now, returning a placeholder
-    const filename = options.filename || `${conference.name.replace(/\s+/g, '-')}-${Date.now()}.pdf`;
+    const filename = options.filename || `${conference.name.replace(/\s+/g, "-")}-${Date.now()}.pdf`;
     const filePath = `${EXPORTS_DIRECTORY}${filename}`;
-    
+
     // Placeholder for PDF creation logic
     // We'll implement this later after UI is set up
-    
+
+    console.log(`PDF generated at: ${filePath}`);
+
     return filePath;
 };
 
@@ -517,11 +512,11 @@ export const generateMarkdown = async (
     options: ExportOptions
 ): Promise<string> => {
     // This will generate a markdown file
-    const filename = options.filename || `${conference.name.replace(/\s+/g, '-')}-${Date.now()}.md`;
+    const filename = options.filename || `${conference.name.replace(/\s+/g, "-")}-${Date.now()}.md`;
     const filePath = `${EXPORTS_DIRECTORY}${filename}`;
-    
+
     // Placeholder for markdown creation logic
     // We'll implement this later after UI is set up
-    
+
     return filePath;
 };

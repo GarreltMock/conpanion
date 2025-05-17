@@ -32,40 +32,65 @@ export default function TalksScreen() {
     const tintColor = useThemeColor({}, "tint");
     const backgroundColor = useThemeColor({}, "background");
 
-    // Update local talks state from app context
+    // Update local talks state from app context, filtering for current conference
     useEffect(() => {
-        // Only update if appTalks is not empty (to avoid clearing our list unnecessarily)
-        if (appTalks && appTalks.length > 0) {
-            // Sort talks by start time (newest first)
-            const sortedTalks = [...appTalks].sort(
+        if (!currentConference) {
+            setTalks([]);
+            return;
+        }
+
+        // Filter for talks in the current conference
+        const conferenceTalks = appTalks.filter(
+            (talk) => talk.conferenceId === currentConference.id
+        );
+
+        // Sort talks by start time (newest first)
+        if (conferenceTalks.length > 0) {
+            const sortedTalks = [...conferenceTalks].sort(
                 (a, b) => b.startTime.getTime() - a.startTime.getTime()
             );
             setTalks(sortedTalks);
+        } else {
+            setTalks([]);
         }
-    }, [appTalks]);
+    }, [appTalks, currentConference]);
 
     const loadTalks = useCallback(async () => {
         try {
+            if (!currentConference) {
+                setTalks([]);
+                setRefreshing(false);
+                return;
+            }
+
             setRefreshing(true);
             const allTalks = await getAllTalks();
 
+            // Filter for current conference
+            const conferenceTalks = allTalks.filter(
+                (talk) => talk.conferenceId === currentConference.id
+            );
+
             // Sort talks by start time (newest first)
-            const sortedTalks = [...allTalks].sort(
+            const sortedTalks = [...conferenceTalks].sort(
                 (a, b) => b.startTime.getTime() - a.startTime.getTime()
             );
 
             setTalks(sortedTalks);
+            console.log(
+                `Loaded ${sortedTalks.length} talks for conference: ${currentConference.name}`
+            );
         } catch (error) {
             console.error("Error loading talks:", error);
         } finally {
             setRefreshing(false);
         }
-    }, [getAllTalks]);
+    }, [getAllTalks, currentConference]);
 
-    // Load talks when the component mounts
+    // Load talks when the component mounts or when the current conference changes
     useEffect(() => {
         loadTalks();
-    }, [loadTalks]);
+    }, [loadTalks, currentConference]);
 
     // Reload talks when the screen comes into focus
     useFocusEffect(
@@ -86,7 +111,7 @@ export default function TalksScreen() {
     };
 
     const handleTalkPress = (talkId: string) => {
-        router.push(`/(talk)?id=${talkId}`);
+        router.push(`/talk?id=${talkId}`);
     };
 
     const renderTalkItem = ({ item }: { item: Talk }) => {

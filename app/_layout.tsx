@@ -4,10 +4,10 @@ import {
     ThemeProvider,
 } from "@react-navigation/native";
 import { useFonts } from "expo-font";
-import { Stack } from "expo-router";
+import { Stack, router } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import "react-native-reanimated";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
@@ -25,7 +25,7 @@ export default function RootLayout() {
 
     useEffect(() => {
         if (loaded) {
-            SplashScreen.hideAsync();
+            SplashScreen.hideAsync().catch(console.error);
         }
     }, [loaded]);
 
@@ -39,26 +39,26 @@ export default function RootLayout() {
                 <ThemeProvider
                     value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
                 >
-                    <Stack initialRouteName="(tabs)">
+                    <Stack>
                         <Stack.Screen
                             name="(tabs)"
                             options={{ headerShown: false }}
                         />
                         <Stack.Screen name="+not-found" />
                         <Stack.Screen
-                            name="(talk)/index"
-                            options={{ 
-                                headerShown: true,
+                            name="talk"
+                            options={{
+                                headerShown: false,
                                 headerTitle: "Talk Details",
-                                headerBackTitle: "Back"
+                                headerBackTitle: "Back",
                             }}
                         />
                         <Stack.Screen
-                            name="(conference)/index"
-                            options={{ 
+                            name="conference"
+                            options={{
                                 headerShown: true,
                                 headerTitle: "Conference Details",
-                                headerBackTitle: "Back" 
+                                headerBackTitle: "Back",
                             }}
                         />
                         <Stack.Screen
@@ -71,31 +71,31 @@ export default function RootLayout() {
                         />
                         <Stack.Screen
                             name="modals/image-view"
-                            options={{ 
+                            options={{
                                 presentation: "modal",
                                 headerShown: false,
-                                animation: "fade" 
+                                animation: "fade",
                             }}
                         />
                         <Stack.Screen
                             name="modals/new-conference"
-                            options={{ 
+                            options={{
                                 presentation: "modal",
-                                title: "New Conference"
+                                title: "New Conference",
                             }}
                         />
                         <Stack.Screen
                             name="modals/edit-conference"
-                            options={{ 
+                            options={{
                                 presentation: "modal",
-                                title: "Edit Conference"
+                                title: "Edit Conference",
                             }}
                         />
                         <Stack.Screen
                             name="modals/export-options"
-                            options={{ 
+                            options={{
                                 presentation: "modal",
-                                title: "Export Conference"
+                                title: "Export Conference",
                             }}
                         />
                     </Stack>

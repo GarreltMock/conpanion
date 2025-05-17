@@ -1,11 +1,4 @@
-import React, {
-    createContext,
-    useContext,
-    useState,
-    useEffect,
-    ReactNode,
-    useCallback,
-} from "react";
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
 import * as ImagePicker from "expo-image-picker";
 import { Audio } from "expo-av";
 import { Conference, Talk, Note, ExportOptions, ConferenceStatus } from "../types";
@@ -33,8 +26,7 @@ import {
 
 // Helper function to generate a random ID (replacing nanoid)
 function generateId(length = 8) {
-    const chars =
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
     let result = "";
     for (let i = 0; i < length; i++) {
         result += chars.charAt(Math.floor(Math.random() * chars.length));
@@ -47,7 +39,13 @@ interface AppContextType {
     currentConference: Conference | null;
     conferences: Conference[];
     loadConference: () => Promise<void>;
-    createConference: (name: string, startDate: Date, endDate: Date, location?: string, description?: string) => Promise<Conference>;
+    createConference: (
+        name: string,
+        startDate: Date,
+        endDate: Date,
+        location?: string,
+        description?: string
+    ) => Promise<Conference>;
     updateConference: (conference: Conference) => Promise<void>;
     deleteConference: (conferenceId: string) => Promise<void>;
     switchActiveConference: (conferenceId: string) => Promise<void>;
@@ -69,11 +67,7 @@ interface AppContextType {
     addImageNote: () => Promise<string>; // Returns image URI instead of creating note
     addAudioNote: () => Promise<Note | null>;
     stopAudioRecording: () => Promise<string | null>; // Returns audio URI instead of creating note
-    addCombinedNote: (
-        text: string,
-        images: string[],
-        audioRecordings: string[]
-    ) => Promise<Note>;
+    addCombinedNote: (text: string, images: string[], audioRecordings: string[]) => Promise<Note>;
     updateNote: (note: Note) => Promise<void>;
     deleteNote: (noteId: string) => Promise<void>;
     getNotesForTalk: (talkId: string) => Note[];
@@ -83,7 +77,7 @@ interface AppContextType {
     exportToMarkdown: (conferenceId: string, options: ExportOptions) => Promise<string>;
     saveExportOptions: (options: ExportOptions) => Promise<void>;
     getExportOptions: () => Promise<ExportOptions | null>;
-    
+
     // States
     isLoading: boolean;
     isRecording: boolean;
@@ -96,8 +90,7 @@ interface AppProviderProps {
 }
 
 export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
-    const [currentConference, setCurrentConference] =
-        useState<Conference | null>(null);
+    const [currentConference, setCurrentConference] = useState<Conference | null>(null);
     const [conferences, setConferences] = useState<Conference[]>([]);
     const [talks, setTalks] = useState<Talk[]>([]);
     const [activeTalk, setActiveTalk] = useState<Talk | null>(null);
@@ -118,10 +111,10 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
                 // Load all conferences first
                 const allConferences = await loadAllConferences();
                 console.log("Loaded conferences:", allConferences);
-                
+
                 // Load active conference (or initialize a default one)
                 await loadConference();
-                
+
                 // Ensure conference directories exist for all conferences
                 for (const conf of allConferences) {
                     try {
@@ -135,14 +128,24 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
                 const storedTalks = await getTalks();
                 setTalks(storedTalks);
 
-                // Set active talk (most recent talk that hasn't ended)
-                const activeTalks = storedTalks.filter((talk) => !talk.endTime);
-                if (activeTalks.length > 0) {
-                    // Sort by start time, most recent first
-                    activeTalks.sort(
-                        (a, b) => b.startTime.getTime() - a.startTime.getTime()
+                // Set active talk (most recent talk that hasn't ended AND belongs to current conference)
+                if (currentConference) {
+                    const activeTalks = storedTalks.filter(
+                        (talk) => !talk.endTime && talk.conferenceId === currentConference.id
                     );
-                    setActiveTalk(activeTalks[0]);
+
+                    if (activeTalks.length > 0) {
+                        // Sort by start time, most recent first
+                        activeTalks.sort((a, b) => b.startTime.getTime() - a.startTime.getTime());
+                        console.log("Setting active talk:", activeTalks[0].title);
+                        setActiveTalk(activeTalks[0]);
+                    } else {
+                        console.log("No active talks found for the current conference");
+                        setActiveTalk(null);
+                    }
+                } else {
+                    console.log("No current conference, not setting any active talk");
+                    setActiveTalk(null);
                 }
 
                 // Load notes
@@ -169,7 +172,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
             return [];
         }
     };
-    
+
     const loadConference = async () => {
         try {
             // Initialize with default if none exists
@@ -177,17 +180,17 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
             const defaultConference = await initializeDefaultConference();
             console.log("Active conference loaded:", defaultConference);
             setCurrentConference(defaultConference);
-            
+
             // Update conferences list if needed
             const allConferences = await loadAllConferences();
-            if (!allConferences.some(conf => conf.id === defaultConference.id)) {
-                setConferences(prev => [...prev, defaultConference]);
+            if (!allConferences.some((conf) => conf.id === defaultConference.id)) {
+                setConferences((prev) => [...prev, defaultConference]);
             }
         } catch (error) {
             console.error("Error loading conference:", error);
         }
     };
-    
+
     const createConference = async (
         name: string,
         startDate: Date,
@@ -200,15 +203,15 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         }
 
         const now = new Date();
-        
+
         // Determine status based on dates
-        let status: ConferenceStatus = 'upcoming';
+        let status: ConferenceStatus = "upcoming";
         if (startDate <= now && endDate >= now) {
-            status = 'active';
+            status = "active";
         } else if (endDate < now) {
-            status = 'past';
+            status = "past";
         }
-        
+
         const newConference: Conference = {
             id: generateId(),
             name,
@@ -220,112 +223,128 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
             createdAt: now,
             updatedAt: now,
         };
-        
+
+        // End any active talk before setting a new conference
+        if (activeTalk) {
+            console.log("Ending active talk before creating new conference");
+            await endCurrentTalk();
+        }
+
         await saveConferenceToStorage(newConference);
         await setActiveConferenceId(newConference.id);
-        
+
         // Update state
         setCurrentConference(newConference);
-        setConferences(prev => [...prev, newConference]);
-        
+        setConferences((prev) => [...prev, newConference]);
+
+        // Clear active talk when creating a new conference
+        setActiveTalk(null);
+
+        console.log(`Created new conference: ${newConference.name} (ID: ${newConference.id})`);
         return newConference;
     };
-    
+
     const updateConference = async (conference: Conference): Promise<void> => {
         // Ensure updatedAt is set to current time
         const updatedConference = {
             ...conference,
             updatedAt: new Date(),
         };
-        
+
         await saveConferenceToStorage(updatedConference);
-        
+
         // Update state
-        setConferences(prev => 
-            prev.map(conf => conf.id === updatedConference.id ? updatedConference : conf)
-        );
-        
+        setConferences((prev) => prev.map((conf) => (conf.id === updatedConference.id ? updatedConference : conf)));
+
         // If this is the current conference, update it
         if (currentConference && currentConference.id === updatedConference.id) {
             setCurrentConference(updatedConference);
         }
     };
-    
+
     const deleteConferenceById = async (conferenceId: string): Promise<void> => {
         if (!conferenceId) {
             throw new Error("Conference ID is required");
         }
-        
+
         // Get talks for this conference
-        const conferenceTalks = talks.filter(talk => talk.conferenceId === conferenceId);
-        
+        const conferenceTalks = talks.filter((talk) => talk.conferenceId === conferenceId);
+
         // Get notes for these talks
-        const talkIds = conferenceTalks.map(talk => talk.id);
-        const conferenceNotes = notes.filter(note => talkIds.includes(note.talkId));
-        
+        const talkIds = conferenceTalks.map((talk) => talk.id);
+        const conferenceNotes = notes.filter((note) => talkIds.includes(note.talkId));
+
         // Delete notes
         for (const note of conferenceNotes) {
             await deleteNoteFromStorage(note.id);
         }
-        
+
         // Delete conference
         await deleteConferenceFromStorage(conferenceId);
-        
+
         // Update state
-        setConferences(prev => prev.filter(conf => conf.id !== conferenceId));
-        
+        setConferences((prev) => prev.filter((conf) => conf.id !== conferenceId));
+
         // If this was the current conference, load a new one
         if (currentConference && currentConference.id === conferenceId) {
             await loadConference();
         }
     };
-    
+
     const switchActiveConference = async (conferenceId: string): Promise<void> => {
         if (!conferenceId) {
             throw new Error("Conference ID is required");
         }
-        
-        const conference = conferences.find(conf => conf.id === conferenceId);
+
+        const conference = conferences.find((conf) => conf.id === conferenceId);
         if (!conference) {
             throw new Error("Conference not found");
         }
-        
+
+        // First end any active talk
+        if (activeTalk) {
+            console.log("Ending active talk before switching conference");
+            await endCurrentTalk();
+        }
+
         await setActiveConferenceId(conferenceId);
         setCurrentConference(conference);
-        
-        // Reset active talk when switching conference
+
+        // Reset active talk
         setActiveTalk(null);
+
+        console.log(`Switched to conference: ${conference.name}`);
     };
-    
+
     const archiveConference = async (conferenceId: string): Promise<void> => {
-        const conference = conferences.find(conf => conf.id === conferenceId);
+        const conference = conferences.find((conf) => conf.id === conferenceId);
         if (!conference) {
             throw new Error("Conference not found");
         }
-        
+
         const updatedConference = {
             ...conference,
-            status: 'past' as ConferenceStatus,
+            status: "past" as ConferenceStatus,
             updatedAt: new Date(),
         };
-        
+
         await updateConference(updatedConference);
     };
-    
+
     const getConferencesFromContext = async (): Promise<Conference[]> => {
         // First check if we already have conferences in state
         if (conferences.length > 0) {
             console.log("Using cached conferences:", conferences.length);
             return conferences;
         }
-        
+
         // Otherwise load from storage
         console.log("Loading conferences from storage");
         const storedConferences = await getConferencesFromStorage();
         setConferences(storedConferences);
         return storedConferences;
     };
-    
+
     const hasConferencesInStorage = async (): Promise<boolean> => {
         const storedConferences = await getConferencesFromStorage();
         return storedConferences.length > 0;
@@ -377,11 +396,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         await saveTalk(updatedTalk);
 
         // Update state
-        setTalks((prevTalks) =>
-            prevTalks.map((talk) =>
-                talk.id === updatedTalk.id ? updatedTalk : talk
-            )
-        );
+        setTalks((prevTalks) => prevTalks.map((talk) => (talk.id === updatedTalk.id ? updatedTalk : talk)));
         setActiveTalk(null);
     };
 
@@ -468,9 +483,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
                 playsInSilentModeIOS: true,
             });
 
-            const { recording } = await Audio.Recording.createAsync(
-                Audio.RecordingOptionsPresets.HIGH_QUALITY
-            );
+            const { recording } = await Audio.Recording.createAsync(Audio.RecordingOptionsPresets.HIGH_QUALITY);
 
             setRecording(recording);
             setIsRecording(true);
@@ -518,11 +531,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     };
 
     // Function to create a note with combined content (text, images, audio)
-    const addCombinedNote = async (
-        text: string,
-        images: string[],
-        audioRecordings: string[]
-    ): Promise<Note> => {
+    const addCombinedNote = async (text: string, images: string[], audioRecordings: string[]): Promise<Note> => {
         if (!activeTalk) {
             throw new Error("No active talk to add note to");
         }
@@ -549,11 +558,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         await saveNote(updatedNote);
 
         // Update state
-        setNotes((prevNotes) =>
-            prevNotes.map((note) =>
-                note.id === updatedNote.id ? updatedNote : note
-            )
-        );
+        setNotes((prevNotes) => prevNotes.map((note) => (note.id === updatedNote.id ? updatedNote : note)));
     };
 
     const deleteNoteById = async (noteId: string): Promise<void> => {
@@ -568,60 +573,60 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
             .filter((note) => note.talkId === talkId)
             .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
     };
-    
+
     // Export Functionality
     const exportToPDF = async (conferenceId: string, options: ExportOptions): Promise<string> => {
-        const conference = conferences.find(conf => conf.id === conferenceId);
+        const conference = conferences.find((conf) => conf.id === conferenceId);
         if (!conference) {
             throw new Error("Conference not found");
         }
-        
+
         // Filter talks based on options
-        let conferenceTalks = talks.filter(talk => talk.conferenceId === conferenceId);
+        let conferenceTalks = talks.filter((talk) => talk.conferenceId === conferenceId);
         if (options.includeTalkIds && options.includeTalkIds.length > 0) {
-            conferenceTalks = conferenceTalks.filter(talk => options.includeTalkIds.includes(talk.id));
+            conferenceTalks = conferenceTalks.filter((talk) => options.includeTalkIds.includes(talk.id));
         }
-        
+
         // Get notes for these talks
         const allNotes: Note[] = [];
         for (const talk of conferenceTalks) {
             const talkNotes = getNotesForTalk(talk.id);
             allNotes.push(...talkNotes);
         }
-        
+
         // Generate PDF
         const pdfPath = await generatePDF(conference, conferenceTalks, allNotes, options);
         return pdfPath;
     };
-    
+
     const exportToMarkdown = async (conferenceId: string, options: ExportOptions): Promise<string> => {
-        const conference = conferences.find(conf => conf.id === conferenceId);
+        const conference = conferences.find((conf) => conf.id === conferenceId);
         if (!conference) {
             throw new Error("Conference not found");
         }
-        
+
         // Filter talks based on options
-        let conferenceTalks = talks.filter(talk => talk.conferenceId === conferenceId);
+        let conferenceTalks = talks.filter((talk) => talk.conferenceId === conferenceId);
         if (options.includeTalkIds && options.includeTalkIds.length > 0) {
-            conferenceTalks = conferenceTalks.filter(talk => options.includeTalkIds.includes(talk.id));
+            conferenceTalks = conferenceTalks.filter((talk) => options.includeTalkIds.includes(talk.id));
         }
-        
+
         // Get notes for these talks
         const allNotes: Note[] = [];
         for (const talk of conferenceTalks) {
             const talkNotes = getNotesForTalk(talk.id);
             allNotes.push(...talkNotes);
         }
-        
+
         // Generate Markdown
         const markdownPath = await generateMarkdown(conference, conferenceTalks, allNotes, options);
         return markdownPath;
     };
-    
+
     const saveExportOptionsToContext = async (options: ExportOptions): Promise<void> => {
         await saveExportOptionsToStorage(options);
     };
-    
+
     const getExportOptionsFromContext = async (): Promise<ExportOptions | null> => {
         return await getExportOptionsFromStorage();
     };
@@ -657,7 +662,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         updateNote,
         deleteNote: deleteNoteById,
         getNotesForTalk,
-        
+
         // Export Functionality
         exportToPDF,
         exportToMarkdown,
@@ -669,11 +674,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         isRecording,
     };
 
-    return (
-        <AppContext.Provider value={contextValue}>
-            {children}
-        </AppContext.Provider>
-    );
+    return <AppContext.Provider value={contextValue}>{children}</AppContext.Provider>;
 };
 
 export const useApp = (): AppContextType => {
