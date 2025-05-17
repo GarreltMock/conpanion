@@ -124,31 +124,10 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
                     }
                 }
 
-                // Load talks
+                // Load talks and notes
                 const storedTalks = await getTalks();
                 setTalks(storedTalks);
 
-                // Set active talk (most recent talk that hasn't ended AND belongs to current conference)
-                if (currentConference) {
-                    const activeTalks = storedTalks.filter(
-                        (talk) => !talk.endTime && talk.conferenceId === currentConference.id
-                    );
-
-                    if (activeTalks.length > 0) {
-                        // Sort by start time, most recent first
-                        activeTalks.sort((a, b) => b.startTime.getTime() - a.startTime.getTime());
-                        console.log("Setting active talk:", activeTalks[0].title);
-                        setActiveTalk(activeTalks[0]);
-                    } else {
-                        console.log("No active talks found for the current conference");
-                        setActiveTalk(null);
-                    }
-                } else {
-                    console.log("No current conference, not setting any active talk");
-                    setActiveTalk(null);
-                }
-
-                // Load notes
                 const storedNotes = await getNotes();
                 setNotes(storedNotes);
             } catch (error) {
@@ -160,6 +139,35 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
         initialize();
     }, []);
+
+    // Load active talk when the app starts, conference changes, or app comes into focus
+    useEffect(() => {
+        if (!currentConference) return;
+
+        const loadActiveTalk = async () => {
+            try {
+                // Fetch fresh talks data every time
+                const storedTalks = await getTalks();
+
+                const activeTalks = storedTalks.filter(
+                    (talk) => !talk.endTime && talk.conferenceId === currentConference.id
+                );
+
+                if (activeTalks.length > 0) {
+                    // Sort by start time, most recent first
+                    activeTalks.sort((a, b) => b.startTime.getTime() - a.startTime.getTime());
+                    setActiveTalk(activeTalks[0]);
+                } else {
+                    setActiveTalk(null);
+                }
+            } catch (error) {
+                console.error("Error loading active talk:", error);
+            }
+        };
+
+        // Load active talk immediately for app startup or conference change
+        loadActiveTalk();
+    }, [currentConference]);
 
     // Conference Management
     const loadAllConferences = async () => {
