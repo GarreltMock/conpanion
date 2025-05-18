@@ -1,12 +1,5 @@
 import React, { useState, useEffect } from "react";
-import {
-    View,
-    StyleSheet,
-    TouchableOpacity,
-    Platform,
-    ScrollView,
-    TextInput,
-} from "react-native";
+import { View, StyleSheet, TouchableOpacity, Platform, ScrollView, TextInput } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Calendar } from "react-native-calendars";
 import { useApp } from "../../context/AppContext";
@@ -84,11 +77,7 @@ export default function EditConferenceModal() {
             await updateConference(updatedConference);
             router.back();
         } catch (err) {
-            setError(
-                err instanceof Error
-                    ? err.message
-                    : "Failed to update conference"
-            );
+            setError(err instanceof Error ? err.message : "Failed to update conference");
         } finally {
             setIsSubmitting(false);
         }
@@ -116,9 +105,7 @@ export default function EditConferenceModal() {
                 {/* <ThemedText style={styles.title}>Edit Conference</ThemedText> */}
 
                 <ThemedView style={styles.formSection}>
-                    <ThemedText style={styles.label}>
-                        Conference Name *
-                    </ThemedText>
+                    <ThemedText style={styles.label}>Conference Name *</ThemedText>
                     <TextInput
                         style={[
                             styles.input,
@@ -133,9 +120,7 @@ export default function EditConferenceModal() {
                         placeholderTextColor={placeholderColor}
                     />
 
-                    <ThemedText style={styles.label}>
-                        Location (Optional)
-                    </ThemedText>
+                    <ThemedText style={styles.label}>Location (Optional)</ThemedText>
                     <TextInput
                         style={[
                             styles.input,
@@ -150,9 +135,7 @@ export default function EditConferenceModal() {
                         placeholderTextColor={placeholderColor}
                     />
 
-                    <ThemedText style={styles.label}>
-                        Description (Optional)
-                    </ThemedText>
+                    <ThemedText style={styles.label}>Description (Optional)</ThemedText>
                     <TextInput
                         style={[
                             styles.textArea,
@@ -173,44 +156,29 @@ export default function EditConferenceModal() {
                     <ThemedText style={styles.label}>Date Range *</ThemedText>
 
                     <TouchableOpacity
-                        style={[
-                            styles.dateButton,
-                            { backgroundColor: backgroundColor },
-                        ]}
+                        style={[styles.dateButton, { backgroundColor: backgroundColor }]}
                         onPress={() => {
                             setShowStartCalendar(!showStartCalendar);
                             setShowEndCalendar(false);
                             setShowStatusOptions(false);
                         }}
                     >
-                        <ThemedText>
-                            Start: {formatDisplayDate(startDate)}
-                        </ThemedText>
-                        <Ionicons
-                            name="calendar-outline"
-                            size={20}
-                            color={textColor}
-                        />
+                        <ThemedText>Start: {formatDisplayDate(startDate)}</ThemedText>
+                        <Ionicons name="calendar-outline" size={20} color={textColor} />
                     </TouchableOpacity>
 
                     {showStartCalendar && (
                         <View style={styles.calendarContainer}>
                             <Calendar
-                                onDayPress={(day) => {
-                                    const selectedDate = new Date(
-                                        day.timestamp
-                                    );
+                                onDayPress={(day: any) => {
+                                    const selectedDate = new Date(day.timestamp);
                                     setStartDate(selectedDate);
 
                                     // If end date is before start date, adjust it
                                     if (endDate < selectedDate) {
                                         // Set end date to start date + 1 day
-                                        const newEndDate = new Date(
-                                            selectedDate
-                                        );
-                                        newEndDate.setDate(
-                                            newEndDate.getDate() + 1
-                                        );
+                                        const newEndDate = new Date(selectedDate);
+                                        newEndDate.setDate(newEndDate.getDate() + 1);
                                         setEndDate(newEndDate);
                                     }
 
@@ -232,31 +200,22 @@ export default function EditConferenceModal() {
                     )}
 
                     <TouchableOpacity
-                        style={[
-                            styles.dateButton,
-                            { backgroundColor: backgroundColor },
-                        ]}
+                        style={[styles.dateButton, { backgroundColor: backgroundColor }]}
                         onPress={() => {
                             setShowEndCalendar(!showEndCalendar);
                             setShowStartCalendar(false);
                             setShowStatusOptions(false);
                         }}
                     >
-                        <ThemedText>
-                            End: {formatDisplayDate(endDate)}
-                        </ThemedText>
-                        <Ionicons
-                            name="calendar-outline"
-                            size={20}
-                            color={textColor}
-                        />
+                        <ThemedText>End: {formatDisplayDate(endDate)}</ThemedText>
+                        <Ionicons name="calendar-outline" size={20} color={textColor} />
                     </TouchableOpacity>
 
                     {showEndCalendar && (
                         <View style={styles.calendarContainer}>
                             <Calendar
                                 minDate={formatCalendarDate(startDate)}
-                                onDayPress={(day) => {
+                                onDayPress={(day: any) => {
                                     setEndDate(new Date(day.timestamp));
                                     setShowEndCalendar(false);
                                 }}
@@ -277,10 +236,7 @@ export default function EditConferenceModal() {
 
                     <ThemedText style={styles.label}>Status</ThemedText>
                     <TouchableOpacity
-                        style={[
-                            styles.dateButton,
-                            { backgroundColor: backgroundColor },
-                        ]}
+                        style={[styles.dateButton, { backgroundColor: backgroundColor }]}
                         onPress={() => {
                             setShowStatusOptions(!showStatusOptions);
                             setShowStartCalendar(false);
@@ -288,22 +244,12 @@ export default function EditConferenceModal() {
                         }}
                     >
                         <ThemedText>{getStatusLabel(status)}</ThemedText>
-                        <Ionicons
-                            name="chevron-down-outline"
-                            size={20}
-                            color={textColor}
-                        />
+                        <Ionicons name="chevron-down-outline" size={20} color={textColor} />
                     </TouchableOpacity>
 
                     {showStatusOptions && (
                         <View style={styles.statusOptionsContainer}>
-                            {(
-                                [
-                                    "active",
-                                    "upcoming",
-                                    "past",
-                                ] as ConferenceStatus[]
-                            ).map((statusOption) => (
+                            {(["active", "upcoming", "past"] as ConferenceStatus[]).map((statusOption) => (
                                 <TouchableOpacity
                                     key={statusOption}
                                     style={[
@@ -321,22 +267,14 @@ export default function EditConferenceModal() {
                                         {getStatusLabel(statusOption)}
                                     </ThemedText>
                                     {status === statusOption && (
-                                        <Ionicons
-                                            name="checkmark"
-                                            size={20}
-                                            color={tintColor}
-                                        />
+                                        <Ionicons name="checkmark" size={20} color={tintColor} />
                                     )}
                                 </TouchableOpacity>
                             ))}
                         </View>
                     )}
 
-                    {error ? (
-                        <ThemedText style={styles.errorText}>
-                            {error}
-                        </ThemedText>
-                    ) : null}
+                    {error ? <ThemedText style={styles.errorText}>{error}</ThemedText> : null}
 
                     <View style={styles.buttonRow}>
                         <TouchableOpacity
@@ -344,9 +282,7 @@ export default function EditConferenceModal() {
                             onPress={handleCancel}
                             disabled={isSubmitting}
                         >
-                            <ThemedText style={styles.cancelButtonText}>
-                                Cancel
-                            </ThemedText>
+                            <ThemedText style={styles.cancelButtonText}>Cancel</ThemedText>
                         </TouchableOpacity>
 
                         <TouchableOpacity
