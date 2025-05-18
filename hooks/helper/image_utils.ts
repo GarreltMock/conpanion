@@ -1,7 +1,5 @@
 import * as FileSystem from "expo-file-system";
-import { Image } from "react-native";
 import * as ImageManipulator from "expo-image-manipulator";
-import atob from "atob";
 import btoa from "btoa";
 
 /**
@@ -9,43 +7,8 @@ import btoa from "btoa";
  * @param uri Path to the image file
  * @returns Promise that resolves to ImageData object
  */
-export async function imageUriToImageData(uri: string): Promise<ImageData> {
-    // First, get the image dimensions
-    const imageSize = await getImageSize(uri);
-
-    // Create a temporary file with base64 encoding to get raw data
-    const base64Data = await FileSystem.readAsStringAsync(uri, { encoding: FileSystem.EncodingType.Base64 });
-
-    // Decode base64 data to binary
-    const binaryData = atob(base64Data);
-
-    // Create Uint8ClampedArray from binary data
-    const uint8Array = new Uint8ClampedArray(binaryData.length);
-    for (let i = 0; i < binaryData.length; i++) {
-        uint8Array[i] = binaryData.charCodeAt(i);
-    }
-
-    // Create and return ImageData object
-    return new ImageData(uint8Array, imageSize.width, imageSize.height);
-}
-
-/**
- * Gets the dimensions of an image
- * @param uri Path to the image
- * @returns Promise resolving to width and height
- */
-function getImageSize(uri: string): Promise<{ width: number; height: number }> {
-    return new Promise((resolve, reject) => {
-        Image.getSize(
-            uri,
-            (width, height) => {
-                resolve({ width, height });
-            },
-            (error) => {
-                reject(new Error(`Failed to get image size: ${error}`));
-            }
-        );
-    });
+export async function imageUriToImageData(uri: string): Promise<string> {
+    return await FileSystem.readAsStringAsync(uri, { encoding: FileSystem.EncodingType.Base64 });
 }
 
 /**

@@ -1,6 +1,6 @@
 import { InferenceSession, Tensor } from "onnxruntime-react-native";
-import * as cv from "react-native-opencv";
 import * as FileSystem from "expo-file-system";
+import * as nativeOpenCV from "@/native-modules/opencv";
 
 export type Point = [number, number];
 export type Polygon = Point[];
@@ -35,12 +35,12 @@ async function getSession(modelName: string): Promise<Session> {
 const pointModel = "model_point.onnx";
 const heatmapModel = "model_heat.onnx";
 
-export async function processImage(imageData: ImageData): Promise<{ polygon: Polygon | null; type: number }> {
+export async function processImage(imageBase64: string): Promise<{ polygon: Polygon | null; type: number }> {
     let type = 0;
-    let polygon: Polygon | null = await callHeatmapModel(imageData);
+    let polygon: Polygon | null = await callHeatmapModel(imageBase64);
 
     if (polygon.length !== 4) {
-        polygon = await callPointModel(imageData);
+        polygon = await callPointModel(imageBase64);
         type = 1;
 
         if (polygon.length !== 4) {
@@ -52,8 +52,8 @@ export async function processImage(imageData: ImageData): Promise<{ polygon: Pol
     return { polygon, type };
 }
 
-async function callHeatmapModel(imageData: ImageData): Promise<Polygon> {
-    const { data, originalSize } = await preprocess(imageData);
+async function callHeatmapModel(imageBase64: string): Promise<Polygon> {
+    const { data, originalSize } = await preprocess(imageBase64);
 
     const session = await getSession(heatmapModel);
     const tensor = new Tensor("float32", data, [1, 3, 256, 256]);
@@ -63,8 +63,8 @@ async function callHeatmapModel(imageData: ImageData): Promise<Polygon> {
     return postprocessHeatmap(results.heatmap as Tensor, originalSize);
 }
 
-async function callPointModel(imageData: ImageData): Promise<Polygon> {
-    const { data, originalSize } = await preprocess(imageData);
+async function callPointModel(imageBase64: string): Promise<Polygon> {
+    const { data, originalSize } = await preprocess(imageBase64);
 
     const session = await getSession(pointModel);
     const tensor = new Tensor("float32", data, [1, 3, 256, 256]);
@@ -77,38 +77,10 @@ async function callPointModel(imageData: ImageData): Promise<Polygon> {
     ]);
 }
 
-async function preprocess(imageData: ImageData): Promise<PreprocessResult> {
-    // OpenCV: Load image data into a matrix
-    const src = await cv.matFromImageData(imageData);
-    const originalSize = { width: src.cols, height: src.rows };
-
-    // Scale image to 256x256
-    const imgSizeInfer = new cv.Size(256, 256);
-    const resized = new cv.Mat();
-    await cv.resize(src, resized, imgSizeInfer, 0, 0, cv.INTER_LINEAR);
-
-    // Normalization and conversion to Float32Array
-    const input = new cv.Mat();
-    await resized.convertTo(input, cv.CV_32FC3, 1.0 / 255.0);
-    const inputData: Float32Array = await input.data32F();
-
-    // Rearrange channels from HWC to CHW
-    const [C, H, W] = [3, 256, 256];
-    const chwData = new Float32Array(C * H * W);
-    for (let c = 0; c < C; c++) {
-        for (let h = 0; h < H; h++) {
-            for (let w = 0; w < W; w++) {
-                chwData[c * H * W + h * W + w] = inputData[h * W * 4 + w * 4 + c];
-            }
-        }
-    }
-
-    // Clean up resources
-    await src.delete();
-    await resized.delete();
-    await input.delete();
-
-    return { data: chwData, originalSize };
+async function preprocess(imageBase64: string): Promise<PreprocessResult> {
+    // Directly call nativeOpenCV.preprocess with base64 string
+    const result = await nativeOpenCV.preprocess(imageBase64);
+    return result;
 }
 
 function postprocessPoint(pointsTensor: CustomTensor, hasObjTensor: CustomTensor, imgSize: [number, number]): Polygon {
@@ -138,64 +110,5 @@ function postprocessPoint(pointsTensor: CustomTensor, hasObjTensor: CustomTensor
 }
 
 async function postprocessHeatmap(heatmap: Tensor, originalSize: { width: number; height: number }): Promise<Polygon> {
-    const [batch, channels, height, width] = heatmap.dims;
-    const outputData = heatmap.data;
-    const heatmapThreshold = 0.3;
-    const polygon: Polygon = [];
-
-    for (let c = 0; c < channels; c++) {
-        const start = c * height * width;
-        const end = (c + 1) * height * width;
-        const channelData = outputData.slice(start, end);
-
-        const mat = new cv.Mat(height, width, cv.CV_32F);
-        await mat.setData32F(channelData);
-
-        const resized = new cv.Mat();
-        await cv.resize(mat, resized, new cv.Size(originalSize.width, originalSize.height), 0, 0, cv.INTER_LINEAR);
-
-        // Thresholding
-        const thresh = new cv.Mat();
-        await cv.threshold(resized, thresh, heatmapThreshold, 1.0, cv.THRESH_BINARY);
-
-        const binary = new cv.Mat();
-        await thresh.convertTo(binary, cv.CV_8U, 255);
-
-        // Find contours
-        const contours = new cv.MatVector();
-        const hierarchy = new cv.Mat();
-        await cv.findContours(binary, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
-
-        let maxArea = 0;
-        let maxContour: any = null;
-        for (let i = 0; i < (await contours.size()); i++) {
-            const contour = await contours.get(i);
-
-            const area = await cv.contourArea(contour);
-            if (area > maxArea) {
-                maxArea = area;
-                maxContour = contour;
-            } else {
-                await contour.delete();
-            }
-        }
-
-        if (maxContour) {
-            const moments = await cv.moments(maxContour);
-            const cx = moments.m10 / moments.m00;
-            const cy = moments.m01 / moments.m00;
-
-            polygon.push([cx, cy]);
-        }
-
-        // Free memory
-        await mat.delete();
-        await resized.delete();
-        await thresh.delete();
-        await binary.delete();
-        await contours.delete();
-        await hierarchy.delete();
-    }
-
-    return polygon;
+    return await nativeOpenCV.postprocessHeatmap(heatmap.data as Float32Array, originalSize);
 }
