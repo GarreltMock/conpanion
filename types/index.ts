@@ -35,3 +35,11 @@ export interface ExportOptions {
     includeTalkIds: string[];
     filename: string;
 }
+
+export type { Point, Polygon } from '../hooks/helper/docaligner';
+
+export interface TransformedImage {
+    uri: string;
+    width: number;
+    height: number;
+}
