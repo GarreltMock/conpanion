@@ -8,4 +8,14 @@
 
 @interface RNOpenCvLibrary : NSObject <RCTBridgeModule>
 
+// Add these declarations for clarity
+- (void)preprocess:(NSString *)imageAsBase64 callback:(RCTResponseSenderBlock)callback;
+- (void)postprocessHeatmap:(NSString *)heatmapBase64
+            originalWidth:(nonnull NSNumber *)width
+           originalHeight:(nonnull NSNumber *)height
+                 callback:(RCTResponseSenderBlock)callback;
+- (void)transformImage:(NSString *)imageAsBase64
+               corners:(NSArray *)corners
+              callback:(RCTResponseSenderBlock)callback;
+
 @end

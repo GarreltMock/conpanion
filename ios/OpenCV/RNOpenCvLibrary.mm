@@ -117,6 +117,68 @@ RCT_EXPORT_METHOD(postprocessHeatmap:(NSString *)heatmapBase64
   callback(@[[NSNull null], polygon]);
 }
 
+RCT_EXPORT_METHOD(transformImage:(NSString *)imageAsBase64
+                  corners:(NSArray *)corners
+                  callback:(RCTResponseSenderBlock)callback)
+{
+  // Decode image
+  UIImage* image = [self decodeBase64ToImage:imageAsBase64];
+  if (!image || ![corners isKindOfClass:[NSArray class]] || [corners count] != 4) {
+    callback(@[@"Invalid input", [NSNull null]]);
+    return;
+  }
+
+  cv::Mat src;
+  UIImageToMat(image, src);
+
+  // Prepare source points from corners
+  std::vector<cv::Point2f> srcPts;
+  for (int i = 0; i < 4; ++i) {
+    NSArray *pt = corners[i];
+    if (![pt isKindOfClass:[NSArray class]] || [pt count] != 2) {
+      callback(@[@"Invalid corner format", [NSNull null]]);
+      return;
+    }
+    float x = [pt[0] floatValue];
+    float y = [pt[1] floatValue];
+    srcPts.push_back(cv::Point2f(x, y));
+  }
+
+  // Compute width and height
+  auto distance = [](cv::Point2f a, cv::Point2f b) {
+    return std::sqrt((a.x - b.x)*(a.x - b.x) + (a.y - b.y)*(a.y - b.y));
+  };
+  float heightLeft = distance(srcPts[0], srcPts[3]);
+  float heightRight = distance(srcPts[1], srcPts[2]);
+  float height = std::min(heightLeft, heightRight);
+  float ratio = 16.0f / 9.0f;
+  float width = height * ratio;
+
+  std::vector<cv::Point2f> dstPts = {
+    cv::Point2f(0, 0),
+    cv::Point2f(width, 0),
+    cv::Point2f(width, height),
+    cv::Point2f(0, height)
+  };
+
+  cv::Mat M = cv::getPerspectiveTransform(srcPts, dstPts);
+  cv::Mat dst;
+  cv::warpPerspective(src, dst, M, cv::Size((int)width, (int)height), cv::INTER_LINEAR, cv::BORDER_CONSTANT);
+
+  // Encode result to PNG base64
+  std::vector<uchar> buf;
+  cv::imencode(".png", dst, buf);
+  NSData *imgData = [NSData dataWithBytes:buf.data() length:buf.size()];
+  NSString *base64 = [imgData base64EncodedStringWithOptions:0];
+
+  NSDictionary *result = @{
+    @"data": base64,
+    @"width": @((int)width),
+    @"height": @((int)height)
+  };
+  callback(@[[NSNull null], result]);
+}
+
 - (cv::Mat)convertUIImageToCVMat:(UIImage *)image {
   CGColorSpaceRef colorSpace = CGImageGetColorSpace(image.CGImage);
   CGFloat cols = image.size.width;

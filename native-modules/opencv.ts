@@ -33,3 +33,15 @@ export async function postprocessHeatmap(
         );
     });
 }
+
+export async function transformImage(
+    imageAsBase64: string,
+    corners: number[][]
+): Promise<{ data: string; width: number; height: number }> {
+    return new Promise((resolve, reject) => {
+        RNOpenCvLibrary.transformImage(imageAsBase64, corners, (err: any, res: any) => {
+            if (err) return reject(err);
+            resolve(res);
+        });
+    });
+}

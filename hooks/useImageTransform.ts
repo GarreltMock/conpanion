@@ -74,7 +74,11 @@ export function useImageTransform() {
                     const transformed = await transformImage(imageData, result.polygon);
 
                     // Convert back to URI
-                    const transformedUri = await imageDataToUriRN(transformed.img);
+                    const transformedUri = await imageDataToUriRN(
+                        transformed.img,
+                        transformed.width,
+                        transformed.height
+                    );
 
                     return {
                         corners: result.polygon,
@@ -121,7 +125,7 @@ export function useImageTransform() {
                 const transformed = await transformImage(imageData, corners);
 
                 // Convert back to URI
-                const transformedUri = await imageDataToUriRN(transformed.img);
+                const transformedUri = await imageDataToUriRN(transformed.img, transformed.width, transformed.height);
 
                 return {
                     uri: transformedUri,
