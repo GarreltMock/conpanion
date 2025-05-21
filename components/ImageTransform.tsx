@@ -1,10 +1,10 @@
 import React, { useState } from "react";
-import { View, Image, Button, ActivityIndicator, StyleSheet, Text, TouchableOpacity } from "react-native";
+import { View, Image, ActivityIndicator, StyleSheet, TouchableOpacity } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { useImageTransform } from "../hooks/useImageTransform";
 import { Polygon, TransformedImage } from "../types";
-import ThemedView from "./ThemedView";
-import ThemedText from "./ThemedText";
+import { ThemedView } from "./ThemedView";
+import { ThemedText } from "./ThemedText";
 
 interface ImageTransformProps {
     onImageTransformed?: (transformedImage: TransformedImage) => void;

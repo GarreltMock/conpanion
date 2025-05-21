@@ -32,7 +32,7 @@ export function useImageTransform() {
                     if (!fileInfo.exists) {
                         // Copy from asset bundle - you'll need to adjust this path based on where you place the models
                         await FileSystem.copyAsync({
-                            from: `${FileSystem.bundleDirectory}assets/models/${file}`,
+                            from: `${FileSystem.bundleDirectory}/${file}`,
                             to: fileUri,
                         });
                     }

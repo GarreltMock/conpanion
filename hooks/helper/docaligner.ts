@@ -22,6 +22,8 @@ interface Session {
 }
 
 const sessions: Map<string, Promise<Session>> = new Map();
+const pointModel = "model_point.onnx";
+const heatmapModel = "model_heat.onnx";
 
 async function getSession(modelName: string): Promise<Session> {
     if (!sessions.has(modelName)) {
@@ -31,9 +33,6 @@ async function getSession(modelName: string): Promise<Session> {
     }
     return sessions.get(modelName)!;
 }
-
-const pointModel = "model_point.onnx";
-const heatmapModel = "model_heat.onnx";
 
 export async function processImage(imageBase64: string): Promise<{ polygon: Polygon | null; type: number }> {
     let type = 0;
@@ -48,6 +47,9 @@ export async function processImage(imageBase64: string): Promise<{ polygon: Poly
             type = 2;
         }
     }
+
+    console.log("Polygon:", polygon);
+    console.log("Type:", type);
 
     return { polygon, type };
 }

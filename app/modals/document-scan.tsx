@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { View, StyleSheet, ScrollView, Platform } from "react-native";
-import { useNavigation, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import * as FileSystem from "expo-file-system";
 import { ThemedView } from "@/components/ThemedView";
@@ -10,7 +10,6 @@ import { TransformedImage } from "@/types";
 import * as Haptics from "expo-haptics";
 
 export default function DocumentScanScreen() {
-    const navigation = useNavigation();
     const router = useRouter();
     const [transformedImage, setTransformedImage] = useState<TransformedImage | null>(null);
 

@@ -79,9 +79,12 @@ export default function ConferencesScreen() {
 
     const handleExportConference = (conference: Conference) => {
         router.push({
-            pathname: "/modals/export-options",
-            params: { id: conference.id },
+            pathname: "/modals/document-scan",
         });
+        // router.push({
+        //     pathname: "/modals/export-options",
+        //     params: { id: conference.id },
+        // });
     };
 
     const handleDeleteConference = (conference: Conference) => {

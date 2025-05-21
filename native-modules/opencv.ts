@@ -10,7 +10,7 @@ export async function preprocess(
     return new Promise((resolve, reject) => {
         RNOpenCvLibrary.preprocess(imageAsBase64, (err: any, res: any) => {
             if (err) return reject(err);
-            const floatArray = new Float32Array(Buffer.from(res.data, "base64").buffer);
+            const floatArray = new Float32Array(Uint8Array.from(atob(res.data), (c) => c.charCodeAt(0)).buffer);
             resolve({ data: floatArray, originalSize: res.originalSize });
         });
     });
@@ -21,7 +21,12 @@ export async function postprocessHeatmap(
     originalSize: { width: number; height: number }
 ): Promise<Polygon> {
     return new Promise((resolve, reject) => {
-        const base64 = Buffer.from(heatmap.buffer).toString("base64");
+        // Convert Float32Array to Uint8Array, then to base64 string
+        const uint8Array = new Uint8Array(heatmap.buffer);
+        const binary = Array.from(uint8Array)
+            .map((byte) => String.fromCharCode(byte))
+            .join("");
+        const base64 = global.btoa(binary);
         RNOpenCvLibrary.postprocessHeatmap(
             base64,
             originalSize.width,
