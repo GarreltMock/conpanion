@@ -15,7 +15,7 @@ RCT_EXPORT_MODULE()
 RCT_EXPORT_METHOD(preprocess:(NSString *)imageAsBase64
                   callback:(RCTResponseSenderBlock)callback)
 {
-  UIImage* image = [self decodeBase64ToImage:imageAsBase64];
+  UIImage* image = [self decodeAndNormalizeBase64Image:imageAsBase64];
   if (!image) {
     callback(@[@"Invalid image", [NSNull null]]);
     return;
@@ -105,7 +105,7 @@ RCT_EXPORT_METHOD(transformImage:(NSString *)imageAsBase64
                   callback:(RCTResponseSenderBlock)callback)
 {
   // Decode image
-  UIImage* image = [self decodeBase64ToImage:imageAsBase64];
+  UIImage* image = [self decodeAndNormalizeBase64Image:imageAsBase64];
   if (!image || ![corners isKindOfClass:[NSArray class]] || [corners count] != 4) {
     callback(@[@"Invalid input", [NSNull null]]);
     return;
@@ -148,9 +148,13 @@ RCT_EXPORT_METHOD(transformImage:(NSString *)imageAsBase64
   cv::Mat dst;
   cv::warpPerspective(src, dst, M, cv::Size((int)width, (int)height), cv::INTER_LINEAR, cv::BORDER_CONSTANT);
 
+  // Convert BGR to RGB before encoding
+  cv::Mat dst_rgb;
+  cv::cvtColor(dst, dst_rgb, cv::COLOR_BGR2RGB);
+
   // Encode result to PNG base64
   std::vector<uchar> buf;
-  cv::imencode(".png", dst, buf);
+  cv::imencode(".png", dst_rgb, buf);
   NSData *imgData = [NSData dataWithBytes:buf.data() length:buf.size()];
   NSString *base64 = [imgData base64EncodedStringWithOptions:0];
 
@@ -162,31 +166,17 @@ RCT_EXPORT_METHOD(transformImage:(NSString *)imageAsBase64
   callback(@[[NSNull null], result]);
 }
 
-- (cv::Mat)convertUIImageToCVMat:(UIImage *)image {
-  CGColorSpaceRef colorSpace = CGImageGetColorSpace(image.CGImage);
-  CGFloat cols = image.size.width;
-  CGFloat rows = image.size.height;
-
-  cv::Mat cvMat(rows, cols, CV_8UC4); // 8 bits per component, 4 channels (color channels + alpha)
-
-  CGContextRef contextRef = CGBitmapContextCreate(cvMat.data,                 // Pointer to  data
-                                                  cols,                       // Width of bitmap
-                                                  rows,                       // Height of bitmap
-                                                  8,                          // Bits per component
-                                                  cvMat.step[0],              // Bytes per row
-                                                  colorSpace,                 // Colorspace
-                                                  kCGImageAlphaNoneSkipLast |
-                                                  kCGBitmapByteOrderDefault); // Bitmap info flags
-
-  CGContextDrawImage(contextRef, CGRectMake(0, 0, cols, rows), image.CGImage);
-  CGContextRelease(contextRef);
-
-  return cvMat;
-}
-
-- (UIImage *)decodeBase64ToImage:(NSString *)strEncodeData {
+- (UIImage *)decodeAndNormalizeBase64Image:(NSString *)strEncodeData {
   NSData *data = [[NSData alloc]initWithBase64EncodedString:strEncodeData options:NSDataBase64DecodingIgnoreUnknownCharacters];
-  return [UIImage imageWithData:data];
+  UIImage *image = [UIImage imageWithData:data];
+  if (!image) return nil;
+  if (image.imageOrientation == UIImageOrientationUp) return image;
+
+  UIGraphicsBeginImageContextWithOptions(image.size, NO, image.scale);
+  [image drawInRect:CGRectMake(0, 0, image.size.width, image.size.height)];
+  UIImage *normalizedImage = UIGraphicsGetImageFromCurrentImageContext();
+  UIGraphicsEndImageContext();
+  return normalizedImage;
 }
 
 @end

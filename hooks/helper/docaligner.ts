@@ -48,8 +48,7 @@ export async function processImage(imageBase64: string): Promise<{ polygon: Poly
         }
     }
 
-    console.log("Polygon:", polygon);
-    console.log("Type:", type);
+    console.log(`Type: ${type}, Polygon: ${JSON.stringify(polygon)}`);
 
     return { polygon, type };
 }

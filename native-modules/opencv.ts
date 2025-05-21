@@ -21,7 +21,6 @@ export async function postprocessHeatmap(
     originalSize: { width: number; height: number }
 ): Promise<Polygon> {
     return new Promise((resolve, reject) => {
-        // Convert Float32Array to Uint8Array, then to base64 string
         const uint8Array = new Uint8Array(heatmap.buffer);
         const binary = Array.from(uint8Array)
             .map((byte) => String.fromCharCode(byte))
