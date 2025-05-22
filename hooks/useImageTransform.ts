@@ -1,8 +1,9 @@
 import { useEffect, useState, useCallback } from "react";
 import * as FileSystem from "expo-file-system";
-import { processImage, Polygon } from "./helper/docaligner";
+import { processImage } from "./helper/docaligner";
 import { transformImage } from "./helper/transform_image";
 import { imageUriToImageData, imageDataToUriRN } from "./helper/image_utils";
+import { Polygon } from "@/types";
 
 export function useImageTransform() {
     const [isInitialized, setIsInitialized] = useState(false);

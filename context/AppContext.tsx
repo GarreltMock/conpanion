@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
 import * as ImagePicker from "expo-image-picker";
 import { Audio } from "expo-av";
-import { Conference, Talk, Note, ExportOptions, ConferenceStatus } from "../types";
+import { Conference, Talk, Note, ExportOptions, ConferenceStatus, NoteImage } from "../types";
 import {
     getTalks,
     getNotes,
@@ -67,7 +67,7 @@ interface AppContextType {
     addImageNote: (fromGallery: boolean) => Promise<string>; // Returns image URI instead of creating note
     addAudioNote: () => Promise<Note | null>;
     stopAudioRecording: () => Promise<string | null>; // Returns audio URI instead of creating note
-    addCombinedNote: (text: string, images: string[], audioRecordings: string[]) => Promise<Note>;
+    addCombinedNote: (text: string, images: NoteImage[], audioRecordings: string[]) => Promise<Note>;
     updateNote: (note: Note) => Promise<void>;
     deleteNote: (noteId: string) => Promise<void>;
     getNotesForTalk: (talkId: string) => Note[];
@@ -554,7 +554,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     };
 
     // Function to create a note with combined content (text, images, audio)
-    const addCombinedNote = async (text: string, images: string[], audioRecordings: string[]): Promise<Note> => {
+    const addCombinedNote = async (text: string, images: NoteImage[], audioRecordings: string[]): Promise<Note> => {
         if (!activeTalk) {
             throw new Error("No active talk to add note to");
         }

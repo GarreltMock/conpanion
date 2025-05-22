@@ -8,7 +8,7 @@ import { TalkHeader } from "@/components/note/TalkHeader";
 import { NoteInput } from "@/components/note/NoteInput";
 import { NoteItem } from "@/components/note/NoteItem";
 import { useApp } from "@/context/AppContext";
-import { Note } from "@/types";
+import { Note, NoteImage } from "@/types";
 
 export default function NotesScreen() {
     const {
@@ -43,7 +43,7 @@ export default function NotesScreen() {
     };
 
     // Handle combined note submission (text, images, audio)
-    const handleSubmitNote = async (text: string, images: string[], audioRecordings: string[]) => {
+    const handleSubmitNote = async (text: string, images: NoteImage[], audioRecordings: string[]) => {
         if (!text.trim() && images.length === 0 && audioRecordings.length === 0) return;
         await addCombinedNote(text, images, audioRecordings);
     };

@@ -20,11 +20,17 @@ export interface Talk {
     endTime?: Date;
 }
 
+export interface NoteImage {
+    uri: string;
+    originalUri?: string; // Set only for transformed images
+    corners?: Polygon; // Set only for transformed images
+}
+
 export interface Note {
     id: string;
     talkId: string;
     textContent: string;
-    images: string[];
+    images: NoteImage[];
     audioRecordings: string[];
     timestamp: Date;
 }
@@ -36,7 +42,8 @@ export interface ExportOptions {
     filename: string;
 }
 
-export type { Point, Polygon } from '../hooks/helper/docaligner';
+export type Point = [number, number];
+export type Polygon = Point[];
 
 export interface TransformedImage {
     uri: string;

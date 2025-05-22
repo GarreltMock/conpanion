@@ -1,13 +1,5 @@
 import React, { useState } from "react";
-import {
-    View,
-    StyleSheet,
-    Image,
-    TouchableOpacity,
-    ScrollView,
-    Alert,
-    Pressable,
-} from "react-native";
+import { View, StyleSheet, Image, TouchableOpacity, ScrollView, Alert, Pressable } from "react-native";
 import { Audio } from "expo-av";
 import { router } from "expo-router";
 import { format } from "date-fns";
@@ -15,7 +7,7 @@ import { format } from "date-fns";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { IconSymbol } from "@/components/ui/IconSymbol";
-import { Note } from "@/types";
+import { Note, NoteImage } from "@/types";
 import { useThemeColor } from "@/hooks/useThemeColor";
 
 interface NoteItemProps {
@@ -24,11 +16,7 @@ interface NoteItemProps {
     readOnly?: boolean;
 }
 
-export const NoteItem: React.FC<NoteItemProps> = ({
-    note,
-    onDelete,
-    readOnly = false,
-}) => {
+export const NoteItem: React.FC<NoteItemProps> = ({ note, onDelete, readOnly = false }) => {
     const [sound, setSound] = useState<Audio.Sound | null>(null);
     const [isPlaying, setIsPlaying] = useState<boolean>(false);
     const [playingIndex, setPlayingIndex] = useState<number | null>(null);
@@ -52,10 +40,7 @@ export const NoteItem: React.FC<NoteItemProps> = ({
         }
 
         try {
-            const { sound: newSound } = await Audio.Sound.createAsync(
-                { uri },
-                { shouldPlay: true }
-            );
+            const { sound: newSound } = await Audio.Sound.createAsync({ uri }, { shouldPlay: true });
 
             setSound(newSound);
             setIsPlaying(true);
@@ -86,34 +71,25 @@ export const NoteItem: React.FC<NoteItemProps> = ({
     const handleDeleteNote = () => {
         if (!onDelete) return;
 
-        Alert.alert(
-            "Delete Note",
-            "Are you sure you want to delete this note?",
-            [
-                { text: "Cancel", style: "cancel" },
-                {
-                    text: "Delete",
-                    style: "destructive",
-                    onPress: () => onDelete(note.id),
-                },
-            ]
-        );
+        Alert.alert("Delete Note", "Are you sure you want to delete this note?", [
+            { text: "Cancel", style: "cancel" },
+            {
+                text: "Delete",
+                style: "destructive",
+                onPress: () => onDelete(note.id),
+            },
+        ]);
     };
 
     return (
         <ThemedView style={styles.container}>
             <View style={styles.header}>
-                <ThemedText style={styles.timestamp}>
-                    {format(note.timestamp, "h:mm a")}
-                </ThemedText>
+                <ThemedText style={styles.timestamp}>{format(note.timestamp, "h:mm a")}</ThemedText>
 
                 {!readOnly && (
                     <View style={styles.actionsContainer}>
                         <Pressable
-                            style={({ pressed }) => [
-                                styles.actionButton,
-                                pressed && styles.buttonPressed,
-                            ]}
+                            style={({ pressed }) => [styles.actionButton, pressed && styles.buttonPressed]}
                             onPress={handleEditNote}
                         >
                             <IconSymbol
@@ -125,10 +101,7 @@ export const NoteItem: React.FC<NoteItemProps> = ({
                         </Pressable>
 
                         <Pressable
-                            style={({ pressed }) => [
-                                styles.actionButton,
-                                pressed && styles.buttonPressed,
-                            ]}
+                            style={({ pressed }) => [styles.actionButton, pressed && styles.buttonPressed]}
                             onPress={handleDeleteNote}
                         >
                             <IconSymbol
@@ -143,29 +116,35 @@ export const NoteItem: React.FC<NoteItemProps> = ({
             </View>
 
             {note.images.length > 0 && (
-                <ScrollView
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    style={styles.imagesContainer}
-                >
-                    {note.images.map((imageUri, index) => (
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.imagesContainer}>
+                    {note.images.map((image, index) => (
                         <TouchableOpacity
                             key={`image-${index}`}
                             activeOpacity={0.9}
                             onPress={() => {
+                                // Pass both the primary image and original if available
+                                const params: any = {
+                                    imageUri: encodeURIComponent(image.uri),
+                                };
+
+                                // If this is a transformed image with original and corners
+                                if (image.originalUri && image.corners) {
+                                    params.originalUri = encodeURIComponent(image.originalUri);
+                                    params.hasCorners = "true";
+                                }
+
                                 router.push({
                                     pathname: "/modals/image-view",
-                                    params: {
-                                        imageUri: encodeURIComponent(imageUri),
-                                    },
+                                    params,
                                 });
                             }}
                         >
-                            <Image
-                                source={{ uri: imageUri }}
-                                style={styles.image}
-                                resizeMode="cover"
-                            />
+                            <Image source={{ uri: image.uri }} style={styles.image} resizeMode="cover" />
+                            {image.originalUri && (
+                                <View style={styles.transformedIndicator}>
+                                    <IconSymbol name="wand.and.stars" size={12} color="#fff" />
+                                </View>
+                            )}
                         </TouchableOpacity>
                     ))}
                 </ScrollView>
@@ -176,38 +155,20 @@ export const NoteItem: React.FC<NoteItemProps> = ({
                     {note.audioRecordings.map((audioUri, index) => (
                         <Pressable
                             key={`audio-${index}`}
-                            style={({ pressed }) => [
-                                styles.audioPlayer,
-                                pressed && styles.buttonPressed,
-                            ]}
-                            onPress={() =>
-                                handlePlayPauseAudio(audioUri, index)
-                            }
+                            style={({ pressed }) => [styles.audioPlayer, pressed && styles.buttonPressed]}
+                            onPress={() => handlePlayPauseAudio(audioUri, index)}
                         >
-                            <View
-                                style={[
-                                    styles.playButton,
-                                    { backgroundColor: tintColor },
-                                ]}
-                            >
+                            <View style={[styles.playButton, { backgroundColor: tintColor }]}>
                                 <IconSymbol
-                                    name={
-                                        isPlaying && playingIndex === index
-                                            ? "pause.fill"
-                                            : "play.fill"
-                                    }
+                                    name={isPlaying && playingIndex === index ? "pause.fill" : "play.fill"}
                                     size={14}
                                     color="#fff"
                                 />
                             </View>
-                            <ThemedText style={styles.audioLabel}>
-                                Audio Recording {index + 1}
-                            </ThemedText>
+                            <ThemedText style={styles.audioLabel}>Audio Recording {index + 1}</ThemedText>
                             {isPlaying && playingIndex === index && (
                                 <View style={styles.playingIndicator}>
-                                    <ThemedText style={{ color: tintColor }}>
-                                        Playing
-                                    </ThemedText>
+                                    <ThemedText style={{ color: tintColor }}>Playing</ThemedText>
                                 </View>
                             )}
                         </Pressable>
@@ -217,9 +178,7 @@ export const NoteItem: React.FC<NoteItemProps> = ({
 
             {note.textContent.trim() !== "" && (
                 <View style={styles.textContainer}>
-                    <ThemedText style={styles.textContent}>
-                        {note.textContent}
-                    </ThemedText>
+                    <ThemedText style={styles.textContent}>{note.textContent}</ThemedText>
                 </View>
             )}
         </ThemedView>
@@ -269,6 +228,17 @@ const styles = StyleSheet.create({
         aspectRatio: 1.6,
         borderRadius: 8,
         marginRight: 8,
+    },
+    transformedIndicator: {
+        position: "absolute",
+        bottom: 4,
+        right: 12,
+        backgroundColor: "rgba(0, 122, 255, 0.8)",
+        borderRadius: 10,
+        width: 20,
+        height: 20,
+        justifyContent: "center",
+        alignItems: "center",
     },
     audioContainer: {
         paddingHorizontal: 12,

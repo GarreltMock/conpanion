@@ -1,9 +1,7 @@
 import { InferenceSession, Tensor } from "onnxruntime-react-native";
 import * as FileSystem from "expo-file-system";
 import * as nativeOpenCV from "@/native-modules/opencv";
-
-export type Point = [number, number];
-export type Polygon = Point[];
+import { Polygon } from "@/types";
 
 interface PreprocessResult {
     data: Float32Array;

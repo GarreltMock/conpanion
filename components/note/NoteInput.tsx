@@ -16,7 +16,7 @@ import { useThemeColor } from "@/hooks/useThemeColor";
 import { Audio } from "expo-av";
 import { ThemedText } from "@/components/ThemedText";
 import { useImageTransform } from "@/hooks/useImageTransform";
-import { Polygon } from "@/types";
+import { Polygon, NoteImage } from "@/types";
 
 // Define types for cached assets
 interface CachedImage {
@@ -36,7 +36,7 @@ interface CachedAudio {
 interface NoteInputProps {
     onTakePhoto: (fromGallery: boolean) => Promise<string>;
     onRecordAudio: () => Promise<string | null>;
-    onSubmitNote: (text: string, images: string[], audioRecordings: string[]) => Promise<void>;
+    onSubmitNote: (text: string, images: NoteImage[], audioRecordings: string[]) => Promise<void>;
     isRecording?: boolean;
     disabled?: boolean;
 }
@@ -75,27 +75,27 @@ export const NoteInput: React.FC<NoteInputProps> = ({
         try {
             setIsSubmitting(true);
 
-            // Extract images (include both original and transformed)
-            // TODO: use other format for images. Save the images in an object
-            const imageUris = cachedImages.flatMap((img) => {
-                const uris = [img.uri]; // Always include original
-
-                // Add transformed if available
-                if (img.transformedUri) {
-                    uris.push(img.transformedUri);
-
-                    // If corners are available, store them as metadata
-                    // This would require modifying your storage system to handle metadata
-                    // You'll need to implement this part in your storage layer
+            // Convert cached images to NoteImage format
+            const noteImages: NoteImage[] = cachedImages.map((img) => {
+                if (img.transformedUri && img.corners) {
+                    // This is a transformed image
+                    return {
+                        uri: img.transformedUri, // The transformed image is the primary URI
+                        originalUri: img.uri,    // Store the original image as originalUri
+                        corners: img.corners     // Store the corners for later manipulation
+                    };
+                } else {
+                    // This is a regular image (not transformed)
+                    return {
+                        uri: img.uri
+                    };
                 }
-
-                return uris;
             });
 
             const audioUris = cachedAudio.map((audio) => audio.uri);
 
             // Submit note with all content
-            await onSubmitNote(text, imageUris, audioUris);
+            await onSubmitNote(text, noteImages, audioUris);
 
             // Clear all cached content
             setText("");
