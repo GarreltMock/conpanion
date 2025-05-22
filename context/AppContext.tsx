@@ -64,7 +64,7 @@ interface AppContextType {
     // Note Management
     notes: Note[];
     addTextNote: (text: string) => Promise<Note>;
-    addImageNote: () => Promise<string>; // Returns image URI instead of creating note
+    addImageNote: (fromGallery: boolean) => Promise<string>; // Returns image URI instead of creating note
     addAudioNote: () => Promise<Note | null>;
     stopAudioRecording: () => Promise<string | null>; // Returns audio URI instead of creating note
     addCombinedNote: (text: string, images: string[], audioRecordings: string[]) => Promise<Note>;
@@ -441,26 +441,41 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         return newNote;
     };
 
-    const addImageNote = async (): Promise<string> => {
+    const addImageNote = async (fromGallery: boolean): Promise<string> => {
         if (!activeTalk) {
             throw new Error("No active talk to add note to");
         }
 
-        // Request camera permissions
-        const { status } = await ImagePicker.requestCameraPermissionsAsync();
-        if (status !== "granted") {
-            console.error("Camera permission not granted");
-            throw new Error("Camera permission not granted");
+        let result: ImagePicker.ImagePickerResult | null = null;
+
+        if (fromGallery) {
+            const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+            if (!permissionResult.granted) {
+                console.error("Permission to access camera roll is required!");
+                throw new Error("Camera roll permission not granted");
+            }
+
+            result = await ImagePicker.launchImageLibraryAsync({
+                mediaTypes: "images",
+                allowsEditing: false,
+            });
+        } else {
+            //Request camera permissions
+            const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
+            if (!permissionResult.granted) {
+                console.error("Camera permission not granted");
+                throw new Error("Camera permission not granted");
+            }
+
+            // Launch camera
+            result = await ImagePicker.launchCameraAsync({
+                mediaTypes: "images",
+                allowsEditing: false,
+            });
         }
 
-        // Launch camera
-        const result = await ImagePicker.launchCameraAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
-            quality: 0.8,
-            allowsEditing: false,
-        });
-
-        if (result.canceled || !result.assets || result.assets.length === 0) {
+        if (!result || result.canceled || !result.assets || result.assets.length === 0) {
             throw new Error("No image selected");
         }
 

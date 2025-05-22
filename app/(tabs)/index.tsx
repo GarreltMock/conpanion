@@ -43,20 +43,15 @@ export default function NotesScreen() {
     };
 
     // Handle combined note submission (text, images, audio)
-    const handleSubmitNote = async (
-        text: string,
-        images: string[],
-        audioRecordings: string[]
-    ) => {
-        if (!text.trim() && images.length === 0 && audioRecordings.length === 0)
-            return;
+    const handleSubmitNote = async (text: string, images: string[], audioRecordings: string[]) => {
+        if (!text.trim() && images.length === 0 && audioRecordings.length === 0) return;
         await addCombinedNote(text, images, audioRecordings);
     };
 
     // Handle taking a photo
-    const handleTakePhoto = async (): Promise<string> => {
+    const handleTakePhoto = async (fromGallery: boolean): Promise<string> => {
         try {
-            return await addImageNote();
+            return await addImageNote(fromGallery);
         } catch (error) {
             console.error("Error taking photo:", error);
             throw error;
@@ -88,12 +83,8 @@ export default function NotesScreen() {
 
     const renderEmptyState = () => (
         <View style={styles.emptyStateContainer}>
-            <ThemedText style={styles.emptyStateTitle}>
-                No Active Talk
-            </ThemedText>
-            <ThemedText style={styles.emptyStateDescription}>
-                Create a new talk to start taking notes
-            </ThemedText>
+            <ThemedText style={styles.emptyStateTitle}>No Active Talk</ThemedText>
+            <ThemedText style={styles.emptyStateDescription}>Create a new talk to start taking notes</ThemedText>
         </View>
     );
 
@@ -117,9 +108,7 @@ export default function NotesScreen() {
                 <FlatList
                     data={talkNotes}
                     keyExtractor={(item) => item.id}
-                    renderItem={({ item }) => (
-                        <NoteItem note={item} onDelete={handleDeleteNote} />
-                    )}
+                    renderItem={({ item }) => <NoteItem note={item} onDelete={handleDeleteNote} />}
                     contentContainerStyle={styles.notesList}
                     keyboardShouldPersistTaps="handled"
                     ListEmptyComponent={() => (

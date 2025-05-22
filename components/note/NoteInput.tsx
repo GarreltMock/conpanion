@@ -9,19 +9,22 @@ import {
     Platform,
     Image,
     ScrollView,
-    Dimensions,
     TouchableOpacity,
 } from "react-native";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { useThemeColor } from "@/hooks/useThemeColor";
-import * as ImagePicker from "expo-image-picker";
 import { Audio } from "expo-av";
 import { ThemedText } from "@/components/ThemedText";
+import { useImageTransform } from "@/hooks/useImageTransform";
+import { Polygon } from "@/types";
 
 // Define types for cached assets
 interface CachedImage {
     id: string;
     uri: string;
+    transformedUri?: string;
+    corners?: Polygon;
+    isProcessing?: boolean;
 }
 
 interface CachedAudio {
@@ -31,13 +34,9 @@ interface CachedAudio {
 }
 
 interface NoteInputProps {
-    onTakePhoto: () => Promise<string>;
+    onTakePhoto: (fromGallery: boolean) => Promise<string>;
     onRecordAudio: () => Promise<string | null>;
-    onSubmitNote: (
-        text: string,
-        images: string[],
-        audioRecordings: string[]
-    ) => Promise<void>;
+    onSubmitNote: (text: string, images: string[], audioRecordings: string[]) => Promise<void>;
     isRecording?: boolean;
     disabled?: boolean;
 }
@@ -62,26 +61,37 @@ export const NoteInput: React.FC<NoteInputProps> = ({
     const textColor = useThemeColor({}, "text");
     const tintColor = useThemeColor({}, "tint");
 
+    // Initialize the image transformation hook
+    const { isInitialized, processImageFromUri } = useImageTransform();
+
     // Generate a unique ID for cached assets
     const generateId = () => {
         return Math.random().toString(36).substring(2, 15);
     };
 
     const handleSubmitNote = async () => {
-        if (
-            (!text.trim() &&
-                cachedImages.length === 0 &&
-                cachedAudio.length === 0) ||
-            isSubmitting ||
-            disabled
-        )
-            return;
+        if ((!text.trim() && cachedImages.length === 0 && cachedAudio.length === 0) || isSubmitting || disabled) return;
 
         try {
             setIsSubmitting(true);
 
-            // Extract URIs from cached assets
-            const imageUris = cachedImages.map((img) => img.uri);
+            // Extract images (include both original and transformed)
+            // TODO: use other format for images. Save the images in an object
+            const imageUris = cachedImages.flatMap((img) => {
+                const uris = [img.uri]; // Always include original
+
+                // Add transformed if available
+                if (img.transformedUri) {
+                    uris.push(img.transformedUri);
+
+                    // If corners are available, store them as metadata
+                    // This would require modifying your storage system to handle metadata
+                    // You'll need to implement this part in your storage layer
+                }
+
+                return uris;
+            });
+
             const audioUris = cachedAudio.map((audio) => audio.uri);
 
             // Submit note with all content
@@ -99,18 +109,70 @@ export const NoteInput: React.FC<NoteInputProps> = ({
         }
     };
 
-    const handleTakePhoto = async () => {
+    const handleTakePhoto = async (fromGallery: boolean = false) => {
         if (isSubmitting || disabled) return;
 
         try {
             Keyboard.dismiss();
-            const imageUri = await onTakePhoto();
+            const imageUri = await onTakePhoto(fromGallery);
             if (imageUri) {
-                // Cache the new image
+                const newImageId = generateId();
+
+                // Add the image to cache with processing state
                 setCachedImages((prev) => [
                     ...prev,
-                    { id: generateId(), uri: imageUri },
+                    {
+                        id: newImageId,
+                        uri: imageUri,
+                        isProcessing: isInitialized, // Only set processing state if models are initialized
+                    },
                 ]);
+
+                // Process the image if models are initialized
+                if (isInitialized) {
+                    try {
+                        // Process the image asynchronously
+                        processImageFromUri(imageUri)
+                            .then((result) => {
+                                setCachedImages((prev) =>
+                                    prev.map((img) => {
+                                        if (img.id === newImageId) {
+                                            return {
+                                                ...img,
+                                                transformedUri: result.transformed?.uri,
+                                                corners: result.corners || undefined,
+                                                isProcessing: false,
+                                            };
+                                        }
+                                        return img;
+                                    })
+                                );
+                            })
+                            .catch((err) => {
+                                console.error("Error processing image:", err);
+                                // Mark processing as complete even if it failed
+                                setCachedImages((prev) =>
+                                    prev.map((img) => {
+                                        if (img.id === newImageId) {
+                                            return { ...img, isProcessing: false };
+                                        }
+                                        return img;
+                                    })
+                                );
+                            });
+                    } catch (err) {
+                        console.error("Error initiating image processing:", err);
+                        // Mark processing as complete
+                        setCachedImages((prev) =>
+                            prev.map((img) => {
+                                if (img.id === newImageId) {
+                                    return { ...img, isProcessing: false };
+                                }
+                                return img;
+                            })
+                        );
+                    }
+                }
             }
         } catch (error) {
             console.error("Error taking photo:", error);
@@ -147,11 +209,7 @@ export const NoteInput: React.FC<NoteInputProps> = ({
     const handleDeleteAudio = (id: string) => {
         // Stop playback if this audio is playing
         if (playingId === id && sound) {
-            sound
-                .stopAsync()
-                .catch((error) =>
-                    console.error("Error stopping sound:", error)
-                );
+            sound.stopAsync().catch((error) => console.error("Error stopping sound:", error));
             setSound(null);
             setIsPlaying(false);
             setPlayingId(null);
@@ -189,10 +247,7 @@ export const NoteInput: React.FC<NoteInputProps> = ({
         try {
             console.log("Creating new sound for URI:", audioUri);
             // Load and play the selected audio
-            const { sound: newSound } = await Audio.Sound.createAsync(
-                { uri: audioUri },
-                { shouldPlay: true }
-            );
+            const { sound: newSound } = await Audio.Sound.createAsync({ uri: audioUri }, { shouldPlay: true });
 
             setSound(newSound);
             setIsPlaying(true);
@@ -203,11 +258,7 @@ export const NoteInput: React.FC<NoteInputProps> = ({
                 if (status.isLoaded && status.didJustFinish) {
                     setIsPlaying(false);
                     setPlayingId(null);
-                    newSound
-                        .unloadAsync()
-                        .catch((error) =>
-                            console.error("Error unloading sound:", error)
-                        );
+                    newSound.unloadAsync().catch((error) => console.error("Error unloading sound:", error));
                     setSound(null);
                 }
             });
@@ -274,68 +325,37 @@ export const NoteInput: React.FC<NoteInputProps> = ({
                 >
                     {/* Image previews */}
                     {cachedImages.map((image) => (
-                        <View
-                            key={image.id}
-                            style={styles.imagePreviewContainer}
-                        >
-                            <Image
-                                source={{ uri: image.uri }}
-                                style={styles.imagePreview}
-                            />
-                            <TouchableOpacity
-                                style={styles.deleteButton}
-                                onPress={() => handleDeleteImage(image.id)}
-                            >
-                                <IconSymbol
-                                    name="xmark.circle.fill"
-                                    size={20}
-                                    color="#fff"
-                                />
+                        <View key={image.id} style={styles.imagePreviewContainer}>
+                            <Image source={{ uri: image.transformedUri || image.uri }} style={styles.imagePreview} />
+                            {image.isProcessing && (
+                                <View style={styles.loadingOverlay}>
+                                    <ActivityIndicator size="small" color="#fff" />
+                                </View>
+                            )}
+                            <TouchableOpacity style={styles.deleteButton} onPress={() => handleDeleteImage(image.id)}>
+                                <IconSymbol name="xmark.circle.fill" size={20} color="#fff" />
                             </TouchableOpacity>
                         </View>
                     ))}
 
                     {/* Audio previews */}
                     {cachedAudio.map((audio) => (
-                        <View
-                            key={audio.id}
-                            style={styles.audioPreviewContainer}
-                        >
+                        <View key={audio.id} style={styles.audioPreviewContainer}>
                             <TouchableOpacity
                                 style={styles.audioPreview}
-                                onPress={() =>
-                                    handlePlayPauseAudio(audio.uri, audio.id)
-                                }
+                                onPress={() => handlePlayPauseAudio(audio.uri, audio.id)}
                             >
-                                <View
-                                    style={[
-                                        styles.playButton,
-                                        { backgroundColor: tintColor },
-                                    ]}
-                                >
+                                <View style={[styles.playButton, { backgroundColor: tintColor }]}>
                                     <IconSymbol
-                                        name={
-                                            playingId === audio.id && isPlaying
-                                                ? "pause"
-                                                : "play"
-                                        }
+                                        name={playingId === audio.id && isPlaying ? "pause" : "play"}
                                         size={14}
                                         color="#fff"
                                     />
                                 </View>
-                                <ThemedText style={styles.audioLabel}>
-                                    Audio Recording
-                                </ThemedText>
+                                <ThemedText style={styles.audioLabel}>Audio Recording</ThemedText>
                             </TouchableOpacity>
-                            <TouchableOpacity
-                                style={styles.deleteButton}
-                                onPress={() => handleDeleteAudio(audio.id)}
-                            >
-                                <IconSymbol
-                                    name="xmark.circle.fill"
-                                    size={20}
-                                    color="#fff"
-                                />
+                            <TouchableOpacity style={styles.deleteButton} onPress={() => handleDeleteAudio(audio.id)}>
+                                <IconSymbol name="xmark.circle.fill" size={20} color="#fff" />
                             </TouchableOpacity>
                         </View>
                     ))}
@@ -358,18 +378,12 @@ export const NoteInput: React.FC<NoteInputProps> = ({
 
                 <View style={styles.buttonsContainer}>
                     <Pressable
-                        style={({ pressed }) => [
-                            styles.iconButton,
-                            pressed && styles.buttonPressed,
-                        ]}
-                        onPress={handleTakePhoto}
+                        style={({ pressed }) => [styles.iconButton, pressed && styles.buttonPressed]}
+                        onPress={() => handleTakePhoto()}
+                        onLongPress={() => handleTakePhoto(true)}
                         disabled={disabled}
                     >
-                        <IconSymbol
-                            name="camera.fill"
-                            size={22}
-                            color={disabled ? textColor + "40" : tintColor}
-                        />
+                        <IconSymbol name="camera.fill" size={22} color={disabled ? textColor + "40" : tintColor} />
                     </Pressable>
 
                     <Pressable
@@ -384,13 +398,7 @@ export const NoteInput: React.FC<NoteInputProps> = ({
                         <IconSymbol
                             name="mic.fill"
                             size={22}
-                            color={
-                                disabled
-                                    ? textColor + "40"
-                                    : isRecording
-                                    ? "#fff"
-                                    : tintColor
-                            }
+                            color={disabled ? textColor + "40" : isRecording ? "#fff" : tintColor}
                         />
                     </Pressable>
 
@@ -399,8 +407,7 @@ export const NoteInput: React.FC<NoteInputProps> = ({
                             styles.sendButton,
                             { backgroundColor: tintColor },
                             pressed && styles.buttonPressed,
-                            ((!text.trim() && !hasAttachments) || disabled) &&
-                                styles.disabledButton,
+                            ((!text.trim() && !hasAttachments) || disabled) && styles.disabledButton,
                         ]}
                         onPress={handleSubmitNote}
                         disabled={(!text.trim() && !hasAttachments) || disabled}
@@ -408,11 +415,7 @@ export const NoteInput: React.FC<NoteInputProps> = ({
                         {isSubmitting ? (
                             <ActivityIndicator color="#fff" size="small" />
                         ) : (
-                            <IconSymbol
-                                name="arrow.up"
-                                size={20}
-                                color="#fff"
-                            />
+                            <IconSymbol name="arrow.up" size={20} color="#fff" />
                         )}
                     </Pressable>
                 </View>
@@ -444,6 +447,17 @@ const styles = StyleSheet.create({
     imagePreview: {
         height: 50,
         aspectRatio: 1.6,
+        borderRadius: 8,
+    },
+    loadingOverlay: {
+        position: "absolute",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: "rgba(0, 0, 0, 0.5)",
+        justifyContent: "center",
+        alignItems: "center",
         borderRadius: 8,
     },
     audioPreviewContainer: {
