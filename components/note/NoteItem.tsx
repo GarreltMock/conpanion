@@ -1,14 +1,16 @@
-import React, { useState } from "react";
-import { View, StyleSheet, Image, TouchableOpacity, ScrollView, Alert, Pressable } from "react-native";
+import { format } from "date-fns";
 import { Audio } from "expo-av";
 import { router } from "expo-router";
-import { format } from "date-fns";
+import React, { useEffect, useState } from "react";
+import { Alert, Image, Pressable, ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { IconSymbol } from "@/components/ui/IconSymbol";
-import { Note, NoteImage } from "@/types";
+import { useApp } from "@/context/AppContext";
+import { useImageTransformNotification } from "@/context/ImageTransformContext";
 import { useThemeColor } from "@/hooks/useThemeColor";
+import { Note } from "@/types";
 
 interface NoteItemProps {
     note: Note;
@@ -23,6 +25,43 @@ export const NoteItem: React.FC<NoteItemProps> = ({ note, onDelete, readOnly = f
 
     const textColor = useThemeColor({}, "text");
     const tintColor = useThemeColor({}, "tint");
+
+    const { updateNote } = useApp();
+    const { lastTransformedImage, clearLastTransformed } = useImageTransformNotification();
+
+    // Listen for image transformations and update this note if it contains the transformed image
+    useEffect(() => {
+        if (lastTransformedImage) {
+            // Check if this note contains the image that was transformed
+            const hasTransformedImage = note.images.some((img) => img.uri === lastTransformedImage.originalImageUri);
+
+            if (hasTransformedImage) {
+                // Update the image in this note
+                const updatedImages = note.images.map((img) => {
+                    if (img.uri === lastTransformedImage.originalImageUri) {
+                        return {
+                            ...img,
+                            uri: lastTransformedImage.newImageUri,
+                            originalUri: lastTransformedImage.originalUri,
+                            corners: lastTransformedImage.corners, // Use the actual corners from the transformation
+                        };
+                    }
+                    return img;
+                });
+
+                const updatedNote: Note = {
+                    ...note,
+                    images: updatedImages,
+                };
+
+                updateNote(updatedNote).catch((error) => console.error("NoteItem: Note update failed:", error));
+
+                clearLastTransformed();
+            } else {
+                console.log("NoteItem: This note does not contain the transformed image");
+            }
+        }
+    }, [lastTransformedImage, note, updateNote, clearLastTransformed]);
 
     const handlePlayPauseAudio = async (uri: string, index: number) => {
         // If a sound is already playing, stop it
@@ -130,7 +169,8 @@ export const NoteItem: React.FC<NoteItemProps> = ({ note, onDelete, readOnly = f
                                 // If this is a transformed image with original and corners
                                 if (image.originalUri && image.corners) {
                                     params.originalUri = encodeURIComponent(image.originalUri);
-                                    params.hasCorners = "true";
+                                    // Pass the saved corners as JSON string
+                                    params.savedCorners = encodeURIComponent(JSON.stringify(image.corners));
                                 }
 
                                 router.push({

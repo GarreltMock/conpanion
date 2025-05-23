@@ -1,52 +1,55 @@
-import React, { useState, useEffect, useRef } from "react";
+import { router, useLocalSearchParams } from "expo-router";
+import React, { useEffect, useState, useRef } from "react";
 import {
-    StyleSheet,
-    View,
-    TouchableOpacity,
-    Dimensions,
-    SafeAreaView,
     ActivityIndicator,
-    Text,
     Alert,
+    Dimensions,
     Image,
+    SafeAreaView,
+    StyleSheet,
+    TouchableOpacity,
+    View,
 } from "react-native";
-import { useLocalSearchParams, router } from "expo-router";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
+    runOnJS,
+    useAnimatedRef,
     useAnimatedStyle,
     useSharedValue,
     withTiming,
-    runOnJS,
-    useAnimatedRef,
-    measure,
 } from "react-native-reanimated";
-import Svg, { Polygon, Circle } from "react-native-svg";
+import Svg, { Polygon } from "react-native-svg";
 
-import { IconSymbol } from "@/components/ui/IconSymbol";
-import { ThemedView } from "@/components/ThemedView";
 import { ThemedText } from "@/components/ThemedText";
-import { Point, Polygon as PolygonType } from "@/types";
+import { ThemedView } from "@/components/ThemedView";
+import { IconSymbol } from "@/components/ui/IconSymbol";
+import { useImageTransformNotification } from "@/context/ImageTransformContext";
 import { useImageTransform } from "@/hooks/useImageTransform";
+import { Point, Polygon as PolygonType } from "@/types";
+
+type ImageLayout = { x: number; y: number; width: number; height: number };
 
 export default function ImageViewModal() {
-    const { imageUri, originalUri, hasCorners } = useLocalSearchParams<{
+    const { imageUri, originalUri, savedCorners } = useLocalSearchParams<{
         imageUri: string;
         originalUri?: string;
-        hasCorners?: string;
+        savedCorners?: string;
     }>();
+
     const decodedUri = decodeURIComponent(imageUri as string);
     const decodedOriginalUri = originalUri ? decodeURIComponent(originalUri as string) : null;
-    const hasOriginalCorners = hasCorners === "true";
+    const decodedSavedCorners = savedCorners ? JSON.parse(decodeURIComponent(savedCorners as string)) : null;
 
     // State for edit mode
     const [isEditMode, setIsEditMode] = useState(false);
     const [corners, setCorners] = useState<PolygonType | null>(null);
     const [loading, setLoading] = useState(false);
+    const [savedImageLayout, setImageLayout] = useState<ImageLayout | null>(null);
     const imageRef = useAnimatedRef<Animated.Image>();
-    const [imageLayout, setImageLayout] = useState({ width: 0, height: 0, x: 0, y: 0 });
 
     // For image transformations
-    const { processImageFromUri, transformImageWithCorners } = useImageTransform();
+    const { transformImageWithCorners } = useImageTransform();
+    const { notifyImageTransformed } = useImageTransformNotification();
 
     // Normal view mode state
     const scale = useSharedValue(1);
@@ -59,79 +62,87 @@ export default function ImageViewModal() {
     const focalY = useSharedValue(0);
     const isPinching = useSharedValue(false);
 
-    // When entering edit mode, try to load better corners from the image (only if we have corner detection capability)
-    useEffect(() => {
-        console.log('First effect - isEditMode:', isEditMode, 'decodedOriginalUri:', !!decodedOriginalUri, 'hasOriginalCorners:', hasOriginalCorners);
-        if (isEditMode && decodedOriginalUri && hasOriginalCorners && corners) {
-            console.log('Attempting to load detected corners to replace fallback corners');
-            loadImageCorners();
-        }
-    }, [isEditMode, decodedOriginalUri, hasOriginalCorners]);
+    // Get original image dimensions
+    const getImageDimensions = React.useCallback((uri: string): Promise<{ width: number; height: number }> => {
+        return new Promise((resolve, reject) => {
+            Image.getSize(
+                uri,
+                (width, height) => resolve({ width, height }),
+                (error) => reject(error)
+            );
+        });
+    }, []);
 
-    // Set default corners when image layout is ready (only if we don't have corners yet)
-    useEffect(() => {
-        console.log('Second effect triggered:', { isEditMode, corners: !!corners, imageLayout });
-        // Only set default corners if we don't have any and the image layout is ready
-        // This is a backup for cases where the immediate fallback corners in handleToggleEditMode weren't set
-        if (isEditMode && !corners && imageLayout.width > 0 && imageLayout.height > 0) {
-            console.log('Calling setDefaultCorners as backup');
-            setDefaultCorners();
-        }
-    }, [isEditMode, corners, imageLayout.width, imageLayout.height, setDefaultCorners]);
-
-    // Load corners from original image if available
-    const loadImageCorners = async () => {
-        const sourceImageUri = decodedOriginalUri || decodedUri;
-        if (!sourceImageUri) {
-            console.log('No image URI available, setting default corners');
-            setDefaultCorners();
-            return;
-        }
-
-        console.log('Loading image corners for:', sourceImageUri);
-        setLoading(true);
-        try {
-            // Get original image dimensions first
-            const { width: originalWidth, height: originalHeight } = await getImageDimensions(sourceImageUri);
-            console.log('Original image dimensions:', { originalWidth, originalHeight });
-
-            // If we already know the image has corners, try to detect them
-            if (hasOriginalCorners) {
-                console.log('Trying to detect corners from image');
-                const result = await processImageFromUri(sourceImageUri);
-                if (result.corners && result.corners.length === 4) {
-                    console.log('Found corners from image (image coordinates):', result.corners);
-                    
-                    // Transform corners from image coordinates to screen coordinates
-                    const transformedCorners = transformCornersToScreen(result.corners, originalWidth, originalHeight);
-                    console.log('Transformed corners to screen coordinates:', transformedCorners);
-                    setCorners(transformedCorners);
-                } else {
-                    console.log('Corner detection failed, setting default corners');
-                    setDefaultCorners();
-                }
-            } else {
-                console.log('No original corners, setting default corners');
-                setDefaultCorners();
+    // Transform corners from image coordinates to screen coordinates
+    // Generic function to transform corners between image and screen coordinates
+    const transformCorners = React.useCallback(
+        (
+            corners: PolygonType,
+            originalImageWidth: number,
+            originalImageHeight: number,
+            imageLayout: ImageLayout,
+            direction: "toScreen" | "toImage"
+        ): PolygonType => {
+            if (!imageLayout.width || !imageLayout.height) {
+                return corners;
             }
-        } catch (error) {
-            console.error("Error loading image corners:", error);
-            console.log('Error occurred, setting default corners');
-            setDefaultCorners();
-        } finally {
-            setLoading(false);
-        }
-    };
+
+            const displayAspectRatio = imageLayout.width / imageLayout.height;
+            const originalAspectRatio = originalImageWidth / originalImageHeight;
+
+            let scaleX, scaleY, offsetX, offsetY;
+
+            if (originalAspectRatio > displayAspectRatio) {
+                scaleX = scaleY = imageLayout.width / originalImageWidth;
+                offsetX = imageLayout.x;
+                offsetY = imageLayout.y + (imageLayout.height - originalImageHeight * scaleY) / 2;
+            } else {
+                scaleX = scaleY = imageLayout.height / originalImageHeight;
+                offsetX = imageLayout.x + (imageLayout.width - originalImageWidth * scaleX) / 2;
+                offsetY = imageLayout.y;
+            }
+
+            if (direction === "toScreen") {
+                // Transform from image to screen coordinates
+                return corners.map(([x, y]) => [x * scaleX + offsetX, y * scaleY + offsetY] as Point);
+            } else {
+                // Transform from screen to image coordinates
+                return corners.map(
+                    ([screenX, screenY]) => [(screenX - offsetX) / scaleX, (screenY - offsetY) / scaleY] as Point
+                );
+            }
+        },
+        []
+    );
+
+    // Wrappers for clarity
+    const transformCornersToScreen = React.useCallback(
+        (
+            imageCorners: PolygonType,
+            originalImageWidth: number,
+            originalImageHeight: number,
+            imageLayout: ImageLayout
+        ): PolygonType =>
+            transformCorners(imageCorners, originalImageWidth, originalImageHeight, imageLayout, "toScreen"),
+        [transformCorners]
+    );
+
+    const transformCornersToImage = React.useCallback(
+        (
+            screenCorners: PolygonType,
+            originalImageWidth: number,
+            originalImageHeight: number,
+            imageLayout: ImageLayout
+        ): PolygonType =>
+            transformCorners(screenCorners, originalImageWidth, originalImageHeight, imageLayout, "toImage"),
+        [transformCorners]
+    );
 
     // Set default corners to the image bounds
-    const setDefaultCorners = () => {
-        // Only proceed if we have image dimensions
+    const setDefaultCorners = React.useCallback((imageLayout: ImageLayout) => {
         if (imageLayout.width === 0 || imageLayout.height === 0) {
-            console.log('Cannot set default corners - no image layout:', imageLayout);
             return;
         }
-
-        console.log('Setting default corners with layout:', imageLayout);
 
         // Set corners to 10% inset from the image edges
         const inset = 0.1;
@@ -146,147 +157,76 @@ export default function ImageViewModal() {
         const bottomLeft: Point = [x + width * inset, y + height * (1 - inset)];
 
         const newCorners = [topLeft, topRight, bottomRight, bottomLeft];
-        console.log('Setting corners to:', newCorners);
         setCorners(newCorners);
-    };
+    }, []);
+
+    // Load corners from original image if available
+    const initCorners = React.useCallback(
+        async (imageLayout: ImageLayout) => {
+            const sourceImageUri = decodedOriginalUri || decodedUri;
+            if (!sourceImageUri || !decodedSavedCorners) {
+                setDefaultCorners(imageLayout);
+                return;
+            }
+
+            const { width: origWidth, height: origHeight } = await getImageDimensions(sourceImageUri);
+            const transformedCorners = transformCornersToScreen(
+                decodedSavedCorners,
+                origWidth,
+                origHeight,
+                imageLayout
+            );
+            setCorners(transformedCorners);
+        },
+        [
+            decodedOriginalUri,
+            decodedUri,
+            decodedSavedCorners,
+            transformCornersToScreen,
+            setDefaultCorners,
+            getImageDimensions,
+        ]
+    );
 
     const handleClose = () => {
         router.back();
     };
 
-    // Get original image dimensions
-    const getImageDimensions = (uri: string): Promise<{ width: number; height: number }> => {
-        return new Promise((resolve, reject) => {
-            Image.getSize(
-                uri,
-                (width, height) => resolve({ width, height }),
-                (error) => reject(error)
-            );
-        });
-    };
-
-    // Transform corners from image coordinates to screen coordinates
-    const transformCornersToScreen = (imageCorners: PolygonType, originalImageWidth: number, originalImageHeight: number): PolygonType => {
-        if (!imageLayout.width || !imageLayout.height) {
-            console.log('No image layout available for transformation');
-            return imageCorners;
-        }
-
-        // Calculate scale factor - the image is displayed with resizeMode="contain"
-        // so we need to figure out how it's scaled and positioned
-        const displayAspectRatio = imageLayout.width / imageLayout.height;
-        const originalAspectRatio = originalImageWidth / originalImageHeight;
-        
-        let scaleX, scaleY, offsetX, offsetY;
-        
-        if (originalAspectRatio > displayAspectRatio) {
-            // Image is wider, so it's constrained by width
-            scaleX = scaleY = imageLayout.width / originalImageWidth;
-            offsetX = imageLayout.x;
-            offsetY = imageLayout.y + (imageLayout.height - (originalImageHeight * scaleY)) / 2;
-        } else {
-            // Image is taller, so it's constrained by height  
-            scaleX = scaleY = imageLayout.height / originalImageHeight;
-            offsetX = imageLayout.x + (imageLayout.width - (originalImageWidth * scaleX)) / 2;
-            offsetY = imageLayout.y;
-        }
-
-        console.log('Transform params:', { scaleX, scaleY, offsetX, offsetY, imageLayout, originalImageWidth, originalImageHeight });
-
-        // Transform each corner
-        const transformedCorners = imageCorners.map(([x, y]) => {
-            const screenX = x * scaleX + offsetX;
-            const screenY = y * scaleY + offsetY;
-            console.log(`Transforming (${x}, ${y}) -> (${screenX}, ${screenY})`);
-            return [screenX, screenY] as Point;
-        });
-
-        return transformedCorners;
-    };
-
-    // Transform corners from screen coordinates back to image coordinates
-    const transformCornersToImage = (screenCorners: PolygonType, originalImageWidth: number, originalImageHeight: number): PolygonType => {
-        if (!imageLayout.width || !imageLayout.height) {
-            console.log('No image layout available for reverse transformation');
-            return screenCorners;
-        }
-
-        // Calculate scale factor and offsets (same logic as transformCornersToScreen)
-        const displayAspectRatio = imageLayout.width / imageLayout.height;
-        const originalAspectRatio = originalImageWidth / originalImageHeight;
-        
-        let scaleX, scaleY, offsetX, offsetY;
-        
-        if (originalAspectRatio > displayAspectRatio) {
-            scaleX = scaleY = imageLayout.width / originalImageWidth;
-            offsetX = imageLayout.x;
-            offsetY = imageLayout.y + (imageLayout.height - (originalImageHeight * scaleY)) / 2;
-        } else {
-            scaleX = scaleY = imageLayout.height / originalImageHeight;
-            offsetX = imageLayout.x + (imageLayout.width - (originalImageWidth * scaleX)) / 2;
-            offsetY = imageLayout.y;
-        }
-
-        // Reverse transform each corner
-        const imageCorners = screenCorners.map(([screenX, screenY]) => {
-            const imageX = (screenX - offsetX) / scaleX;
-            const imageY = (screenY - offsetY) / scaleY;
-            console.log(`Reverse transforming (${screenX}, ${screenY}) -> (${imageX}, ${imageY})`);
-            return [imageX, imageY] as Point;
-        });
-
-        return imageCorners;
-    };
-
     const handleToggleEditMode = () => {
         if (isEditMode) {
-            // Exit edit mode
-            console.log('Exiting edit mode');
             setIsEditMode(false);
             setCorners(null); // Clear corners when exiting edit mode
         } else {
-            // Enter edit mode
-            console.log('Entering edit mode');
             setIsEditMode(true);
-            // Set immediate fallback corners to ensure something is always visible
-            const fallbackCorners: PolygonType = [
-                [100, 100],     // top-left
-                [300, 100],    // top-right  
-                [300, 400],   // bottom-right
-                [100, 400]     // bottom-left
-            ];
-            console.log('Setting immediate fallback corners:', fallbackCorners);
-            setCorners(fallbackCorners);
         }
     };
 
     const handleSaveCorners = async () => {
-        if (!corners || corners.length !== 4) return;
+        if (!corners || corners.length !== 4 || !savedImageLayout) return;
 
         // Use original URI if available, otherwise use the main image URI
         const sourceImageUri = decodedOriginalUri || decodedUri;
-        console.log('Processing image with URI:', sourceImageUri);
 
         setLoading(true);
         try {
-            // Get original image dimensions for coordinate transformation
             const { width: originalWidth, height: originalHeight } = await getImageDimensions(sourceImageUri);
-            console.log('Original image dimensions for save:', { originalWidth, originalHeight });
-
-            // Transform screen coordinates back to image coordinates
-            const imageCorners = transformCornersToImage(corners, originalWidth, originalHeight);
-            console.log('Transformed corners to image coordinates for processing:', imageCorners);
-
-            // Transform the image with the new corners (in image coordinates)
+            const imageCorners = transformCornersToImage(corners, originalWidth, originalHeight, savedImageLayout);
             const result = await transformImageWithCorners(sourceImageUri, imageCorners);
 
-            // Redirect to the new transformed image
+            notifyImageTransformed({
+                originalImageUri: decodedUri, // The image that was being viewed
+                newImageUri: result.uri, // The new transformed image
+                originalUri: sourceImageUri, // The source image used for transformation
+                corners: imageCorners, // The corners used for transformation (in image coordinates)
+                timestamp: Date.now(),
+            });
+
             router.replace({
                 pathname: "/modals/image-view",
                 params: {
                     imageUri: encodeURIComponent(result.uri),
                     originalUri: encodeURIComponent(sourceImageUri),
-                    hasCorners: "true",
+                    savedCorners: encodeURIComponent(JSON.stringify(imageCorners)),
                 },
             });
         } catch (error) {
@@ -388,19 +328,14 @@ export default function ImageViewModal() {
         };
     });
 
-    // Update a specific corner position - defined early to ensure it's available for runOnJS
     const updateCorner = React.useCallback((index: number, x: number, y: number) => {
-        console.log(`Updating corner ${index} to (${x}, ${y})`);
-        
         setCorners((prevCorners) => {
             if (!prevCorners || prevCorners.length !== 4) {
-                console.log('Invalid corners state, cannot update');
                 return prevCorners;
             }
-            
+
             const newCorners = [...prevCorners];
             newCorners[index] = [x, y];
-            console.log('New corners:', newCorners);
             return newCorners;
         });
     }, []);
@@ -497,37 +432,32 @@ export default function ImageViewModal() {
 
     // Create animated styles for each corner
     const corner0Style = useAnimatedStyle(() => ({
-        left: corner0X.value - 15,
-        top: corner0Y.value - 15,
+        left: corner0X.value - 30, // Updated offset for larger handle
+        top: corner0Y.value - 30,
     }));
 
     const corner1Style = useAnimatedStyle(() => ({
-        left: corner1X.value - 15,
-        top: corner1Y.value - 15,
+        left: corner1X.value - 30, // Updated offset for larger handle
+        top: corner1Y.value - 30,
     }));
 
     const corner2Style = useAnimatedStyle(() => ({
-        left: corner2X.value - 15,
-        top: corner2Y.value - 15,
+        left: corner2X.value - 30, // Updated offset for larger handle
+        top: corner2Y.value - 30,
     }));
 
     const corner3Style = useAnimatedStyle(() => ({
-        left: corner3X.value - 15,
-        top: corner3Y.value - 15,
+        left: corner3X.value - 30, // Updated offset for larger handle
+        top: corner3Y.value - 30,
     }));
 
     const cornerStyles = [corner0Style, corner1Style, corner2Style, corner3Style];
 
-
     // Render the corner editor interface
     const renderCornerEditor = () => {
         if (!corners || corners.length !== 4) {
-            console.log('No corners to render:', corners);
             return null;
         }
-
-        console.log('Rendering corners:', corners);
-
         // Create SVG polygon points string from corners
         const polygonPoints = corners.map((point) => `${point[0]},${point[1]}`).join(" ");
 
@@ -538,19 +468,9 @@ export default function ImageViewModal() {
                 </Svg>
 
                 {corners.map((corner, index) => {
-                    console.log(`Corner ${index}:`, corner);
-                    
                     return (
                         <GestureDetector key={`corner-${index}`} gesture={cornerGestures[index]}>
-                            <Animated.View
-                                style={[
-                                    styles.cornerHandle,
-                                    cornerStyles[index],
-                                    {
-                                        backgroundColor: 'red', // Make visible for debugging
-                                    },
-                                ]}
-                            >
+                            <Animated.View style={[styles.cornerHandle, cornerStyles[index]]}>
                                 <View style={styles.cornerHandleInner} />
                             </Animated.View>
                         </GestureDetector>
@@ -600,8 +520,9 @@ export default function ImageViewModal() {
                             style={styles.image}
                             resizeMode="contain"
                             onLayout={(event) => {
-                                const { x, y, width, height } = event.nativeEvent.layout;
-                                setImageLayout({ x, y, width, height });
+                                const layout = event.nativeEvent.layout;
+                                setImageLayout(layout);
+                                initCorners(layout);
                             }}
                         />
                         {renderCornerEditor()}
@@ -609,20 +530,14 @@ export default function ImageViewModal() {
                         <View style={styles.editActions}>
                             <TouchableOpacity
                                 style={[styles.actionButton, styles.cancelButton]}
-                                onPress={() => {
-                                    console.log('Cancel button pressed');
-                                    setIsEditMode(false);
-                                }}
+                                onPress={() => setIsEditMode(false)}
                             >
                                 <ThemedText style={styles.actionButtonText}>Cancel</ThemedText>
                             </TouchableOpacity>
 
                             <TouchableOpacity
                                 style={[styles.actionButton, styles.saveButton]}
-                                onPress={() => {
-                                    console.log('Transform button pressed');
-                                    handleSaveCorners();
-                                }}
+                                onPress={() => handleSaveCorners()}
                                 disabled={!corners}
                             >
                                 <ThemedText style={styles.actionButtonText}>Transform</ThemedText>
@@ -707,20 +622,20 @@ const styles = StyleSheet.create({
     },
     cornerHandle: {
         position: "absolute",
-        width: 30,
-        height: 30,
-        borderRadius: 15,
+        width: 60, // Increased from 30 to make dragging easier
+        height: 60, // Increased from 30 to make dragging easier
+        borderRadius: 30,
         justifyContent: "center",
         alignItems: "center",
         zIndex: 20,
     },
     cornerHandleInner: {
-        width: 20,
-        height: 20,
-        borderRadius: 10,
-        backgroundColor: "rgba(0, 122, 255, 0.8)",
-        borderWidth: 2,
-        borderColor: "white",
+        width: 60,
+        height: 60,
+        borderRadius: 60,
+        backgroundColor: "rgba(0, 122, 255, 0.6)", // Changed from rgba to rgb (fully opaque)
+        borderWidth: 20,
+        borderColor: "rgba(255, 255, 255, 0.8)", // Changed from rgba to rgb (fully opaque)
     },
     cornerLabels: {
         position: "absolute",
