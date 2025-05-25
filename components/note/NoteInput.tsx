@@ -11,6 +11,7 @@ import {
     ScrollView,
     TouchableOpacity,
 } from "react-native";
+import * as FileSystem from "expo-file-system";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { Audio } from "expo-av";
@@ -22,7 +23,9 @@ import { Polygon, NoteImage } from "@/types";
 interface CachedImage {
     id: string;
     uri: string;
+    relativePath?: string; // Store relative path for saving
     transformedUri?: string;
+    transformedRelativePath?: string; // Store relative path of transformed image
     corners?: Polygon;
     isProcessing?: boolean;
 }
@@ -30,6 +33,7 @@ interface CachedImage {
 interface CachedAudio {
     id: string;
     uri: string;
+    relativePath?: string; // Store relative path for saving
     duration?: number;
 }
 
@@ -69,6 +73,11 @@ export const NoteInput: React.FC<NoteInputProps> = ({
         return Math.random().toString(36).substring(2, 15);
     };
 
+    // Helper function to convert relative paths to absolute paths for display
+    const getAbsolutePath = (path: string) => {
+        return path.startsWith("/") ? path : `${FileSystem.documentDirectory}${path}`;
+    };
+
     const handleSubmitNote = async () => {
         if ((!text.trim() && cachedImages.length === 0 && cachedAudio.length === 0) || isSubmitting || disabled) return;
 
@@ -80,19 +89,19 @@ export const NoteInput: React.FC<NoteInputProps> = ({
                 if (img.transformedUri && img.corners) {
                     // This is a transformed image
                     return {
-                        uri: img.transformedUri, // The transformed image is the primary URI
-                        originalUri: img.uri,    // Store the original image as originalUri
-                        corners: img.corners     // Store the corners for later manipulation
+                        uri: img.transformedUri, // The transformed image (cache URI, will be saved by addCombinedNote)
+                        originalUri: img.relativePath || img.uri, // Use relative path for original
+                        corners: img.corners, // Store the corners for later manipulation
                     };
                 } else {
                     // This is a regular image (not transformed)
                     return {
-                        uri: img.uri
+                        uri: img.relativePath || img.uri, // Use relative path if available
                     };
                 }
             });
 
-            const audioUris = cachedAudio.map((audio) => audio.uri);
+            const audioUris = cachedAudio.map((audio) => audio.relativePath || audio.uri);
 
             // Submit note with all content
             await onSubmitNote(text, noteImages, audioUris);
@@ -119,11 +128,14 @@ export const NoteInput: React.FC<NoteInputProps> = ({
                 const newImageId = generateId();
 
                 // Add the image to cache with processing state
+                // Store absolute path for display, but keep track of relative path for saving
+                const absoluteImageUri = getAbsolutePath(imageUri);
                 setCachedImages((prev) => [
                     ...prev,
                     {
                         id: newImageId,
-                        uri: imageUri,
+                        uri: absoluteImageUri, // Store absolute path for display
+                        relativePath: imageUri, // Keep track of relative path for saving
                         isProcessing: isInitialized, // Only set processing state if models are initialized
                     },
                 ]);
@@ -132,7 +144,7 @@ export const NoteInput: React.FC<NoteInputProps> = ({
                 if (isInitialized) {
                     try {
                         // Process the image asynchronously
-                        processImageFromUri(imageUri)
+                        processImageFromUri(getAbsolutePath(imageUri))
                             .then((result) => {
                                 setCachedImages((prev) =>
                                     prev.map((img) => {
@@ -189,11 +201,13 @@ export const NoteInput: React.FC<NoteInputProps> = ({
             // If we got an audio URI back (recording stopped), add it to cached audio
             if (audioUri) {
                 console.log("Adding audio to cache:", audioUri);
+                const absoluteAudioUri = getAbsolutePath(audioUri);
                 setCachedAudio((prev) => [
                     ...prev,
                     {
                         id: generateId(),
-                        uri: audioUri,
+                        uri: absoluteAudioUri, // Store absolute path for playback
+                        relativePath: audioUri, // Store relative path for saving
                     },
                 ]);
             }
@@ -247,7 +261,10 @@ export const NoteInput: React.FC<NoteInputProps> = ({
         try {
             console.log("Creating new sound for URI:", audioUri);
             // Load and play the selected audio
-            const { sound: newSound } = await Audio.Sound.createAsync({ uri: audioUri }, { shouldPlay: true });
+            const { sound: newSound } = await Audio.Sound.createAsync(
+                { uri: audioUri },
+                { shouldPlay: true }
+            );
 
             setSound(newSound);
             setIsPlaying(true);
@@ -326,7 +343,10 @@ export const NoteInput: React.FC<NoteInputProps> = ({
                     {/* Image previews */}
                     {cachedImages.map((image) => (
                         <View key={image.id} style={styles.imagePreviewContainer}>
-                            <Image source={{ uri: image.transformedUri || image.uri }} style={styles.imagePreview} />
+                            <Image
+                                source={{ uri: image.transformedUri || image.uri }}
+                                style={styles.imagePreview}
+                            />
                             {image.isProcessing && (
                                 <View style={styles.loadingOverlay}>
                                     <ActivityIndicator size="small" color="#fff" />

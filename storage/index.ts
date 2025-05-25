@@ -123,6 +123,7 @@ export const initializeConferenceDirectories = async (conferenceId: string): Pro
 export const saveImage = async (uri: string, conferenceId?: string): Promise<string> => {
     const filename = generateUniqueFilename("jpg");
     let destination;
+    let relativePath;
 
     if (conferenceId) {
         const directory = getConferenceImagesDirectory(conferenceId);
@@ -134,8 +135,10 @@ export const saveImage = async (uri: string, conferenceId?: string): Promise<str
             });
         }
         destination = directory + filename;
+        relativePath = `conferences/${conferenceId}/images/${filename}`;
     } else {
         destination = IMAGES_DIRECTORY + filename;
+        relativePath = `images/${filename}`;
     }
 
     await FileSystem.copyAsync({
@@ -143,13 +146,15 @@ export const saveImage = async (uri: string, conferenceId?: string): Promise<str
         to: destination,
     });
 
-    return destination;
+    // Return relative path instead of absolute path
+    return relativePath;
 };
 
 // Save audio to file system
 export const saveAudio = async (uri: string, conferenceId?: string): Promise<string> => {
     const filename = generateUniqueFilename("m4a");
     let destination;
+    let relativePath;
 
     if (conferenceId) {
         const directory = getConferenceAudioDirectory(conferenceId);
@@ -161,8 +166,10 @@ export const saveAudio = async (uri: string, conferenceId?: string): Promise<str
             });
         }
         destination = directory + filename;
+        relativePath = `conferences/${conferenceId}/audio/${filename}`;
     } else {
         destination = AUDIO_DIRECTORY + filename;
+        relativePath = `audio/${filename}`;
     }
 
     await FileSystem.copyAsync({
@@ -170,7 +177,8 @@ export const saveAudio = async (uri: string, conferenceId?: string): Promise<str
         to: destination,
     });
 
-    return destination;
+    // Return relative path instead of absolute path
+    return relativePath;
 };
 
 // Conference storage functions
@@ -395,6 +403,25 @@ export const deleteTalk = async (talkId: string): Promise<void> => {
     }
 };
 
+// Helper function to convert absolute paths to relative paths
+const convertAbsoluteToRelativePath = (absolutePath: string): string => {
+    if (!absolutePath.startsWith('/')) {
+        // Already a relative path
+        return absolutePath;
+    }
+    
+    // Extract the relative part from absolute path
+    const documentDirPattern = /.*\/Documents\/(.*)/;
+    const match = absolutePath.match(documentDirPattern);
+    
+    if (match && match[1]) {
+        return match[1];
+    }
+    
+    // If we can't parse it, return as-is (it might be a cache path that will be handled elsewhere)
+    return absolutePath;
+};
+
 // Note storage functions
 export const getNotes = async (): Promise<Note[]> => {
     try {
@@ -402,10 +429,24 @@ export const getNotes = async (): Promise<Note[]> => {
         if (notesJson) {
             // Parse stored JSON and convert date strings back to Date objects
             const parsedNotes = JSON.parse(notesJson);
-            return parsedNotes.map((note: any) => ({
+            const notes = parsedNotes.map((note: any) => ({
                 ...note,
                 timestamp: new Date(note.timestamp),
+                // Migrate absolute paths to relative paths
+                images: note.images.map((image: any) => ({
+                    ...image,
+                    uri: convertAbsoluteToRelativePath(image.uri),
+                    originalUri: image.originalUri ? convertAbsoluteToRelativePath(image.originalUri) : image.originalUri,
+                })),
+                audioRecordings: note.audioRecordings.map((audioPath: string) => 
+                    convertAbsoluteToRelativePath(audioPath)
+                ),
             }));
+            
+            // Save the migrated notes back to storage
+            await AsyncStorage.setItem(NOTES_KEY, JSON.stringify(notes));
+            
+            return notes;
         }
         return [];
     } catch (error) {
@@ -438,9 +479,21 @@ export const deleteNote = async (noteId: string): Promise<void> => {
 
         if (noteToDelete) {
             // Delete associated files
-            for (const imagePath of noteToDelete.images) {
+            for (const image of noteToDelete.images) {
                 try {
-                    await FileSystem.deleteAsync(imagePath);
+                    // Convert relative path to absolute path for deletion
+                    const imageAbsolutePath = image.uri.startsWith('/') 
+                        ? image.uri 
+                        : `${FileSystem.documentDirectory}${image.uri}`;
+                    await FileSystem.deleteAsync(imageAbsolutePath);
+                    
+                    // If it's a transformed image, also delete the original
+                    if (image.originalUri) {
+                        const originalAbsolutePath = image.originalUri.startsWith('/') 
+                            ? image.originalUri 
+                            : `${FileSystem.documentDirectory}${image.originalUri}`;
+                        await FileSystem.deleteAsync(originalAbsolutePath);
+                    }
                 } catch (error) {
                     console.error("Error deleting image file:", error);
                 }
@@ -448,7 +501,11 @@ export const deleteNote = async (noteId: string): Promise<void> => {
 
             for (const audioPath of noteToDelete.audioRecordings) {
                 try {
-                    await FileSystem.deleteAsync(audioPath);
+                    // Convert relative path to absolute path for deletion
+                    const audioAbsolutePath = audioPath.startsWith('/') 
+                        ? audioPath 
+                        : `${FileSystem.documentDirectory}${audioPath}`;
+                    await FileSystem.deleteAsync(audioAbsolutePath);
                 } catch (error) {
                     console.error("Error deleting audio file:", error);
                 }

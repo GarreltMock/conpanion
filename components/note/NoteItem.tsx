@@ -3,6 +3,7 @@ import { Audio } from "expo-av";
 import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { Alert, Image, Pressable, ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
+import * as FileSystem from "expo-file-system";
 
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
@@ -23,8 +24,12 @@ export const NoteItem: React.FC<NoteItemProps> = ({ note, onDelete, readOnly = f
     const [isPlaying, setIsPlaying] = useState<boolean>(false);
     const [playingIndex, setPlayingIndex] = useState<number | null>(null);
 
-    const textColor = useThemeColor({}, "text");
     const tintColor = useThemeColor({}, "tint");
+
+    // Helper function to convert relative paths to absolute paths
+    const getAbsolutePath = (path: string) => {
+        return path.startsWith("/") ? path : `${FileSystem.documentDirectory}${path}`;
+    };
 
     const { updateNote } = useApp();
     const { lastTransformedImage, clearLastTransformed } = useImageTransformNotification();
@@ -36,14 +41,13 @@ export const NoteItem: React.FC<NoteItemProps> = ({ note, onDelete, readOnly = f
             const hasTransformedImage = note.images.some((img) => img.uri === lastTransformedImage.originalImageUri);
 
             if (hasTransformedImage) {
-                // Update the image in this note
                 const updatedImages = note.images.map((img) => {
                     if (img.uri === lastTransformedImage.originalImageUri) {
                         return {
                             ...img,
                             uri: lastTransformedImage.newImageUri,
                             originalUri: lastTransformedImage.originalUri,
-                            corners: lastTransformedImage.corners, // Use the actual corners from the transformation
+                            corners: lastTransformedImage.corners,
                         };
                     }
                     return img;
@@ -57,8 +61,6 @@ export const NoteItem: React.FC<NoteItemProps> = ({ note, onDelete, readOnly = f
                 updateNote(updatedNote).catch((error) => console.error("NoteItem: Note update failed:", error));
 
                 clearLastTransformed();
-            } else {
-                console.log("NoteItem: This note does not contain the transformed image");
             }
         }
     }, [lastTransformedImage, note, updateNote, clearLastTransformed]);
@@ -79,7 +81,8 @@ export const NoteItem: React.FC<NoteItemProps> = ({ note, onDelete, readOnly = f
         }
 
         try {
-            const { sound: newSound } = await Audio.Sound.createAsync({ uri }, { shouldPlay: true });
+            const audioUri = getAbsolutePath(uri);
+            const { sound: newSound } = await Audio.Sound.createAsync({ uri: audioUri }, { shouldPlay: true });
 
             setSound(newSound);
             setIsPlaying(true);
@@ -131,24 +134,14 @@ export const NoteItem: React.FC<NoteItemProps> = ({ note, onDelete, readOnly = f
                             style={({ pressed }) => [styles.actionButton, pressed && styles.buttonPressed]}
                             onPress={handleEditNote}
                         >
-                            <IconSymbol
-                                name="pencil"
-                                size={16}
-                                // color={tintColor}
-                                color="white"
-                            />
+                            <IconSymbol name="pencil" size={16} color="white" />
                         </Pressable>
 
                         <Pressable
                             style={({ pressed }) => [styles.actionButton, pressed && styles.buttonPressed]}
                             onPress={handleDeleteNote}
                         >
-                            <IconSymbol
-                                name="trash"
-                                size={16}
-                                // color={"#FF453A"}
-                                color="white"
-                            />
+                            <IconSymbol name="trash" size={16} color="white" />
                         </Pressable>
                     </View>
                 )}
@@ -162,13 +155,15 @@ export const NoteItem: React.FC<NoteItemProps> = ({ note, onDelete, readOnly = f
                             activeOpacity={0.9}
                             onPress={() => {
                                 // Pass both the primary image and original if available
+                                const imageAbsoluteUri = getAbsolutePath(image.uri);
                                 const params: any = {
-                                    imageUri: encodeURIComponent(image.uri),
+                                    imageUri: encodeURIComponent(imageAbsoluteUri),
                                 };
 
                                 // If this is a transformed image with original and corners
                                 if (image.originalUri && image.corners) {
-                                    params.originalUri = encodeURIComponent(image.originalUri);
+                                    const originalAbsoluteUri = getAbsolutePath(image.originalUri);
+                                    params.originalUri = encodeURIComponent(originalAbsoluteUri);
                                     // Pass the saved corners as JSON string
                                     params.savedCorners = encodeURIComponent(JSON.stringify(image.corners));
                                 }
@@ -179,7 +174,11 @@ export const NoteItem: React.FC<NoteItemProps> = ({ note, onDelete, readOnly = f
                                 });
                             }}
                         >
-                            <Image source={{ uri: image.uri }} style={styles.image} resizeMode="cover" />
+                            <Image
+                                source={{ uri: getAbsolutePath(image.uri) }}
+                                style={styles.image}
+                                resizeMode="cover"
+                            />
                             {image.originalUri && (
                                 <View style={styles.transformedIndicator}>
                                     <IconSymbol name="wand.and.stars" size={12} color="#fff" />

@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import { Audio } from "expo-av";
+import * as FileSystem from "expo-file-system";
 
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
@@ -34,6 +35,11 @@ export default function EditNoteModal() {
     const tintColor = useThemeColor({}, "tint");
     const backgroundColor = useThemeColor({}, "background");
     const textColor = useThemeColor({}, "text");
+
+    // Helper function to convert relative paths to absolute paths
+    const getAbsolutePath = (path: string) => {
+        return path.startsWith('/') ? path : `${FileSystem.documentDirectory}${path}`;
+    };
 
     useEffect(() => {
         if (noteId) {
@@ -158,7 +164,7 @@ export default function EditNoteModal() {
         }
 
         try {
-            const { sound: newSound } = await Audio.Sound.createAsync({ uri }, { shouldPlay: true });
+            const { sound: newSound } = await Audio.Sound.createAsync({ uri: getAbsolutePath(uri) }, { shouldPlay: true });
 
             setSound(newSound);
             setIsPlaying(true);
@@ -227,13 +233,15 @@ export default function EditNoteModal() {
                                         onPress={() => {
                                             // TODO: here is no edit possible
                                             // Pass both the primary image and original if available
+                                            const imageAbsoluteUri = getAbsolutePath(image.uri);
                                             const params: any = {
-                                                imageUri: encodeURIComponent(image.uri),
+                                                imageUri: encodeURIComponent(imageAbsoluteUri),
                                             };
 
                                             // If this is a transformed image with original and corners
                                             if (image.originalUri && image.corners) {
-                                                params.originalUri = encodeURIComponent(image.originalUri);
+                                                const originalAbsoluteUri = getAbsolutePath(image.originalUri);
+                                                params.originalUri = encodeURIComponent(originalAbsoluteUri);
                                                 // Pass the saved corners as JSON string
                                                 params.savedCorners = encodeURIComponent(JSON.stringify(image.corners));
                                             }
@@ -244,7 +252,7 @@ export default function EditNoteModal() {
                                             });
                                         }}
                                     >
-                                        <Image source={{ uri: image.uri }} style={styles.image} resizeMode="cover" />
+                                        <Image source={{ uri: getAbsolutePath(image.uri) }} style={styles.image} resizeMode="cover" />
                                     </TouchableOpacity>
                                     <TouchableOpacity
                                         style={styles.deleteImageButton}
