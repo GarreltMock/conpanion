@@ -1,4 +1,4 @@
-import { Polygon } from "./docaligner";
+import { Polygon } from "@/types";
 import * as nativeOpenCV from "@/native-modules/opencv";
 
 export interface TransformResult {

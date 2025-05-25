@@ -481,7 +481,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
         // Save image to file system
         const imageUri = result.assets[0].uri;
-        const savedImagePath = await saveImage(imageUri);
+        const savedImagePath = await saveImage(imageUri, currentConference?.id);
 
         // Just return the saved image path
         return savedImagePath;
@@ -540,7 +540,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
                 throw new Error("Recording URI is null");
             }
 
-            const savedAudioPath = await saveAudio(uri);
+            const savedAudioPath = await saveAudio(uri, currentConference?.id);
             setRecording(null);
 
             // Return the saved audio path
@@ -559,12 +559,39 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
             throw new Error("No active talk to add note to");
         }
 
+        // Process images to ensure they're saved to document directory (not cache)
+        const processedImages: NoteImage[] = await Promise.all(
+            images.map(async (image) => {
+                // Check if the main image URI is from cache directory
+                if (image.uri.includes("ImageManipulator") || image.uri.includes("cacheDirectory")) {
+                    // Save the cache image to document directory
+                    const savedImagePath = await saveImage(image.uri, currentConference?.id);
+
+                    // Also save the original image if it exists and is from cache
+                    let savedOriginalPath = image.originalUri;
+                    if (
+                        image.originalUri &&
+                        (image.originalUri.includes("ImageManipulator") || image.originalUri.includes("cacheDirectory"))
+                    ) {
+                        savedOriginalPath = await saveImage(image.originalUri, currentConference?.id);
+                    }
+
+                    return {
+                        ...image,
+                        uri: savedImagePath,
+                        originalUri: savedOriginalPath,
+                    };
+                }
+                return image;
+            })
+        );
+
         // Create the new note with all content
         const newNote: Note = {
             id: generateId(),
             talkId: activeTalk.id,
             textContent: text,
-            images: images,
+            images: processedImages,
             audioRecordings: audioRecordings,
             timestamp: new Date(),
         };
@@ -578,10 +605,42 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     };
 
     const updateNote = async (updatedNote: Note): Promise<void> => {
-        await saveNote(updatedNote);
+        // Process images to ensure they're saved to document directory (not cache)
+        const processedImages: NoteImage[] = await Promise.all(
+            updatedNote.images.map(async (image) => {
+                // Check if the main image URI is from cache directory
+                if (image.uri.includes("ImageManipulator") || image.uri.includes("cacheDirectory")) {
+                    // Save the cache image to document directory
+                    const savedImagePath = await saveImage(image.uri, currentConference?.id);
+
+                    // Also save the original image if it exists and is from cache
+                    let savedOriginalPath = image.originalUri;
+                    if (
+                        image.originalUri &&
+                        (image.originalUri.includes("ImageManipulator") || image.originalUri.includes("cacheDirectory"))
+                    ) {
+                        savedOriginalPath = await saveImage(image.originalUri, currentConference?.id);
+                    }
+
+                    return {
+                        ...image,
+                        uri: savedImagePath,
+                        originalUri: savedOriginalPath,
+                    };
+                }
+                return image;
+            })
+        );
+
+        const processedNote = {
+            ...updatedNote,
+            images: processedImages,
+        };
+
+        await saveNote(processedNote);
 
         // Update state
-        setNotes((prevNotes) => prevNotes.map((note) => (note.id === updatedNote.id ? updatedNote : note)));
+        setNotes((prevNotes) => prevNotes.map((note) => (note.id === updatedNote.id ? processedNote : note)));
     };
 
     const deleteNoteById = async (noteId: string): Promise<void> => {
