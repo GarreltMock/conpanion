@@ -39,6 +39,7 @@ interface NoteInputProps {
     onSubmitNote: (text: string, images: NoteImage[], audioRecordings: string[]) => Promise<void>;
     isRecording?: boolean;
     disabled?: boolean;
+    keyboardSpaceDiff?: number; // Optional prop to control space below input
     initialText?: string;
     initialImages?: NoteImage[];
     initialAudio?: string[];
@@ -50,6 +51,7 @@ export const NoteInput: React.FC<NoteInputProps> = ({
     onSubmitNote,
     isRecording = false,
     disabled = false,
+    keyboardSpaceDiff = undefined,
     initialText = "",
     initialImages = [],
     initialAudio = [],
@@ -309,8 +311,8 @@ export const NoteInput: React.FC<NoteInputProps> = ({
 
                 // Only add extra space on iOS
                 if (Platform.OS === "ios") {
-                    // Calculate how much space to add below the input
-                    setKeyboardSpace(keyboardHeight - 74);
+                    console.log("Keyboard height:", keyboardSpace && 74);
+                    setKeyboardSpace(keyboardHeight - (keyboardSpaceDiff ?? 74));
                 }
             }
         );
@@ -471,9 +473,6 @@ export const NoteInput: React.FC<NoteInputProps> = ({
 const styles = StyleSheet.create({
     container: {
         padding: 8,
-        borderTopWidth: 1,
-        borderTopColor: "rgba(150, 150, 150, 0.2)",
-        // Dynamic padding will be set by the component
     },
     attachmentsContainer: {
         marginBottom: 8,

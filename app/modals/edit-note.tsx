@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { StyleSheet, View, TouchableOpacity, Alert, ActivityIndicator } from "react-native";
+import { StyleSheet, View, Alert, ActivityIndicator } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 
-import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { NoteInput } from "@/components/note/NoteInput";
 import { useApp } from "@/context/AppContext";
-import { useThemeColor } from "@/hooks/useThemeColor";
 import { Note, NoteImage } from "@/types";
 
 export default function EditNoteModal() {
@@ -15,8 +13,6 @@ export default function EditNoteModal() {
     const [isSaving, setIsSaving] = useState(false);
 
     const { notes, isRecording, updateNote, addImageNote, addAudioNote, stopAudioRecording } = useApp();
-
-    const tintColor = useThemeColor({}, "tint");
 
     useEffect(() => {
         if (noteId) {
@@ -32,6 +28,8 @@ export default function EditNoteModal() {
 
     const handleUpdateNote = async (text: string, images: NoteImage[], audioRecordings: string[]) => {
         if (!note) return;
+
+        // TODO handle deleting images correctly
 
         try {
             setIsSaving(true);
@@ -94,51 +92,46 @@ export default function EditNoteModal() {
     }
 
     return (
-        <ThemedView style={styles.container}>
-            <View style={styles.header}>
-                <TouchableOpacity style={styles.cancelButton} onPress={handleCancel} disabled={isSaving}>
-                    <ThemedText style={styles.cancelText}>Cancel</ThemedText>
-                </TouchableOpacity>
-
-                <ThemedText style={styles.title}>Edit Note</ThemedText>
-
-                {isSaving && <ActivityIndicator size="small" color={tintColor} />}
-            </View>
-
-            <View style={styles.content}>
-                <NoteInput
-                    onTakePhoto={handleTakePhoto}
-                    onRecordAudio={handleRecordAudio}
-                    onSubmitNote={handleUpdateNote}
-                    isRecording={isRecording}
-                    disabled={isSaving}
-                    initialText={note.textContent}
-                    initialAudio={note.audioRecordings}
-                    initialImages={note.images}
-                />
-            </View>
-        </ThemedView>
+        <View style={styles.backdrop}>
+            <View style={styles.spacer} onTouchEnd={handleCancel} />
+            <ThemedView style={styles.container}>
+                <View style={styles.content}>
+                    <NoteInput
+                        onTakePhoto={handleTakePhoto}
+                        onRecordAudio={handleRecordAudio}
+                        onSubmitNote={handleUpdateNote}
+                        isRecording={isRecording}
+                        disabled={isSaving}
+                        keyboardSpaceDiff={8}
+                        initialText={note.textContent}
+                        initialAudio={note.audioRecordings}
+                        initialImages={note.images}
+                    />
+                </View>
+            </ThemedView>
+        </View>
     );
 }
 
 const styles = StyleSheet.create({
-    container: {
+    backdrop: {
         flex: 1,
+        backgroundColor: "rgba(0, 0, 0, 0.75)",
+    },
+    spacer: {
+        flex: 1,
+    },
+    container: {
+        borderTopLeftRadius: 16,
+        borderTopRightRadius: 16,
+        maxHeight: "70%",
+        minHeight: 180,
+        paddingTop: 8,
     },
     loadingContainer: {
         flex: 1,
         justifyContent: "center",
         alignItems: "center",
-    },
-    header: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-        paddingHorizontal: 16,
-        paddingTop: 16,
-        paddingBottom: 16,
-        borderBottomWidth: 1,
-        borderBottomColor: "rgba(150, 150, 150, 0.2)",
     },
     title: {
         fontSize: 17,
@@ -151,6 +144,6 @@ const styles = StyleSheet.create({
         fontSize: 17,
     },
     content: {
-        flex: 1,
+        paddingBottom: 16,
     },
 });

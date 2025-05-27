@@ -123,13 +123,15 @@ export default function NotesScreen() {
                 renderEmptyState()
             )}
 
-            <NoteInput
-                onSubmitNote={handleSubmitNote}
-                onTakePhoto={handleTakePhoto}
-                onRecordAudio={handleRecordAudio}
-                isRecording={isRecording}
-                disabled={!activeTalk}
-            />
+            <View style={{ borderTopWidth: 1, borderTopColor: "rgba(150, 150, 150, 0.2)" }}>
+                <NoteInput
+                    onSubmitNote={handleSubmitNote}
+                    onTakePhoto={handleTakePhoto}
+                    onRecordAudio={handleRecordAudio}
+                    isRecording={isRecording}
+                    disabled={!activeTalk}
+                />
+            </View>
         </ThemedView>
     );
 }

@@ -101,9 +101,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     const loadConference = useCallback(async () => {
         try {
             // Initialize with default if none exists
-            console.log("Loading active conference data...");
             const defaultConference = await initializeDefaultConference();
-            console.log("Active conference loaded:", defaultConference);
             setCurrentConference(defaultConference);
 
             // Update conferences list if needed
@@ -127,7 +125,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
                 // Load all conferences first
                 const allConferences = await loadAllConferences();
-                console.log("Loaded conferences:", allConferences);
 
                 // Load active conference (or initialize a default one)
                 await loadConference();
@@ -233,7 +230,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
         // End any active talk before setting a new conference
         if (activeTalk) {
-            console.log("Ending active talk before creating new conference");
             await endCurrentTalk();
         }
 
@@ -247,7 +243,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         // Clear active talk when creating a new conference
         setActiveTalk(null);
 
-        console.log(`Created new conference: ${newConference.name} (ID: ${newConference.id})`);
         return newConference;
     };
 
@@ -310,7 +305,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
         // First end any active talk
         if (activeTalk) {
-            console.log("Ending active talk before switching conference");
             await endCurrentTalk();
         }
 
@@ -319,8 +313,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
         // Reset active talk
         setActiveTalk(null);
-
-        console.log(`Switched to conference: ${conference.name}`);
     };
 
     const archiveConference = async (conferenceId: string): Promise<void> => {
@@ -341,12 +333,9 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     const getConferencesFromContext = async (): Promise<Conference[]> => {
         // First check if we already have conferences in state
         if (conferences.length > 0) {
-            console.log("Using cached conferences:", conferences.length);
             return conferences;
         }
 
-        // Otherwise load from storage
-        console.log("Loading conferences from storage");
         const storedConferences = await getConferencesFromStorage();
         setConferences(storedConferences);
         return storedConferences;
@@ -359,9 +348,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
     // Talk Management
     const createTalk = async (title: string): Promise<Talk> => {
-        console.log("Creating talk with title:", title);
-        console.log("Current conference state:", currentConference);
-
         if (!currentConference) {
             console.error("Conference is null or undefined");
             throw new Error("No current conference exists");
@@ -369,7 +355,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
         // End current active talk if one exists
         if (activeTalk) {
-            console.log("Ending current active talk:", activeTalk.title);
             await endCurrentTalk();
         }
 

@@ -57,8 +57,6 @@ export const ConferenceItem: React.FC<ConferenceItemProps> = ({
             <ThemedView
                 style={[styles.container, isActive && styles.activeContainer, isActive && { borderColor: tintColor }]}
             >
-                {isActive && <Ionicons name="checkmark-circle" size={20} color={tintColor} style={styles.activeMark} />}
-
                 <View style={styles.contentContainer}>
                     <View style={styles.mainContent}>
                         <ThemedText style={styles.title}>{conference.name}</ThemedText>
@@ -117,11 +115,6 @@ const styles = StyleSheet.create({
     },
     activeContainer: {
         borderWidth: 2,
-    },
-    activeMark: {
-        position: "absolute",
-        top: -11,
-        right: -11,
     },
     contentContainer: {
         flexDirection: "row",

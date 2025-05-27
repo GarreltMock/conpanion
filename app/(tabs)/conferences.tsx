@@ -25,17 +25,14 @@ export default function ConferencesScreen() {
 
     useEffect(() => {
         const checkConferencesAndLoad = async () => {
-            console.log("Conferences screen - loading data");
             setLoading(true);
             try {
                 const hasConfs = await hasConferences();
-                console.log("Has conferences check:", hasConfs);
                 setHasAnyConferences(hasConfs);
 
                 // Always try to load conferences regardless of hasConfs
                 // This ensures we have the latest data
-                const loadedConferences = await getConferences();
-                console.log("Loaded conferences:", loadedConferences);
+                await getConferences();
             } catch (error) {
                 console.error("Error loading conferences:", error);
             } finally {
@@ -51,14 +48,11 @@ export default function ConferencesScreen() {
     const handleRefresh = async () => {
         setRefreshing(true);
         try {
-            console.log("Refreshing conferences list");
             const hasConfs = await hasConferences();
-            console.log("Has conferences check (refresh):", hasConfs);
             setHasAnyConferences(hasConfs);
 
             // Always try to load conferences
-            const loadedConferences = await getConferences();
-            console.log("Refreshed conferences:", loadedConferences);
+            await getConferences();
         } catch (error) {
             console.error("Error refreshing conferences:", error);
         } finally {
@@ -120,8 +114,6 @@ export default function ConferencesScreen() {
     };
 
     const handleViewConferenceDetails = (conference: Conference) => {
-        console.log("Navigating to conference details:", conference.id);
-
         // Make sure we have an ID to navigate with
         if (!conference || !conference.id) {
             console.error("Cannot navigate to conference details: Invalid conference");
