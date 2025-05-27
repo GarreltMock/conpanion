@@ -19,13 +19,10 @@ import { ThemedText } from "@/components/ThemedText";
 import { useImageTransform } from "@/hooks/useImageTransform";
 import { Polygon, NoteImage } from "@/types";
 
-// Define types for cached assets
 interface CachedImage {
     id: string;
     uri: string;
-    relativePath?: string; // Store relative path for saving
     transformedUri?: string;
-    transformedRelativePath?: string; // Store relative path of transformed image
     corners?: Polygon;
     isProcessing?: boolean;
 }
@@ -33,7 +30,6 @@ interface CachedImage {
 interface CachedAudio {
     id: string;
     uri: string;
-    relativePath?: string; // Store relative path for saving
     duration?: number;
 }
 
@@ -43,6 +39,9 @@ interface NoteInputProps {
     onSubmitNote: (text: string, images: NoteImage[], audioRecordings: string[]) => Promise<void>;
     isRecording?: boolean;
     disabled?: boolean;
+    initialText?: string;
+    initialImages?: NoteImage[];
+    initialAudio?: string[];
 }
 
 export const NoteInput: React.FC<NoteInputProps> = ({
@@ -51,8 +50,11 @@ export const NoteInput: React.FC<NoteInputProps> = ({
     onSubmitNote,
     isRecording = false,
     disabled = false,
+    initialText = "",
+    initialImages = [],
+    initialAudio = [],
 }) => {
-    const [text, setText] = useState("");
+    const [text, setText] = useState(initialText);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [cachedImages, setCachedImages] = useState<CachedImage[]>([]);
     const [cachedAudio, setCachedAudio] = useState<CachedAudio[]>([]);
@@ -73,7 +75,32 @@ export const NoteInput: React.FC<NoteInputProps> = ({
         return Math.random().toString(36).substring(2, 15);
     };
 
-    // Helper function to convert relative paths to absolute paths for display
+    // Initialize cached assets from props - use a ref to track if already initialized
+    const [hasInitializedProps, setHasInitializedProps] = useState(false);
+
+    useEffect(() => {
+        if (!hasInitializedProps && (initialImages.length > 0 || initialAudio.length > 0 || initialText)) {
+            // Convert initial images to cached format
+            const convertedImages: CachedImage[] = initialImages.map((img) => ({
+                id: generateId(),
+                uri: img.originalUri ? img.originalUri : img.uri,
+                transformedUri: img.originalUri ? img.uri : undefined,
+                corners: img.corners,
+                isProcessing: false,
+            }));
+
+            // Convert initial audio to cached format
+            const convertedAudio: CachedAudio[] = initialAudio.map((audioUri) => ({
+                id: generateId(),
+                uri: audioUri,
+            }));
+
+            setCachedImages(convertedImages);
+            setCachedAudio(convertedAudio);
+            setHasInitializedProps(true);
+        }
+    }, [initialImages, initialAudio, initialText, hasInitializedProps]);
+
     const getAbsolutePath = (path: string) => {
         return path.startsWith("/") ? path : `${FileSystem.documentDirectory}${path}`;
     };
@@ -87,21 +114,19 @@ export const NoteInput: React.FC<NoteInputProps> = ({
             // Convert cached images to NoteImage format
             const noteImages: NoteImage[] = cachedImages.map((img) => {
                 if (img.transformedUri && img.corners) {
-                    // This is a transformed image
                     return {
-                        uri: img.transformedUri, // The transformed image (cache URI, will be saved by addCombinedNote)
-                        originalUri: img.relativePath || img.uri, // Use relative path for original
-                        corners: img.corners, // Store the corners for later manipulation
+                        uri: img.transformedUri,
+                        originalUri: img.uri,
+                        corners: img.corners,
                     };
                 } else {
-                    // This is a regular image (not transformed)
                     return {
-                        uri: img.relativePath || img.uri, // Use relative path if available
+                        uri: img.uri,
                     };
                 }
             });
 
-            const audioUris = cachedAudio.map((audio) => audio.relativePath || audio.uri);
+            const audioUris = cachedAudio.map((audio) => audio.uri);
 
             // Submit note with all content
             await onSubmitNote(text, noteImages, audioUris);
@@ -128,14 +153,11 @@ export const NoteInput: React.FC<NoteInputProps> = ({
                 const newImageId = generateId();
 
                 // Add the image to cache with processing state
-                // Store absolute path for display, but keep track of relative path for saving
-                const absoluteImageUri = getAbsolutePath(imageUri);
                 setCachedImages((prev) => [
                     ...prev,
                     {
                         id: newImageId,
-                        uri: absoluteImageUri, // Store absolute path for display
-                        relativePath: imageUri, // Keep track of relative path for saving
+                        uri: imageUri, // Store absolute path for display
                         isProcessing: isInitialized, // Only set processing state if models are initialized
                     },
                 ]);
@@ -198,16 +220,12 @@ export const NoteInput: React.FC<NoteInputProps> = ({
             Keyboard.dismiss();
             const audioUri = await onRecordAudio();
 
-            // If we got an audio URI back (recording stopped), add it to cached audio
             if (audioUri) {
-                console.log("Adding audio to cache:", audioUri);
-                const absoluteAudioUri = getAbsolutePath(audioUri);
                 setCachedAudio((prev) => [
                     ...prev,
                     {
                         id: generateId(),
-                        uri: absoluteAudioUri, // Store absolute path for playback
-                        relativePath: audioUri, // Store relative path for saving
+                        uri: audioUri,
                     },
                 ]);
             }
@@ -232,8 +250,6 @@ export const NoteInput: React.FC<NoteInputProps> = ({
     };
 
     const handlePlayPauseAudio = async (audioUri: string, id: string) => {
-        console.log("Playing/pausing audio:", audioUri);
-
         // If already playing this audio, pause it
         if (playingId === id && sound && isPlaying) {
             try {
@@ -259,10 +275,8 @@ export const NoteInput: React.FC<NoteInputProps> = ({
         }
 
         try {
-            console.log("Creating new sound for URI:", audioUri);
-            // Load and play the selected audio
             const { sound: newSound } = await Audio.Sound.createAsync(
-                { uri: audioUri },
+                { uri: getAbsolutePath(audioUri) },
                 { shouldPlay: true }
             );
 
@@ -344,7 +358,7 @@ export const NoteInput: React.FC<NoteInputProps> = ({
                     {cachedImages.map((image) => (
                         <View key={image.id} style={styles.imagePreviewContainer}>
                             <Image
-                                source={{ uri: image.transformedUri || image.uri }}
+                                source={{ uri: getAbsolutePath(image.transformedUri || image.uri) }}
                                 style={styles.imagePreview}
                             />
                             {image.isProcessing && (
@@ -353,7 +367,12 @@ export const NoteInput: React.FC<NoteInputProps> = ({
                                 </View>
                             )}
                             <TouchableOpacity style={styles.deleteButton} onPress={() => handleDeleteImage(image.id)}>
-                                <IconSymbol name="xmark.circle.fill" size={20} color="#fff" />
+                                <IconSymbol
+                                    name="xmark.circle.fill"
+                                    size={20}
+                                    color="#fff"
+                                    style={{ backgroundColor, borderRadius: 20 }}
+                                />
                             </TouchableOpacity>
                         </View>
                     ))}
@@ -375,7 +394,12 @@ export const NoteInput: React.FC<NoteInputProps> = ({
                                 <ThemedText style={styles.audioLabel}>Audio Recording</ThemedText>
                             </TouchableOpacity>
                             <TouchableOpacity style={styles.deleteButton} onPress={() => handleDeleteAudio(audio.id)}>
-                                <IconSymbol name="xmark.circle.fill" size={20} color="#fff" />
+                                <IconSymbol
+                                    name="xmark.circle.fill"
+                                    size={20}
+                                    color="#fff"
+                                    style={{ backgroundColor, borderRadius: 20 }}
+                                />
                             </TouchableOpacity>
                         </View>
                     ))}
@@ -519,11 +543,11 @@ const styles = StyleSheet.create({
         flex: 1,
         minHeight: 40,
         maxHeight: 100,
-        paddingHorizontal: 12,
+        paddingLeft: 6,
         paddingTop: 10,
         paddingBottom: 10,
         borderRadius: 20,
-        backgroundColor: "rgba(150, 150, 150, 0.1)",
+        // backgroundColor: "rgba(150, 150, 150, 0.1)",
         fontSize: 16,
     },
     buttonsContainer: {

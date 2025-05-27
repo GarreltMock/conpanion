@@ -46,7 +46,7 @@ export default function ConferencesScreen() {
         checkConferencesAndLoad();
 
         // Only run this once on component mount by using empty dependency array
-    }, []);
+    }, [getConferences, hasConferences]);
 
     const handleRefresh = async () => {
         setRefreshing(true);

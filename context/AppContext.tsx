@@ -15,7 +15,6 @@ import {
     getConferences as getConferencesFromStorage,
     saveConference as saveConferenceToStorage,
     deleteConference as deleteConferenceFromStorage,
-    getActiveConferenceId,
     setActiveConferenceId,
     getExportOptions as getExportOptionsFromStorage,
     saveExportOptions as saveExportOptionsToStorage,
@@ -99,6 +98,24 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     const [isRecording, setIsRecording] = useState<boolean>(false);
     const [recording, setRecording] = useState<Audio.Recording | null>(null);
 
+    const loadConference = useCallback(async () => {
+        try {
+            // Initialize with default if none exists
+            console.log("Loading active conference data...");
+            const defaultConference = await initializeDefaultConference();
+            console.log("Active conference loaded:", defaultConference);
+            setCurrentConference(defaultConference);
+
+            // Update conferences list if needed
+            const allConferences = await loadAllConferences();
+            if (!allConferences.some((conf) => conf.id === defaultConference.id)) {
+                setConferences((prev) => [...prev, defaultConference]);
+            }
+        } catch (error) {
+            console.error("Error loading conference:", error);
+        }
+    }, []);
+
     // Initialize the app
     useEffect(() => {
         const initialize = async () => {
@@ -138,7 +155,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         };
 
         initialize();
-    }, []);
+    }, [loadConference]);
 
     // Load active talk when the app starts, conference changes, or app comes into focus
     useEffect(() => {
@@ -178,24 +195,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         } catch (error) {
             console.error("Error loading all conferences:", error);
             return [];
-        }
-    };
-
-    const loadConference = async () => {
-        try {
-            // Initialize with default if none exists
-            console.log("Loading active conference data...");
-            const defaultConference = await initializeDefaultConference();
-            console.log("Active conference loaded:", defaultConference);
-            setCurrentConference(defaultConference);
-
-            // Update conferences list if needed
-            const allConferences = await loadAllConferences();
-            if (!allConferences.some((conf) => conf.id === defaultConference.id)) {
-                setConferences((prev) => [...prev, defaultConference]);
-            }
-        } catch (error) {
-            console.error("Error loading conference:", error);
         }
     };
 

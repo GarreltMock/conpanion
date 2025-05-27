@@ -55,7 +55,10 @@ export default function RootLayout() {
                                 }}
                             />
                             <Stack.Screen name="modals/new-talk" options={{ presentation: "modal" }} />
-                            <Stack.Screen name="modals/edit-note" options={{ presentation: "modal" }} />
+                            <Stack.Screen
+                                name="modals/edit-note"
+                                options={{ presentation: "modal", headerShown: false }}
+                            />
                             <Stack.Screen
                                 name="modals/image-view"
                                 options={{
