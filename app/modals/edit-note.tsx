@@ -12,7 +12,7 @@ export default function EditNoteModal() {
     const [note, setNote] = useState<Note | null>(null);
     const [isSaving, setIsSaving] = useState(false);
 
-    const { notes, isRecording, updateNote, addImageNote, addAudioNote, stopAudioRecording } = useApp();
+    const { notes, isRecording, updateNote, addImageNote, addAudioNote, stopAudioRecording, deleteImage } = useApp();
 
     useEffect(() => {
         if (noteId) {
@@ -26,13 +26,30 @@ export default function EditNoteModal() {
         }
     }, [noteId, notes]);
 
+    const handleDeletedImages = async (initialImages: NoteImage[], currentImages: NoteImage[]) => {
+        const currentImageUris = new Set(currentImages.map((img) => img.uri));
+        const deletedImages = initialImages.filter((img) => !currentImageUris.has(img.uri));
+
+        for (const deletedImage of deletedImages) {
+            try {
+                await deleteImage(deletedImage.uri);
+                if (deletedImage.originalUri) {
+                    await deleteImage(deletedImage.originalUri);
+                }
+            } catch (error) {
+                console.error("Error deleting image:", deletedImage.uri, error);
+            }
+        }
+    };
+
     const handleUpdateNote = async (text: string, images: NoteImage[], audioRecordings: string[]) => {
         if (!note) return;
 
-        // TODO handle deleting images correctly
-
         try {
             setIsSaving(true);
+
+            // Handle deleted images
+            await handleDeletedImages(note.images, images);
 
             // Update the note
             const updatedNote: Note = {

@@ -11,13 +11,13 @@ import {
     ScrollView,
     TouchableOpacity,
 } from "react-native";
-import * as FileSystem from "expo-file-system";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { Audio } from "expo-av";
 import { ThemedText } from "@/components/ThemedText";
 import { useImageTransform } from "@/hooks/useImageTransform";
 import { Polygon, NoteImage } from "@/types";
+import { useApp } from "@/context/AppContext";
 
 interface CachedImage {
     id: string;
@@ -69,6 +69,8 @@ export const NoteInput: React.FC<NoteInputProps> = ({
     const textColor = useThemeColor({}, "text");
     const tintColor = useThemeColor({}, "tint");
 
+    const { getAbsolutePath } = useApp();
+
     // Initialize the image transformation hook
     const { isInitialized, processImageFromUri } = useImageTransform();
 
@@ -102,10 +104,6 @@ export const NoteInput: React.FC<NoteInputProps> = ({
             setHasInitializedProps(true);
         }
     }, [initialImages, initialAudio, initialText, hasInitializedProps]);
-
-    const getAbsolutePath = (path: string) => {
-        return path.startsWith("/") ? path : `${FileSystem.documentDirectory}${path}`;
-    };
 
     const handleSubmitNote = async () => {
         if ((!text.trim() && cachedImages.length === 0 && cachedAudio.length === 0) || isSubmitting || disabled) return;
@@ -173,6 +171,12 @@ export const NoteInput: React.FC<NoteInputProps> = ({
                                 setCachedImages((prev) =>
                                     prev.map((img) => {
                                         if (img.id === newImageId) {
+                                            console.log({
+                                                transformedUri: result.transformed?.uri,
+                                                uri: result.transformed?.uri
+                                                    ? getAbsolutePath(result.transformed.uri)
+                                                    : undefined,
+                                            });
                                             return {
                                                 ...img,
                                                 transformedUri: result.transformed?.uri,

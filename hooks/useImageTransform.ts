@@ -4,6 +4,7 @@ import { processImage } from "./helper/docaligner";
 import { transformImage } from "./helper/transform_image";
 import { imageUriToImageData, imageDataToUriRN } from "./helper/image_utils";
 import { Polygon } from "@/types";
+import { Platform } from "react-native";
 
 export function useImageTransform() {
     const [isInitialized, setIsInitialized] = useState(false);
@@ -33,7 +34,7 @@ export function useImageTransform() {
                     if (!fileInfo.exists) {
                         // Copy from asset bundle - you'll need to adjust this path based on where you place the models
                         await FileSystem.copyAsync({
-                            from: `${FileSystem.bundleDirectory}/${file}`,
+                            from: `${FileSystem.bundleDirectory}${Platform.OS === "ios" ? "" : "models"}/${file}`,
                             to: fileUri,
                         });
                     }

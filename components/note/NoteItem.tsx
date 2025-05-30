@@ -3,7 +3,6 @@ import { Audio } from "expo-av";
 import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { Alert, Image, Pressable, ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
-import * as FileSystem from "expo-file-system";
 
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
@@ -26,12 +25,7 @@ export const NoteItem: React.FC<NoteItemProps> = ({ note, onDelete, readOnly = f
 
     const tintColor = useThemeColor({}, "tint");
 
-    // Helper function to convert relative paths to absolute paths
-    const getAbsolutePath = (path: string) => {
-        return path.startsWith("/") ? path : `${FileSystem.documentDirectory}${path}`;
-    };
-
-    const { updateNote } = useApp();
+    const { updateNote, getAbsolutePath } = useApp();
     const { lastTransformedImage, clearLastTransformed } = useImageTransformNotification();
 
     // Listen for image transformations and update this note if it contains the transformed image

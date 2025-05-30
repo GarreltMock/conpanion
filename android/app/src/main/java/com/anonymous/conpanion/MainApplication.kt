@@ -2,19 +2,20 @@ package com.anonymous.conpanion
 
 import android.app.Application
 import android.content.res.Configuration
-
+import android.util.Log
 import com.facebook.react.PackageList
 import com.facebook.react.ReactApplication
+import com.facebook.react.ReactHost
 import com.facebook.react.ReactNativeHost
 import com.facebook.react.ReactPackage
-import com.facebook.react.ReactHost
 import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint.load
 import com.facebook.react.defaults.DefaultReactNativeHost
 import com.facebook.react.soloader.OpenSourceMergedSoMapping
 import com.facebook.soloader.SoLoader
-
+import com.reactlibrary.RNOpenCvLibraryPackage
 import expo.modules.ApplicationLifecycleDispatcher
 import expo.modules.ReactNativeHostWrapper
+import org.opencv.android.OpenCVLoader
 
 class MainApplication : Application(), ReactApplication {
 
@@ -24,7 +25,7 @@ class MainApplication : Application(), ReactApplication {
           override fun getPackages(): List<ReactPackage> {
             val packages = PackageList(this).packages
             // Packages that cannot be autolinked yet can be added manually here, for example:
-            // packages.add(new MyReactNativePackage());
+            packages.add(RNOpenCvLibraryPackage())
             return packages
           }
 
@@ -48,6 +49,10 @@ class MainApplication : Application(), ReactApplication {
       load()
     }
     ApplicationLifecycleDispatcher.onApplicationCreate(this)
+
+    if (!OpenCVLoader.initLocal()) {
+      Log.d("OpenCv", "Error while init");
+    }
   }
 
   override fun onConfigurationChanged(newConfig: Configuration) {

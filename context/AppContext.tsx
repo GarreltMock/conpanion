@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
 import * as ImagePicker from "expo-image-picker";
+import * as FileSystem from "expo-file-system";
 import { Audio } from "expo-av";
 import { Conference, Talk, Note, ExportOptions, ConferenceStatus, NoteImage } from "../types";
 import {
@@ -21,6 +22,7 @@ import {
     generatePDF,
     generateMarkdown,
     initializeConferenceDirectories,
+    deleteImage as deleteImageFromStorage,
 } from "../storage";
 
 // Helper function to generate a random ID (replacing nanoid)
@@ -69,7 +71,9 @@ interface AppContextType {
     addCombinedNote: (text: string, images: NoteImage[], audioRecordings: string[]) => Promise<Note>;
     updateNote: (note: Note) => Promise<void>;
     deleteNote: (noteId: string) => Promise<void>;
+    deleteImage: (imagePath: string) => Promise<void>;
     getNotesForTalk: (talkId: string) => Note[];
+    getAbsolutePath: (path: string) => string; // Returns absolute path for file system operations
 
     // Export Functionality
     exportToPDF: (conferenceId: string, options: ExportOptions) => Promise<string>;
@@ -634,6 +638,10 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         setNotes((prevNotes) => prevNotes.filter((note) => note.id !== noteId));
     };
 
+    const deleteImage = async (imagePath: string): Promise<void> => {
+        await deleteImageFromStorage(imagePath);
+    };
+
     const getNotesForTalk = (talkId: string): Note[] => {
         return notes
             .filter((note) => note.talkId === talkId)
@@ -697,6 +705,10 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         return await getExportOptionsFromStorage();
     };
 
+    const getAbsolutePath = (path: string) => {
+        return path.startsWith("/") || path.startsWith("file:") ? path : `${FileSystem.documentDirectory}${path}`;
+    };
+
     const contextValue: AppContextType = {
         // Conference Management
         currentConference,
@@ -727,7 +739,9 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         addCombinedNote,
         updateNote,
         deleteNote: deleteNoteById,
+        deleteImage,
         getNotesForTalk,
+        getAbsolutePath,
 
         // Export Functionality
         exportToPDF,

@@ -78,8 +78,6 @@ export const initializeConferenceDirectories = async (conferenceId: string): Pro
         throw new Error("Invalid conference ID");
     }
 
-    console.log(`Initializing directories for conference: ${conferenceId}`);
-
     // First ensure the base conferences directory exists
     const conferencesBaseDir = `${FileSystem.documentDirectory}conferences/`;
     const conferencesBaseDirInfo = await FileSystem.getInfoAsync(conferencesBaseDir);
@@ -405,19 +403,19 @@ export const deleteTalk = async (talkId: string): Promise<void> => {
 
 // Helper function to convert absolute paths to relative paths
 const convertAbsoluteToRelativePath = (absolutePath: string): string => {
-    if (!absolutePath.startsWith('/')) {
+    if (!absolutePath.startsWith("/")) {
         // Already a relative path
         return absolutePath;
     }
-    
+
     // Extract the relative part from absolute path
     const documentDirPattern = /.*\/Documents\/(.*)/;
     const match = absolutePath.match(documentDirPattern);
-    
+
     if (match && match[1]) {
         return match[1];
     }
-    
+
     // If we can't parse it, return as-is (it might be a cache path that will be handled elsewhere)
     return absolutePath;
 };
@@ -436,16 +434,18 @@ export const getNotes = async (): Promise<Note[]> => {
                 images: note.images.map((image: any) => ({
                     ...image,
                     uri: convertAbsoluteToRelativePath(image.uri),
-                    originalUri: image.originalUri ? convertAbsoluteToRelativePath(image.originalUri) : image.originalUri,
+                    originalUri: image.originalUri
+                        ? convertAbsoluteToRelativePath(image.originalUri)
+                        : image.originalUri,
                 })),
-                audioRecordings: note.audioRecordings.map((audioPath: string) => 
+                audioRecordings: note.audioRecordings.map((audioPath: string) =>
                     convertAbsoluteToRelativePath(audioPath)
                 ),
             }));
-            
+
             // Save the migrated notes back to storage
             await AsyncStorage.setItem(NOTES_KEY, JSON.stringify(notes));
-            
+
             return notes;
         }
         return [];
@@ -482,15 +482,15 @@ export const deleteNote = async (noteId: string): Promise<void> => {
             for (const image of noteToDelete.images) {
                 try {
                     // Convert relative path to absolute path for deletion
-                    const imageAbsolutePath = image.uri.startsWith('/') 
-                        ? image.uri 
+                    const imageAbsolutePath = image.uri.startsWith("/")
+                        ? image.uri
                         : `${FileSystem.documentDirectory}${image.uri}`;
                     await FileSystem.deleteAsync(imageAbsolutePath);
-                    
+
                     // If it's a transformed image, also delete the original
                     if (image.originalUri) {
-                        const originalAbsolutePath = image.originalUri.startsWith('/') 
-                            ? image.originalUri 
+                        const originalAbsolutePath = image.originalUri.startsWith("/")
+                            ? image.originalUri
                             : `${FileSystem.documentDirectory}${image.originalUri}`;
                         await FileSystem.deleteAsync(originalAbsolutePath);
                     }
@@ -502,8 +502,8 @@ export const deleteNote = async (noteId: string): Promise<void> => {
             for (const audioPath of noteToDelete.audioRecordings) {
                 try {
                     // Convert relative path to absolute path for deletion
-                    const audioAbsolutePath = audioPath.startsWith('/') 
-                        ? audioPath 
+                    const audioAbsolutePath = audioPath.startsWith("/")
+                        ? audioPath
                         : `${FileSystem.documentDirectory}${audioPath}`;
                     await FileSystem.deleteAsync(audioAbsolutePath);
                 } catch (error) {
@@ -576,4 +576,17 @@ export const generateMarkdown = async (
     // We'll implement this later after UI is set up
 
     return filePath;
+};
+
+// Delete image from file system
+export const deleteImage = async (imagePath: string): Promise<void> => {
+    try {
+        // Convert relative path to absolute path for deletion
+        const absolutePath = imagePath.startsWith("/") ? imagePath : `${FileSystem.documentDirectory}${imagePath}`;
+
+        await FileSystem.deleteAsync(absolutePath, { idempotent: true });
+    } catch (error) {
+        console.error("Error deleting image file:", error);
+        throw error;
+    }
 };
