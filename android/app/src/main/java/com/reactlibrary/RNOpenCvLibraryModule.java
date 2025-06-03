@@ -11,6 +11,8 @@ import com.facebook.react.bridge.Arguments;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.media.ExifInterface;
+import android.graphics.Matrix;
 
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
@@ -194,11 +196,6 @@ public class RNOpenCvLibraryModule extends ReactContextBaseJavaModule {
             Mat src = new Mat();
             Utils.bitmapToMat(image, src);
 
-            // Convert RGBA to RGB if needed
-            if (src.channels() == 4) {
-                Imgproc.cvtColor(src, src, Imgproc.COLOR_RGBA2RGB);
-            }
-
             // Prepare source points
             Point[] srcPts = new Point[4];
             for (int i = 0; i < 4; i++) {
@@ -234,15 +231,14 @@ public class RNOpenCvLibraryModule extends ReactContextBaseJavaModule {
             Mat dst = new Mat();
             Imgproc.warpPerspective(src, dst, M, new Size(width, height), Imgproc.INTER_LINEAR);
 
-            // Convert to bitmap
-            Bitmap resultBitmap = Bitmap.createBitmap((int)width, (int)height, Bitmap.Config.ARGB_8888);
-            Utils.matToBitmap(dst, resultBitmap);
+            Mat dst_rgb = new Mat();
+            Imgproc.cvtColor(dst, dst_rgb, Imgproc.COLOR_BGR2RGB);
 
-            // Encode to PNG base64
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            resultBitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
-            byte[] imageBytes = baos.toByteArray();
-            String base64 = Base64.encodeToString(imageBytes, Base64.DEFAULT);
+            // Encode directly to PNG without bitmap conversion
+            org.opencv.core.MatOfByte matOfByte = new org.opencv.core.MatOfByte();
+            org.opencv.imgcodecs.Imgcodecs.imencode(".png", dst_rgb, matOfByte);
+            byte[] imageBytes = matOfByte.toArray();
+            String base64 = Base64.encodeToString(imageBytes, Base64.NO_WRAP);
 
             WritableMap result = Arguments.createMap();
             result.putString("data", base64);
@@ -258,9 +254,71 @@ public class RNOpenCvLibraryModule extends ReactContextBaseJavaModule {
     private Bitmap decodeBase64Image(String base64) {
         try {
             byte[] decodedString = Base64.decode(base64, Base64.DEFAULT);
-            return BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+            Bitmap bitmap = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+
+            if (bitmap == null) {
+                return null;
+            }
+
+            // Handle orientation similar to iOS
+            return normalizeImageOrientation(bitmap, decodedString);
         } catch (Exception e) {
             return null;
+        }
+    }
+
+    private Bitmap normalizeImageOrientation(Bitmap bitmap, byte[] imageData) {
+        try {
+            // Create temporary file to read EXIF data
+            java.io.File tempFile = new java.io.File(reactContext.getCacheDir(), "temp_image.jpg");
+            java.io.FileOutputStream fos = new java.io.FileOutputStream(tempFile);
+            fos.write(imageData);
+            fos.close();
+
+            ExifInterface exif = new ExifInterface(tempFile.getAbsolutePath());
+            int orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
+
+            // Clean up temp file
+            tempFile.delete();
+
+            Matrix matrix = new Matrix();
+            switch (orientation) {
+                case ExifInterface.ORIENTATION_ROTATE_90:
+                    matrix.postRotate(90);
+                    break;
+                case ExifInterface.ORIENTATION_ROTATE_180:
+                    matrix.postRotate(180);
+                    break;
+                case ExifInterface.ORIENTATION_ROTATE_270:
+                    matrix.postRotate(270);
+                    break;
+                case ExifInterface.ORIENTATION_FLIP_HORIZONTAL:
+                    matrix.postScale(-1, 1);
+                    break;
+                case ExifInterface.ORIENTATION_FLIP_VERTICAL:
+                    matrix.postScale(1, -1);
+                    break;
+                case ExifInterface.ORIENTATION_TRANSPOSE:
+                    matrix.postRotate(90);
+                    matrix.postScale(-1, 1);
+                    break;
+                case ExifInterface.ORIENTATION_TRANSVERSE:
+                    matrix.postRotate(-90);
+                    matrix.postScale(-1, 1);
+                    break;
+                default:
+                    return bitmap; // No transformation needed
+            }
+
+            Bitmap rotatedBitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
+            if (rotatedBitmap != bitmap) {
+                bitmap.recycle();
+            }
+            return rotatedBitmap;
+
+        } catch (Exception e) {
+            // If orientation handling fails, return original bitmap
+            return bitmap;
         }
     }
 
