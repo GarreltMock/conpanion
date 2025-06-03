@@ -1,12 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import {
-    StyleSheet,
-    FlatList,
-    View,
-    TouchableOpacity,
-    ActivityIndicator,
-    Text,
-} from "react-native";
+import { StyleSheet, FlatList, View, TouchableOpacity, ActivityIndicator, Text } from "react-native";
 import { router, useFocusEffect } from "expo-router";
 import { format } from "date-fns";
 
@@ -18,13 +11,7 @@ import { Talk } from "@/types";
 import { useThemeColor } from "@/hooks/useThemeColor";
 
 export default function TalksScreen() {
-    const {
-        currentConference,
-        activeTalk,
-        talks: appTalks,
-        getAllTalks,
-        isLoading,
-    } = useApp();
+    const { currentConference, activeTalk, talks: appTalks, getAllTalks, isLoading } = useApp();
 
     const [talks, setTalks] = useState<Talk[]>([]);
     const [refreshing, setRefreshing] = useState(false);
@@ -40,15 +27,11 @@ export default function TalksScreen() {
         }
 
         // Filter for talks in the current conference
-        const conferenceTalks = appTalks.filter(
-            (talk) => talk.conferenceId === currentConference.id
-        );
+        const conferenceTalks = appTalks.filter((talk) => talk.conferenceId === currentConference.id);
 
         // Sort talks by start time (newest first)
         if (conferenceTalks.length > 0) {
-            const sortedTalks = [...conferenceTalks].sort(
-                (a, b) => b.startTime.getTime() - a.startTime.getTime()
-            );
+            const sortedTalks = [...conferenceTalks].sort((a, b) => b.startTime.getTime() - a.startTime.getTime());
             setTalks(sortedTalks);
         } else {
             setTalks([]);
@@ -67,19 +50,12 @@ export default function TalksScreen() {
             const allTalks = await getAllTalks();
 
             // Filter for current conference
-            const conferenceTalks = allTalks.filter(
-                (talk) => talk.conferenceId === currentConference.id
-            );
+            const conferenceTalks = allTalks.filter((talk) => talk.conferenceId === currentConference.id);
 
             // Sort talks by start time (newest first)
-            const sortedTalks = [...conferenceTalks].sort(
-                (a, b) => b.startTime.getTime() - a.startTime.getTime()
-            );
+            const sortedTalks = [...conferenceTalks].sort((a, b) => b.startTime.getTime() - a.startTime.getTime());
 
             setTalks(sortedTalks);
-            console.log(
-                `Loaded ${sortedTalks.length} talks for conference: ${currentConference.name}`
-            );
         } catch (error) {
             console.error("Error loading talks:", error);
         } finally {
@@ -119,51 +95,29 @@ export default function TalksScreen() {
 
         return (
             <TouchableOpacity
-                style={[
-                    styles.talkItem,
-                    isActive && { borderColor: tintColor, borderWidth: 2 },
-                ]}
+                style={[styles.talkItem, isActive && { borderColor: tintColor, borderWidth: 2 }]}
                 onPress={() => handleTalkPress(item.id)}
                 activeOpacity={0.7}
             >
                 <View style={styles.talkContent}>
-                    <ThemedText style={styles.talkTitle}>
-                        {item.title}
-                    </ThemedText>
-                    <ThemedText style={styles.talkDate}>
-                        {format(item.startTime, "MMM d, yyyy • h:mm a")}
-                    </ThemedText>
+                    <ThemedText style={styles.talkTitle}>{item.title}</ThemedText>
+                    <ThemedText style={styles.talkDate}>{format(item.startTime, "MMM d, yyyy • h:mm a")}</ThemedText>
                     {item.endTime && (
                         <ThemedText style={styles.talkDuration}>
-                            Duration:{" "}
-                            {formatDuration(item.startTime, item.endTime)}
+                            Duration: {formatDuration(item.startTime, item.endTime)}
                         </ThemedText>
                     )}
                 </View>
 
                 {isActive && (
-                    <View
-                        style={[
-                            styles.activeIndicator,
-                            { backgroundColor: tintColor },
-                        ]}
-                    >
-                        <ThemedText
-                            style={styles.activeText}
-                            lightColor="#fff"
-                            darkColor={backgroundColor}
-                        >
+                    <View style={[styles.activeIndicator, { backgroundColor: tintColor }]}>
+                        <ThemedText style={styles.activeText} lightColor="#fff" darkColor={backgroundColor}>
                             Active
                         </ThemedText>
                     </View>
                 )}
 
-                <IconSymbol
-                    size={20}
-                    name="chevron.right"
-                    color={tintColor}
-                    style={styles.chevron}
-                />
+                <IconSymbol size={20} name="chevron.right" color={tintColor} style={styles.chevron} />
             </TouchableOpacity>
         );
     };
@@ -193,28 +147,17 @@ export default function TalksScreen() {
         <ThemedView style={styles.container}>
             <View style={styles.header}>
                 <View>
-                    <ThemedText style={styles.conferenceLabel}>
-                        CONFERENCE
-                    </ThemedText>
-                    <ThemedText style={styles.conferenceName}>
-                        {currentConference?.name || "My Conference"}
-                    </ThemedText>
+                    <ThemedText style={styles.conferenceLabel}>CONFERENCE</ThemedText>
+                    <ThemedText style={styles.conferenceName}>{currentConference?.name || "My Conference"}</ThemedText>
                 </View>
 
                 <TouchableOpacity
-                    style={[
-                        styles.newTalkButton,
-                        { backgroundColor: tintColor },
-                    ]}
+                    style={[styles.newTalkButton, { backgroundColor: tintColor }]}
                     onPress={handleNewTalk}
                     activeOpacity={0.8}
                 >
                     <IconSymbol name="plus" size={22} color={backgroundColor} />
-                    <Text
-                        style={[styles.buttonText, { color: backgroundColor }]}
-                    >
-                        New Talk
-                    </Text>
+                    <Text style={[styles.buttonText, { color: backgroundColor }]}>New Talk</Text>
                 </TouchableOpacity>
             </View>
 
@@ -227,12 +170,8 @@ export default function TalksScreen() {
                 onRefresh={handleRefresh}
                 ListEmptyComponent={() => (
                     <View style={styles.emptyContainer}>
-                        <ThemedText style={styles.emptyTitle}>
-                            No Talks Yet
-                        </ThemedText>
-                        <ThemedText style={styles.emptyDescription}>
-                            Create a new talk to start taking notes
-                        </ThemedText>
+                        <ThemedText style={styles.emptyTitle}>No Talks Yet</ThemedText>
+                        <ThemedText style={styles.emptyDescription}>Create a new talk to start taking notes</ThemedText>
                     </View>
                 )}
             />

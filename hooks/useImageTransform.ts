@@ -69,11 +69,17 @@ export function useImageTransform() {
                 const imageData = await imageUriToImageData(imageUri);
 
                 // Detect corners
+                const start = Date.now();
                 const result = await processImage(imageData);
+                const end = Date.now();
+                console.log(`processImage took ${end - start}ms`);
 
                 // If valid corners were detected, transform the image
                 if (result.polygon && result.polygon.length === 4) {
+                    const startTime = Date.now();
                     const transformed = await transformImage(imageData, result.polygon);
+                    const endTime = Date.now();
+                    console.log(`transformImage took ${endTime - startTime}ms`);
 
                     // Convert back to URI
                     const transformedUri = await imageDataToUriRN(

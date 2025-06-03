@@ -113,8 +113,6 @@ export const initializeConferenceDirectories = async (conferenceId: string): Pro
             intermediates: true,
         });
     }
-
-    console.log(`Successfully initialized directories for conference: ${conferenceId}`);
 };
 
 // Save image to file system
@@ -227,8 +225,6 @@ export const saveConference = async (conference: Conference): Promise<void> => {
         }
 
         await AsyncStorage.setItem(CONFERENCES_KEY, JSON.stringify(conferences));
-
-        console.log(`Conference saved: ${conference.id} - ${conference.name}`);
     } catch (error) {
         console.error("Error saving conference:", error);
         throw error; // Re-throw to allow handling in calling code

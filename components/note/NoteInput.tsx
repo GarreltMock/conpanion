@@ -171,12 +171,6 @@ export const NoteInput: React.FC<NoteInputProps> = ({
                                 setCachedImages((prev) =>
                                     prev.map((img) => {
                                         if (img.id === newImageId) {
-                                            console.log({
-                                                transformedUri: result.transformed?.uri,
-                                                uri: result.transformed?.uri
-                                                    ? getAbsolutePath(result.transformed.uri)
-                                                    : undefined,
-                                            });
                                             return {
                                                 ...img,
                                                 transformedUri: result.transformed?.uri,
@@ -315,7 +309,6 @@ export const NoteInput: React.FC<NoteInputProps> = ({
 
                 // Only add extra space on iOS
                 if (Platform.OS === "ios") {
-                    console.log("Keyboard height:", keyboardSpace && 74);
                     setKeyboardSpace(keyboardHeight - (keyboardSpaceDiff ?? 74));
                 }
             }
@@ -337,7 +330,7 @@ export const NoteInput: React.FC<NoteInputProps> = ({
                 sound.unloadAsync();
             }
         };
-    }, [sound]);
+    }, [sound, keyboardSpaceDiff]);
 
     // Calculate if we need to show the attachments area
     const hasAttachments = cachedImages.length > 0 || cachedAudio.length > 0;
