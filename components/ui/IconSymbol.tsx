@@ -1,44 +1,41 @@
 // This file is a fallback for using MaterialIcons on Android and web.
 
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { SymbolWeight } from 'expo-symbols';
-import React from 'react';
-import { OpaqueColorValue, StyleProp, ViewStyle } from 'react-native';
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { SymbolWeight } from "expo-symbols";
+import React from "react";
+import { OpaqueColorValue, StyleProp, ViewStyle } from "react-native";
 
 // Add your SFSymbol to MaterialIcons mappings here.
 const MAPPING = {
-  // See MaterialIcons here: https://icons.expo.fyi
-  // See SF Symbols in the SF Symbols app on Mac.
-  'house.fill': 'home',
-  'paperplane.fill': 'send',
-  'chevron.left.forwardslash.chevron.right': 'code',
-  'chevron.right': 'chevron-right',
-  'chevron.left': 'chevron-left',
-  'play': 'play-arrow',
-  'pause': 'pause',
-  'play.fill': 'play-arrow',
-  'pause.fill': 'pause',
-  'xmark.circle.fill': 'cancel',
-  'xmark': 'close',
-  'arrow.up': 'arrow-upward',
-  'camera.fill': 'camera-alt',
-  'mic.fill': 'mic',
-  'note.text': 'note',
-  'list.bullet': 'list',
-  'pencil': 'edit',
-  'trash': 'delete',
-  'plus': 'add',
-  'checkmark': 'check',
-  'calendar': 'calendar-today',
-  'clock': 'access-time',
-  'timer': 'timer',
-  'eye': 'visibility',
-  'wand.and.stars': 'auto-fix-high',
+    // See MaterialIcons here: https://icons.expo.fyi
+    // See SF Symbols in the SF Symbols app on Mac.
+    "house.fill": "home",
+    "paperplane.fill": "send",
+    "chevron.left.forwardslash.chevron.right": "code",
+    "chevron.right": "chevron-right",
+    "chevron.left": "chevron-left",
+    play: "play-arrow",
+    pause: "pause",
+    "play.fill": "play-arrow",
+    "pause.fill": "pause",
+    "xmark.circle.fill": "cancel",
+    xmark: "close",
+    "arrow.up": "arrow-upward",
+    "camera.fill": "camera-alt",
+    "mic.fill": "mic",
+    "note.text": "speaker-notes",
+    "list.bullet": "list",
+    pencil: "edit",
+    trash: "delete",
+    plus: "add",
+    checkmark: "check",
+    calendar: "event",
+    clock: "access-time",
+    timer: "timer",
+    eye: "visibility",
+    "wand.and.stars": "auto-fix-high",
 } as Partial<
-  Record<
-    import('expo-symbols').SymbolViewProps['name'],
-    React.ComponentProps<typeof MaterialIcons>['name']
-  >
+    Record<import("expo-symbols").SymbolViewProps["name"], React.ComponentProps<typeof MaterialIcons>["name"]>
 >;
 
 export type IconSymbolName = keyof typeof MAPPING;
@@ -49,16 +46,16 @@ export type IconSymbolName = keyof typeof MAPPING;
  * Icon `name`s are based on SFSymbols and require manual mapping to MaterialIcons.
  */
 export function IconSymbol({
-  name,
-  size = 24,
-  color,
-  style,
+    name,
+    size = 24,
+    color,
+    style,
 }: {
-  name: IconSymbolName;
-  size?: number;
-  color: string | OpaqueColorValue;
-  style?: StyleProp<ViewStyle>;
-  weight?: SymbolWeight;
+    name: IconSymbolName;
+    size?: number;
+    color: string | OpaqueColorValue;
+    style?: StyleProp<ViewStyle>;
+    weight?: SymbolWeight;
 }) {
-  return <MaterialIcons color={color} size={size} name={MAPPING[name]} style={style} />;
+    return <MaterialIcons color={color} size={size} name={MAPPING[name]} style={style} />;
 }

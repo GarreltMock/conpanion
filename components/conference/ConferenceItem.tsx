@@ -30,6 +30,7 @@ export const ConferenceItem: React.FC<ConferenceItemProps> = ({
     const dateFormat = "MMM d, yyyy";
     const tintColor = useThemeColor({}, "tint");
     const mutedColor = useThemeColor({}, "tabIconDefault");
+    const backgroundColor = useThemeColor({}, "background");
 
     const getStatusColor = (status: string) => {
         switch (status) {
@@ -47,7 +48,7 @@ export const ConferenceItem: React.FC<ConferenceItemProps> = ({
     const getStatusBadge = (status: string) => {
         return (
             <View style={[styles.statusBadge, { backgroundColor: getStatusColor(status) }]}>
-                <ThemedText style={styles.statusText}>{status}</ThemedText>
+                <ThemedText style={[styles.statusText, { color: backgroundColor }]}>{status}</ThemedText>
             </View>
         );
     };
@@ -152,7 +153,6 @@ const styles = StyleSheet.create({
     statusText: {
         fontSize: 12,
         fontWeight: "bold",
-        color: "#fff",
         textTransform: "capitalize",
     },
     actions: {
