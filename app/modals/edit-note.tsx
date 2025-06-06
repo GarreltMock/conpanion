@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { StyleSheet, View, Alert, ActivityIndicator } from "react-native";
+import { StyleSheet, View, Alert, ActivityIndicator, KeyboardAvoidingView, Platform } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 
 import { ThemedView } from "@/components/ThemedView";
@@ -109,7 +109,10 @@ export default function EditNoteModal() {
     }
 
     return (
-        <View style={styles.backdrop}>
+        <KeyboardAvoidingView 
+            style={styles.backdrop} 
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        >
             <View style={styles.spacer} onTouchEnd={handleCancel} />
             <ThemedView style={styles.container}>
                 <View style={styles.content}>
@@ -119,14 +122,13 @@ export default function EditNoteModal() {
                         onSubmitNote={handleUpdateNote}
                         isRecording={isRecording}
                         disabled={isSaving}
-                        keyboardSpaceDiff={8}
                         initialText={note.textContent}
                         initialAudio={note.audioRecordings}
                         initialImages={note.images}
                     />
                 </View>
             </ThemedView>
-        </View>
+        </KeyboardAvoidingView>
     );
 }
 

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { StyleSheet, FlatList, View, ActivityIndicator } from "react-native";
+import { StyleSheet, FlatList, View, ActivityIndicator, KeyboardAvoidingView, Platform } from "react-native";
 import { router } from "expo-router";
 
 import { ThemedView } from "@/components/ThemedView";
@@ -97,42 +97,48 @@ export default function NotesScreen() {
     }
 
     return (
-        <ThemedView style={styles.container}>
-            <TalkHeader
-                conferenceName={currentConference?.name || "My Conference"}
-                talk={activeTalk}
-                onDone={handleTalkDone}
-            />
-
-            {activeTalk ? (
-                <FlatList
-                    data={talkNotes}
-                    keyExtractor={(item) => item.id}
-                    renderItem={({ item }) => <NoteItem note={item} onDelete={handleDeleteNote} />}
-                    contentContainerStyle={styles.notesList}
-                    keyboardShouldPersistTaps="handled"
-                    ListEmptyComponent={() => (
-                        <View style={styles.emptyNotesContainer}>
-                            <ThemedText style={styles.emptyNotesText}>
-                                No notes yet. Start taking notes for this talk.
-                            </ThemedText>
-                        </View>
-                    )}
+        <KeyboardAvoidingView
+            style={styles.container}
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
+        >
+            <ThemedView style={styles.container}>
+                <TalkHeader
+                    conferenceName={currentConference?.name || "My Conference"}
+                    talk={activeTalk}
+                    onDone={handleTalkDone}
                 />
-            ) : (
-                renderEmptyState()
-            )}
 
-            <View style={{ borderTopWidth: 1, borderTopColor: "rgba(150, 150, 150, 0.2)" }}>
-                <NoteInput
-                    onSubmitNote={handleSubmitNote}
-                    onTakePhoto={handleTakePhoto}
-                    onRecordAudio={handleRecordAudio}
-                    isRecording={isRecording}
-                    disabled={!activeTalk}
-                />
-            </View>
-        </ThemedView>
+                {activeTalk ? (
+                    <FlatList
+                        data={talkNotes}
+                        keyExtractor={(item) => item.id}
+                        renderItem={({ item }) => <NoteItem note={item} onDelete={handleDeleteNote} />}
+                        contentContainerStyle={styles.notesList}
+                        keyboardShouldPersistTaps="handled"
+                        ListEmptyComponent={() => (
+                            <View style={styles.emptyNotesContainer}>
+                                <ThemedText style={styles.emptyNotesText}>
+                                    No notes yet. Start taking notes for this talk.
+                                </ThemedText>
+                            </View>
+                        )}
+                    />
+                ) : (
+                    renderEmptyState()
+                )}
+
+                <View style={styles.inputWrapper}>
+                    <NoteInput
+                        onSubmitNote={handleSubmitNote}
+                        onTakePhoto={handleTakePhoto}
+                        onRecordAudio={handleRecordAudio}
+                        isRecording={isRecording}
+                        disabled={!activeTalk}
+                    />
+                </View>
+            </ThemedView>
+        </KeyboardAvoidingView>
     );
 }
 
@@ -175,5 +181,9 @@ const styles = StyleSheet.create({
         fontSize: 16,
         textAlign: "center",
         opacity: 0.7,
+    },
+    inputWrapper: {
+        borderTopWidth: 1,
+        borderTopColor: "rgba(150, 150, 150, 0.2)",
     },
 });

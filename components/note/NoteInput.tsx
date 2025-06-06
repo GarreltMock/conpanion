@@ -298,39 +298,15 @@ export const NoteInput: React.FC<NoteInputProps> = ({
         }
     };
 
-    const [keyboardSpace, setKeyboardSpace] = useState(0);
-
-    // Handle keyboard events to manage space below input
+    // Cleanup audio resources when component unmounts
     useEffect(() => {
-        const keyboardWillShowListener = Keyboard.addListener(
-            Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow",
-            (e) => {
-                const keyboardHeight = e.endCoordinates.height;
-
-                // Only add extra space on iOS
-                if (Platform.OS === "ios") {
-                    setKeyboardSpace(keyboardHeight - (keyboardSpaceDiff ?? 74));
-                }
-            }
-        );
-
-        const keyboardWillHideListener = Keyboard.addListener(
-            Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide",
-            () => {
-                setKeyboardSpace(0);
-            }
-        );
-
         return () => {
-            keyboardWillShowListener.remove();
-            keyboardWillHideListener.remove();
-
             // Cleanup audio resources
             if (sound) {
                 sound.unloadAsync();
             }
         };
-    }, [sound, keyboardSpaceDiff]);
+    }, [sound]);
 
     // Calculate if we need to show the attachments area
     const hasAttachments = cachedImages.length > 0 || cachedAudio.length > 0;
@@ -341,7 +317,6 @@ export const NoteInput: React.FC<NoteInputProps> = ({
                 styles.container,
                 {
                     backgroundColor,
-                    paddingBottom: keyboardSpace > 0 ? keyboardSpace : 8,
                 },
             ]}
         >
