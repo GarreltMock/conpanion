@@ -125,6 +125,7 @@ export default function EditNoteModal() {
                         initialText={note.textContent}
                         initialAudio={note.audioRecordings}
                         initialImages={note.images}
+                        autoFocus={true}
                     />
                 </View>
             </ThemedView>

@@ -43,6 +43,7 @@ interface NoteInputProps {
     initialText?: string;
     initialImages?: NoteImage[];
     initialAudio?: string[];
+    autoFocus?: boolean; // Auto focus the text input when component mounts
 }
 
 export const NoteInput: React.FC<NoteInputProps> = ({
@@ -55,6 +56,7 @@ export const NoteInput: React.FC<NoteInputProps> = ({
     initialText = "",
     initialImages = [],
     initialAudio = [],
+    autoFocus = false,
 }) => {
     const [text, setText] = useState(initialText);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -73,6 +75,24 @@ export const NoteInput: React.FC<NoteInputProps> = ({
 
     // Initialize the image transformation hook
     const { isInitialized, processImageFromUri } = useImageTransform();
+
+    // Auto focus the text input if requested
+    useEffect(() => {
+        if (autoFocus && inputRef.current) {
+            // Add a small delay to ensure the component is fully mounted
+            const timer = setTimeout(() => {
+                const input = inputRef.current;
+                if (input) {
+                    input.focus();
+                    // Position cursor at the end of the text
+                    if (text.length > 0) {
+                        input.setSelection(text.length, text.length);
+                    }
+                }
+            }, 100);
+            return () => clearTimeout(timer);
+        }
+    }, [autoFocus, text]);
 
     // Generate a unique ID for cached assets
     const generateId = () => {
