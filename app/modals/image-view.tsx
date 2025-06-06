@@ -9,6 +9,8 @@ import {
     StyleSheet,
     TouchableOpacity,
     View,
+    Platform,
+    StatusBar,
 } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
@@ -570,6 +572,7 @@ const styles = StyleSheet.create({
     },
     safeArea: {
         flex: 1,
+        paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
     },
     header: {
         flexDirection: "row",

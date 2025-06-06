@@ -6,6 +6,7 @@ import {
     Platform,
     ScrollView,
     TextInput,
+    SafeAreaView,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Calendar } from "react-native-calendars";
@@ -76,8 +77,9 @@ export default function NewConferenceModal() {
     };
 
     return (
-        <ScrollView showsVerticalScrollIndicator={false}>
-            <ThemedView style={styles.container}>
+        <SafeAreaView style={styles.safeArea}>
+            <ScrollView showsVerticalScrollIndicator={false}>
+                <ThemedView style={styles.container}>
                 {/* <ThemedText style={styles.title}>
                     Create New Conference
                 </ThemedText> */}
@@ -276,11 +278,15 @@ export default function NewConferenceModal() {
                     </View>
                 </ThemedView>
             </ThemedView>
-        </ScrollView>
+            </ScrollView>
+        </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
+    safeArea: {
+        flex: 1,
+    },
     container: {
         padding: 16,
     },

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, StyleSheet, TouchableOpacity, Platform, ScrollView, TextInput } from "react-native";
+import { View, StyleSheet, TouchableOpacity, Platform, ScrollView, TextInput, SafeAreaView } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Calendar } from "react-native-calendars";
 import { useApp } from "../../context/AppContext";
@@ -100,8 +100,9 @@ export default function EditConferenceModal() {
     };
 
     return (
-        <ScrollView showsVerticalScrollIndicator={false}>
-            <ThemedView style={styles.container}>
+        <SafeAreaView style={styles.safeArea}>
+            <ScrollView showsVerticalScrollIndicator={false}>
+                <ThemedView style={styles.container}>
                 {/* <ThemedText style={styles.title}>Edit Conference</ThemedText> */}
 
                 <ThemedView style={styles.formSection}>
@@ -304,11 +305,15 @@ export default function EditConferenceModal() {
                     </View>
                 </ThemedView>
             </ThemedView>
-        </ScrollView>
+            </ScrollView>
+        </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
+    safeArea: {
+        flex: 1,
+    },
     container: {
         padding: 16,
     },

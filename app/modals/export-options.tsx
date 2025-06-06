@@ -1,5 +1,5 @@
 import React from "react";
-import { StyleSheet, Alert, Share } from "react-native";
+import { StyleSheet, Alert, Share, SafeAreaView } from "react-native";
 import { ExportOptionsForm } from "../../components/conference/ExportOptionsForm";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { ThemedView } from "../../components/ThemedView";
@@ -43,24 +43,31 @@ export default function ExportOptionsModal() {
     // If no conference ID provided, show error
     if (!id) {
         return (
-            <ThemedView style={styles.centered}>
-                <ThemedText>No conference selected for export</ThemedText>
-            </ThemedView>
+            <SafeAreaView style={styles.safeArea}>
+                <ThemedView style={styles.centered}>
+                    <ThemedText>No conference selected for export</ThemedText>
+                </ThemedView>
+            </SafeAreaView>
         );
     }
 
     return (
-        <ThemedView style={styles.container}>
-            <ExportOptionsForm
-                conferenceId={id}
-                onCancel={handleCancel}
-                onExport={handleExport}
-            />
-        </ThemedView>
+        <SafeAreaView style={styles.safeArea}>
+            <ThemedView style={styles.container}>
+                <ExportOptionsForm
+                    conferenceId={id}
+                    onCancel={handleCancel}
+                    onExport={handleExport}
+                />
+            </ThemedView>
+        </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
+    safeArea: {
+        flex: 1,
+    },
     container: {
         flex: 1,
     },
