@@ -147,16 +147,17 @@ export default function ImageViewModal() {
         }
 
         // Set corners to 10% inset from the image edges
-        const inset = 0.1;
+        const wInset = 0.1;
+        const hInset = 0.35;
         const width = imageLayout.width;
         const height = imageLayout.height;
         const x = imageLayout.x;
         const y = imageLayout.y;
 
-        const topLeft: Point = [x + width * inset, y + height * inset];
-        const topRight: Point = [x + width * (1 - inset), y + height * inset];
-        const bottomRight: Point = [x + width * (1 - inset), y + height * (1 - inset)];
-        const bottomLeft: Point = [x + width * inset, y + height * (1 - inset)];
+        const topLeft: Point = [x + width * wInset, y + height * hInset];
+        const topRight: Point = [x + width * (1 - wInset), y + height * hInset];
+        const bottomRight: Point = [x + width * (1 - wInset), y + height * (1 - hInset)];
+        const bottomLeft: Point = [x + width * wInset, y + height * (1 - hInset)];
 
         const newCorners = [topLeft, topRight, bottomRight, bottomLeft];
         setCorners(newCorners);
@@ -522,7 +523,20 @@ export default function ImageViewModal() {
                             style={styles.image}
                             resizeMode="contain"
                             onLayout={(event) => {
-                                const layout = event.nativeEvent.layout;
+                                let layout = event.nativeEvent.layout;
+
+                                if (Platform.OS === "android") {
+                                    const statusBarOffset =
+                                        Platform.OS === "android" ? StatusBar.currentHeight || 0 : 0;
+                                    const headerHeight = 16 * 2; // padding top + bottom + icon size
+                                    layout = {
+                                        ...layout,
+                                        width: layout.width * 0.5,
+                                        height: layout.height * 0.5,
+                                        y: layout.y + statusBarOffset + headerHeight,
+                                    };
+                                }
+
                                 setImageLayout(layout);
                                 initCorners(layout);
                             }}
@@ -572,7 +586,7 @@ const styles = StyleSheet.create({
     },
     safeArea: {
         flex: 1,
-        paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
+        paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
     },
     header: {
         flexDirection: "row",
