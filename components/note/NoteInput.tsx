@@ -296,6 +296,14 @@ export const NoteInput: React.FC<NoteInputProps> = ({
         }
 
         try {
+            // Ensure audio session is configured for playback
+            await Audio.setAudioModeAsync({
+                allowsRecordingIOS: false,
+                playsInSilentModeIOS: true,
+                shouldDuckAndroid: true,
+                playThroughEarpieceAndroid: false,
+            });
+
             const { sound: newSound } = await Audio.Sound.createAsync(
                 { uri: getAbsolutePath(audioUri) },
                 { shouldPlay: true }

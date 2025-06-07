@@ -76,6 +76,14 @@ export const NoteItem: React.FC<NoteItemProps> = ({ note, onDelete, readOnly = f
         }
 
         try {
+            // Ensure audio session is configured for playback
+            await Audio.setAudioModeAsync({
+                allowsRecordingIOS: false,
+                playsInSilentModeIOS: true,
+                shouldDuckAndroid: true,
+                playThroughEarpieceAndroid: false,
+            });
+
             const audioUri = getAbsolutePath(uri);
             const { sound: newSound } = await Audio.Sound.createAsync({ uri: audioUri }, { shouldPlay: true });
 

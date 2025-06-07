@@ -127,6 +127,18 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
                 // Initialize file system directories
                 await initializeFileSystem();
 
+                // Initialize audio session for iOS to enable playback in silent mode
+                try {
+                    await Audio.setAudioModeAsync({
+                        allowsRecordingIOS: false,
+                        playsInSilentModeIOS: true,
+                        shouldDuckAndroid: true,
+                        playThroughEarpieceAndroid: false,
+                    });
+                } catch (audioError) {
+                    console.error("Error initializing audio session:", audioError);
+                }
+
                 // Load all conferences first
                 const allConferences = await loadAllConferences();
 
@@ -520,6 +532,9 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
             await recording.stopAndUnloadAsync();
             await Audio.setAudioModeAsync({
                 allowsRecordingIOS: false,
+                playsInSilentModeIOS: true,
+                shouldDuckAndroid: true,
+                playThroughEarpieceAndroid: false,
             });
 
             // Get recording URI and save to file system
