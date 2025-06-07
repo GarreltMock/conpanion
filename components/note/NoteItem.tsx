@@ -24,6 +24,7 @@ export const NoteItem: React.FC<NoteItemProps> = ({ note, onDelete, readOnly = f
     const [playingIndex, setPlayingIndex] = useState<number | null>(null);
 
     const tintColor = useThemeColor({}, "tint");
+    const iconColor = useThemeColor({}, "tabIconDefault");
 
     const { updateNote, getAbsolutePath } = useApp();
     const { lastTransformedImage, clearLastTransformed } = useImageTransformNotification();
@@ -128,14 +129,14 @@ export const NoteItem: React.FC<NoteItemProps> = ({ note, onDelete, readOnly = f
                             style={({ pressed }) => [styles.actionButton, pressed && styles.buttonPressed]}
                             onPress={handleEditNote}
                         >
-                            <IconSymbol name="pencil" size={16} color="white" />
+                            <IconSymbol name="pencil" size={16} color={iconColor} />
                         </Pressable>
 
                         <Pressable
                             style={({ pressed }) => [styles.actionButton, pressed && styles.buttonPressed]}
                             onPress={handleDeleteNote}
                         >
-                            <IconSymbol name="trash" size={16} color="white" />
+                            <IconSymbol name="trash" size={16} color={iconColor} />
                         </Pressable>
                     </View>
                 )}

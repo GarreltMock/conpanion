@@ -70,6 +70,7 @@ export const NoteInput: React.FC<NoteInputProps> = ({
     const backgroundColor = useThemeColor({}, "background");
     const textColor = useThemeColor({}, "text");
     const tintColor = useThemeColor({}, "tint");
+    const iconColor = useThemeColor({}, "icon");
 
     const { getAbsolutePath } = useApp();
 
@@ -364,7 +365,7 @@ export const NoteInput: React.FC<NoteInputProps> = ({
                                 <IconSymbol
                                     name="xmark.circle.fill"
                                     size={20}
-                                    color="#fff"
+                                    color={iconColor}
                                     style={{ backgroundColor, borderRadius: 20 }}
                                 />
                             </TouchableOpacity>
@@ -391,7 +392,7 @@ export const NoteInput: React.FC<NoteInputProps> = ({
                                 <IconSymbol
                                     name="xmark.circle.fill"
                                     size={20}
-                                    color="#fff"
+                                    color={iconColor}
                                     style={{ backgroundColor, borderRadius: 20 }}
                                 />
                             </TouchableOpacity>
