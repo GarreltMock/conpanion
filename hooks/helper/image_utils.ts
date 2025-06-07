@@ -1,5 +1,4 @@
 import * as FileSystem from "expo-file-system";
-import * as ImageManipulator from "expo-image-manipulator";
 
 /**
  * Converts an image URI to ImageData format for processing

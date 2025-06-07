@@ -15,21 +15,19 @@ interface CustomTensor {
     cpuData: Float32Array;
 }
 
-interface Session {
-    run(feeds: Record<string, any>): Promise<Record<string, any>>;
-}
-
-const sessions: Map<string, Promise<Session>> = new Map();
+const sessionsCache: Map<string, Promise<InferenceSession>> = new Map();
 const pointModel = "model_point.onnx";
 const heatmapModel = "model_heat.onnx";
 
-async function getSession(modelName: string): Promise<Session> {
-    if (!sessions.has(modelName)) {
-        // Get absolute path to model file in assets directory
+async function getSession(modelName: string): Promise<InferenceSession> {
+    // const modelPath = `${FileSystem.documentDirectory}models/${modelName}`;
+    // return InferenceSession.create(modelPath);
+
+    if (!sessionsCache.has(modelName)) {
         const modelPath = `${FileSystem.documentDirectory}models/${modelName}`;
-        sessions.set(modelName, InferenceSession.create(modelPath));
+        sessionsCache.set(modelName, InferenceSession.create(modelPath));
     }
-    return sessions.get(modelName)!;
+    return sessionsCache.get(modelName)!;
 }
 
 export async function processImage(imageBase64: string): Promise<{ polygon: Polygon | null; type: number }> {
@@ -58,6 +56,7 @@ async function callHeatmapModel(imageBase64: string): Promise<Polygon> {
     const tensor = new Tensor("float32", data, [1, 3, 256, 256]);
     const feeds = { img: tensor };
     const results = await session.run(feeds);
+    // session.release();
 
     return postprocessHeatmap(results.heatmap as Tensor, originalSize);
 }
@@ -70,7 +69,7 @@ async function callPointModel(imageBase64: string): Promise<Polygon> {
     const feeds = { img: tensor };
     const results = await session.run(feeds);
 
-    return postprocessPoint(results.points as CustomTensor, results.has_obj as CustomTensor, [
+    return postprocessPoint(results.points as unknown as CustomTensor, results.has_obj as unknown as CustomTensor, [
         originalSize.height,
         originalSize.width,
     ]);

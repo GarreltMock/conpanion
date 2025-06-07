@@ -109,10 +109,7 @@ export default function EditNoteModal() {
     }
 
     return (
-        <KeyboardAvoidingView 
-            style={styles.backdrop} 
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        >
+        <KeyboardAvoidingView style={styles.backdrop} behavior={Platform.OS === "ios" ? "padding" : "height"}>
             <View style={styles.spacer} onTouchEnd={handleCancel} />
             <ThemedView style={styles.container}>
                 <View style={styles.content}>
