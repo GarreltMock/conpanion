@@ -6,7 +6,6 @@ import {
     Pressable,
     Keyboard,
     ActivityIndicator,
-    Platform,
     Image,
     ScrollView,
     TouchableOpacity,
@@ -17,7 +16,7 @@ import { Audio } from "expo-av";
 import { ThemedText } from "@/components/ThemedText";
 import { useImageTransform } from "@/hooks/useImageTransform";
 import { Polygon, NoteImage } from "@/types";
-import { useApp } from "@/context/AppContext";
+import { getAbsolutePath, generateId } from "@/storage/helper";
 
 interface CachedImage {
     id: string;
@@ -39,7 +38,6 @@ interface NoteInputProps {
     onSubmitNote: (text: string, images: NoteImage[], audioRecordings: string[]) => Promise<void>;
     isRecording?: boolean;
     disabled?: boolean;
-    keyboardSpaceDiff?: number; // Optional prop to control space below input
     initialText?: string;
     initialImages?: NoteImage[];
     initialAudio?: string[];
@@ -52,7 +50,6 @@ export const NoteInput: React.FC<NoteInputProps> = ({
     onSubmitNote,
     isRecording = false,
     disabled = false,
-    keyboardSpaceDiff = undefined,
     initialText = "",
     initialImages = [],
     initialAudio = [],
@@ -71,8 +68,6 @@ export const NoteInput: React.FC<NoteInputProps> = ({
     const textColor = useThemeColor({}, "text");
     const tintColor = useThemeColor({}, "tint");
     const iconColor = useThemeColor({}, "icon");
-
-    const { getAbsolutePath } = useApp();
 
     // Initialize the image transformation hook
     const { isInitialized, processImageFromUri } = useImageTransform();
@@ -94,11 +89,6 @@ export const NoteInput: React.FC<NoteInputProps> = ({
             return () => clearTimeout(timer);
         }
     }, [autoFocus, text]);
-
-    // Generate a unique ID for cached assets
-    const generateId = () => {
-        return Math.random().toString(36).substring(2, 15);
-    };
 
     // Initialize cached assets from props - use a ref to track if already initialized
     const [hasInitializedProps, setHasInitializedProps] = useState(false);

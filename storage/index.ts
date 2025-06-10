@@ -1,16 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as FileSystem from "expo-file-system";
 import { Conference, Talk, Note, ExportOptions } from "../types";
-
-// Helper function to generate a random ID (replacing nanoid)
-function generateId(length = 8) {
-    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-    let result = "";
-    for (let i = 0; i < length; i++) {
-        result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return result;
-}
+import { getAbsolutePath, generateId } from "./helper";
 
 // Storage keys
 const CONFERENCES_KEY = "conpanion_conferences";
@@ -142,7 +133,6 @@ export const saveImage = async (uri: string, conferenceId?: string): Promise<str
         to: destination,
     });
 
-    // Return relative path instead of absolute path
     return relativePath;
 };
 
@@ -173,7 +163,6 @@ export const saveAudio = async (uri: string, conferenceId?: string): Promise<str
         to: destination,
     });
 
-    // Return relative path instead of absolute path
     return relativePath;
 };
 
@@ -204,18 +193,15 @@ export const saveConference = async (conference: Conference): Promise<void> => {
         const conferences = await getConferences();
         const index = conferences.findIndex((c) => c.id === conference.id);
 
-        // Always update the updatedAt timestamp when saving
         const updatedConference = {
             ...conference,
             updatedAt: new Date(),
         };
 
-        // Ensure the conference directories exist first
         try {
             await initializeConferenceDirectories(conference.id);
         } catch (dirError) {
             console.error(`Error initializing directories for conference ${conference.id}:`, dirError);
-            // Continue anyway - we don't want to fail saving the conference
         }
 
         if (index !== -1) {
@@ -227,7 +213,7 @@ export const saveConference = async (conference: Conference): Promise<void> => {
         await AsyncStorage.setItem(CONFERENCES_KEY, JSON.stringify(conferences));
     } catch (error) {
         console.error("Error saving conference:", error);
-        throw error; // Re-throw to allow handling in calling code
+        throw error;
     }
 };
 
@@ -397,46 +383,15 @@ export const deleteTalk = async (talkId: string): Promise<void> => {
     }
 };
 
-// Helper function to convert absolute paths to relative paths
-const convertAbsoluteToRelativePath = (absolutePath: string): string => {
-    if (!absolutePath.startsWith("/")) {
-        // Already a relative path
-        return absolutePath;
-    }
-
-    // Extract the relative part from absolute path
-    const documentDirPattern = /.*\/Documents\/(.*)/;
-    const match = absolutePath.match(documentDirPattern);
-
-    if (match && match[1]) {
-        return match[1];
-    }
-
-    // If we can't parse it, return as-is (it might be a cache path that will be handled elsewhere)
-    return absolutePath;
-};
-
 // Note storage functions
 export const getNotes = async (): Promise<Note[]> => {
     try {
         const notesJson = await AsyncStorage.getItem(NOTES_KEY);
         if (notesJson) {
-            // Parse stored JSON and convert date strings back to Date objects
             const parsedNotes = JSON.parse(notesJson);
             const notes = parsedNotes.map((note: any) => ({
                 ...note,
                 timestamp: new Date(note.timestamp),
-                // Migrate absolute paths to relative paths
-                images: note.images.map((image: any) => ({
-                    ...image,
-                    uri: convertAbsoluteToRelativePath(image.uri),
-                    originalUri: image.originalUri
-                        ? convertAbsoluteToRelativePath(image.originalUri)
-                        : image.originalUri,
-                })),
-                audioRecordings: note.audioRecordings.map((audioPath: string) =>
-                    convertAbsoluteToRelativePath(audioPath)
-                ),
             }));
 
             // Save the migrated notes back to storage
@@ -577,9 +532,7 @@ export const generateMarkdown = async (
 // Delete image from file system
 export const deleteImage = async (imagePath: string): Promise<void> => {
     try {
-        // Convert relative path to absolute path for deletion
-        const absolutePath = imagePath.startsWith("/") ? imagePath : `${FileSystem.documentDirectory}${imagePath}`;
-
+        const absolutePath = getAbsolutePath(imagePath);
         await FileSystem.deleteAsync(absolutePath, { idempotent: true });
     } catch (error) {
         console.error("Error deleting image file:", error);

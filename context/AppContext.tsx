@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
 import * as ImagePicker from "expo-image-picker";
-import * as FileSystem from "expo-file-system";
 import { Audio } from "expo-av";
 import { Conference, Talk, Note, ExportOptions, ConferenceStatus, NoteImage } from "../types";
 import {
@@ -24,16 +23,7 @@ import {
     initializeConferenceDirectories,
     deleteImage as deleteImageFromStorage,
 } from "../storage";
-
-// Helper function to generate a random ID (replacing nanoid)
-function generateId(length = 8) {
-    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-    let result = "";
-    for (let i = 0; i < length; i++) {
-        result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return result;
-}
+import { generateId } from "@/storage/helper";
 
 interface AppContextType {
     // Conference Management
@@ -73,7 +63,6 @@ interface AppContextType {
     deleteNote: (noteId: string) => Promise<void>;
     deleteImage: (imagePath: string) => Promise<void>;
     getNotesForTalk: (talkId: string) => Note[];
-    getAbsolutePath: (path: string) => string; // Returns absolute path for file system operations
 
     // Export Functionality
     exportToPDF: (conferenceId: string, options: ExportOptions) => Promise<string>;
@@ -720,10 +709,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         return await getExportOptionsFromStorage();
     };
 
-    const getAbsolutePath = (path: string) => {
-        return path.startsWith("/") || path.startsWith("file:") ? path : `${FileSystem.documentDirectory}${path}`;
-    };
-
     const contextValue: AppContextType = {
         // Conference Management
         currentConference,
@@ -756,7 +741,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         deleteNote: deleteNoteById,
         deleteImage,
         getNotesForTalk,
-        getAbsolutePath,
 
         // Export Functionality
         exportToPDF,

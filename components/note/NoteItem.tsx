@@ -11,6 +11,7 @@ import { useApp } from "@/context/AppContext";
 import { useImageTransformNotification } from "@/context/ImageTransformContext";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { Note } from "@/types";
+import { getAbsolutePath } from "@/storage/helper";
 
 interface NoteItemProps {
     note: Note;
@@ -26,7 +27,7 @@ export const NoteItem: React.FC<NoteItemProps> = ({ note, onDelete, readOnly = f
     const tintColor = useThemeColor({}, "tint");
     const iconColor = useThemeColor({}, "tabIconDefault");
 
-    const { updateNote, getAbsolutePath } = useApp();
+    const { updateNote } = useApp();
     const { lastTransformedImage, clearLastTransformed } = useImageTransformNotification();
 
     // Listen for image transformations and update this note if it contains the transformed image
