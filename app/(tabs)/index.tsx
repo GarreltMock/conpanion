@@ -100,7 +100,7 @@ export default function NotesScreen() {
         <KeyboardAvoidingView
             style={styles.container}
             behavior={Platform.OS === "ios" ? "padding" : "height"}
-            keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
+            keyboardVerticalOffset={0}
         >
             <ThemedView style={styles.container}>
                 <TalkHeader

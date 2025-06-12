@@ -1,5 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { StyleSheet, FlatList, View, TouchableOpacity, ActivityIndicator } from "react-native";
+import {
+    StyleSheet,
+    FlatList,
+    View,
+    TouchableOpacity,
+    ActivityIndicator,
+    KeyboardAvoidingView,
+    Platform,
+} from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import { format } from "date-fns";
 
@@ -9,14 +17,26 @@ import { IconSymbol } from "@/components/ui/IconSymbol";
 import { NoteItem } from "@/components/note/NoteItem";
 import { useApp } from "@/context/AppContext";
 import { useThemeColor } from "@/hooks/useThemeColor";
-import { Note, Talk } from "@/types";
+import { Note, NoteImage, Talk } from "@/types";
+import { NoteInput } from "@/components/note/NoteInput";
 
 export default function TalkDetailScreen() {
     const { id } = useLocalSearchParams<{ id: string }>();
     const [talk, setTalk] = useState<Talk | null>(null);
     const [talkNotes, setTalkNotes] = useState<Note[]>([]);
 
-    const { talks, currentConference, getNotesForTalk, isLoading } = useApp();
+    const {
+        talks,
+        currentConference,
+        addCombinedNote,
+        addImageNote,
+        stopAudioRecording,
+        getNotesForTalk,
+        addAudioNote,
+        deleteNote,
+        isLoading,
+        isRecording,
+    } = useApp();
 
     const textColor = useThemeColor({}, "text");
 
@@ -50,6 +70,44 @@ export default function TalkDetailScreen() {
         }
     };
 
+    const handleSubmitNote = async (text: string, images: NoteImage[], audioRecordings: string[]) => {
+        if (!text.trim() && images.length === 0 && audioRecordings.length === 0) return;
+        await addCombinedNote(text, images, audioRecordings);
+    };
+
+    // Handle taking a photo
+    const handleTakePhoto = async (fromGallery: boolean): Promise<string> => {
+        try {
+            return await addImageNote(fromGallery);
+        } catch (error) {
+            console.error("Error taking photo:", error);
+            throw error;
+        }
+    };
+
+    // Handle audio recording
+    const handleRecordAudio = async (): Promise<string | null> => {
+        try {
+            if (isRecording) {
+                // When stopping, return the URI of the recorded audio
+                const audioUri = await stopAudioRecording();
+                console.log("Audio recording stopped, URI:", audioUri);
+                return audioUri;
+            } else {
+                // Start recording
+                await addAudioNote();
+                return null;
+            }
+        } catch (error) {
+            console.error("Error with audio recording:", error);
+            return null;
+        }
+    };
+
+    const handleDeleteNote = async (noteId: string) => {
+        await deleteNote(noteId);
+    };
+
     if (isLoading || !talk) {
         return (
             <ThemedView style={styles.loadingContainer}>
@@ -59,54 +117,66 @@ export default function TalkDetailScreen() {
     }
 
     return (
-        <ThemedView style={styles.container}>
-            <View style={styles.header}>
-                <TouchableOpacity style={styles.backButton} onPress={handleBack}>
-                    <IconSymbol name="chevron.left" size={24} color={textColor} />
-                    <ThemedText style={styles.backText}>Talks</ThemedText>
-                </TouchableOpacity>
-            </View>
+        <KeyboardAvoidingView style={styles.container} behavior="padding">
+            <ThemedView style={styles.container}>
+                <View style={styles.header}>
+                    <TouchableOpacity style={styles.backButton} onPress={handleBack}>
+                        <IconSymbol name="chevron.left" size={24} color={textColor} />
+                        <ThemedText style={styles.backText}>Talks</ThemedText>
+                    </TouchableOpacity>
+                </View>
 
-            <View style={styles.talkHeader}>
-                <ThemedText style={styles.conferenceName}>{currentConference?.name || "My Conference"}</ThemedText>
-                <ThemedText style={styles.talkTitle}>{talk.title}</ThemedText>
-                <View style={styles.talkDetails}>
-                    <View style={styles.detailItem}>
-                        <IconSymbol name="calendar" size={16} color={textColor + "80"} style={styles.detailIcon} />
-                        <ThemedText style={styles.detailText}>{format(talk.startTime, "MMM d, yyyy")}</ThemedText>
-                    </View>
-                    <View style={styles.detailItem}>
-                        <IconSymbol name="clock" size={16} color={textColor + "80"} style={styles.detailIcon} />
-                        <ThemedText style={styles.detailText}>{format(talk.startTime, "h:mm a")}</ThemedText>
-                    </View>
-                    <View style={styles.detailItem}>
-                        <IconSymbol name="timer" size={16} color={textColor + "80"} style={styles.detailIcon} />
-                        <ThemedText style={styles.detailText}>
-                            {formatDuration(talk.startTime, talk.endTime)}
-                        </ThemedText>
+                <View style={styles.talkHeader}>
+                    <ThemedText style={styles.conferenceName}>{currentConference?.name || "My Conference"}</ThemedText>
+                    <ThemedText style={styles.talkTitle}>{talk.title}</ThemedText>
+                    <View style={styles.talkDetails}>
+                        <View style={styles.detailItem}>
+                            <IconSymbol name="calendar" size={16} color={textColor + "80"} style={styles.detailIcon} />
+                            <ThemedText style={styles.detailText}>{format(talk.startTime, "MMM d, yyyy")}</ThemedText>
+                        </View>
+                        <View style={styles.detailItem}>
+                            <IconSymbol name="clock" size={16} color={textColor + "80"} style={styles.detailIcon} />
+                            <ThemedText style={styles.detailText}>{format(talk.startTime, "h:mm a")}</ThemedText>
+                        </View>
+                        <View style={styles.detailItem}>
+                            <IconSymbol name="timer" size={16} color={textColor + "80"} style={styles.detailIcon} />
+                            <ThemedText style={styles.detailText}>
+                                {formatDuration(talk.startTime, talk.endTime)}
+                            </ThemedText>
+                        </View>
                     </View>
                 </View>
-            </View>
 
-            <View style={styles.notesSectionHeader}>
-                <ThemedText style={styles.notesTitle}>Notes</ThemedText>
-                <ThemedText style={styles.notesCount}>
-                    {talkNotes.length} {talkNotes.length === 1 ? "note" : "notes"}
-                </ThemedText>
-            </View>
+                <View style={styles.notesSectionHeader}>
+                    <ThemedText style={styles.notesTitle}>Notes</ThemedText>
+                    <ThemedText style={styles.notesCount}>
+                        {talkNotes.length} {talkNotes.length === 1 ? "note" : "notes"}
+                    </ThemedText>
+                </View>
 
-            <FlatList
-                data={talkNotes}
-                keyExtractor={(item) => item.id}
-                renderItem={({ item }) => <NoteItem note={item} readOnly />}
-                contentContainerStyle={styles.notesList}
-                ListEmptyComponent={() => (
-                    <View style={styles.emptyContainer}>
-                        <ThemedText style={styles.emptyText}>No notes available for this talk</ThemedText>
-                    </View>
-                )}
-            />
-        </ThemedView>
+                <FlatList
+                    data={talkNotes}
+                    keyExtractor={(item) => item.id}
+                    renderItem={({ item }) => <NoteItem note={item} onDelete={handleDeleteNote} />}
+                    contentContainerStyle={styles.notesList}
+                    keyboardShouldPersistTaps="handled"
+                    ListEmptyComponent={() => (
+                        <View style={styles.emptyContainer}>
+                            <ThemedText style={styles.emptyText}>No notes available for this talk</ThemedText>
+                        </View>
+                    )}
+                />
+
+                <View style={styles.inputWrapper}>
+                    <NoteInput
+                        onSubmitNote={handleSubmitNote}
+                        onTakePhoto={handleTakePhoto}
+                        onRecordAudio={handleRecordAudio}
+                        isRecording={isRecording}
+                    />
+                </View>
+            </ThemedView>
+        </KeyboardAvoidingView>
     );
 }
 
@@ -194,5 +264,9 @@ const styles = StyleSheet.create({
         fontSize: 16,
         textAlign: "center",
         opacity: 0.7,
+    },
+    inputWrapper: {
+        borderTopWidth: 1,
+        borderTopColor: "rgba(150, 150, 150, 0.2)",
     },
 });
