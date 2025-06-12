@@ -12,10 +12,10 @@ export default function TabLayout() {
     const [isKeyboardVisible, setKeyboardVisible] = useState(false);
 
     useEffect(() => {
-        const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
+        const keyboardDidShowListener = Keyboard.addListener("keyboardDidShow", () => {
             setKeyboardVisible(true);
         });
-        const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
+        const keyboardDidHideListener = Keyboard.addListener("keyboardDidHide", () => {
             setKeyboardVisible(false);
         });
 
@@ -33,7 +33,7 @@ export default function TabLayout() {
                 tabBarButton: HapticTab,
                 tabBarStyle: Platform.select({
                     ios: {},
-                    android: isKeyboardVisible ? { display: 'none' } : {},
+                    android: isKeyboardVisible ? { display: "none" } : {},
                     default: {},
                 }),
             }}
@@ -42,31 +42,21 @@ export default function TabLayout() {
                 name="index"
                 options={{
                     title: "Notes",
-                    tabBarIcon: ({ color }) => (
-                        <IconSymbol size={28} name="note.text" color={color} />
-                    ),
+                    tabBarIcon: ({ color }) => <IconSymbol size={28} name="note.text" color={color} />,
                 }}
             />
             <Tabs.Screen
                 name="talks"
                 options={{
                     title: "Talks",
-                    tabBarIcon: ({ color }) => (
-                        <IconSymbol
-                            size={28}
-                            name="list.bullet"
-                            color={color}
-                        />
-                    ),
+                    tabBarIcon: ({ color }) => <IconSymbol size={28} name="list.bullet" color={color} />,
                 }}
             />
             <Tabs.Screen
                 name="conferences"
                 options={{
                     title: "Conferences",
-                    tabBarIcon: ({ color }) => (
-                        <IconSymbol size={28} name="calendar" color={color} />
-                    ),
+                    tabBarIcon: ({ color }) => <IconSymbol size={28} name="calendar" color={color} />,
                 }}
             />
         </Tabs>

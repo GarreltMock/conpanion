@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from "react";
-import { StyleSheet, View, Alert, ActivityIndicator, KeyboardAvoidingView, Platform } from "react-native";
-import { useLocalSearchParams, router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
+import React, { useEffect, useState } from "react";
+import { ActivityIndicator, Alert, StyleSheet, View } from "react-native";
 
+import { MyKeyboardAvoidingView } from "@/components/MyKeyboardAvoidingView";
 import { ThemedView } from "@/components/ThemedView";
 import { NoteInput } from "@/components/note/NoteInput";
 import { useApp } from "@/context/AppContext";
@@ -109,7 +110,7 @@ export default function EditNoteModal() {
     }
 
     return (
-        <KeyboardAvoidingView style={styles.backdrop} behavior={Platform.OS === "ios" ? "padding" : "height"}>
+        <MyKeyboardAvoidingView style={styles.backdrop}>
             <View style={styles.spacer} onTouchEnd={handleCancel} />
             <ThemedView style={styles.container}>
                 <View style={styles.content}>
@@ -126,7 +127,7 @@ export default function EditNoteModal() {
                     />
                 </View>
             </ThemedView>
-        </KeyboardAvoidingView>
+        </MyKeyboardAvoidingView>
     );
 }
 

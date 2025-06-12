@@ -1,12 +1,13 @@
-import React, { useEffect, useState } from "react";
-import { StyleSheet, FlatList, View, ActivityIndicator, KeyboardAvoidingView, Platform } from "react-native";
 import { router } from "expo-router";
+import React, { useEffect, useState } from "react";
+import { ActivityIndicator, FlatList, StyleSheet, View } from "react-native";
 
-import { ThemedView } from "@/components/ThemedView";
+import { MyKeyboardAvoidingView } from "@/components/MyKeyboardAvoidingView";
 import { ThemedText } from "@/components/ThemedText";
-import { TalkHeader } from "@/components/note/TalkHeader";
+import { ThemedView } from "@/components/ThemedView";
 import { NoteInput } from "@/components/note/NoteInput";
 import { NoteItem } from "@/components/note/NoteItem";
+import { TalkHeader } from "@/components/note/TalkHeader";
 import { useApp } from "@/context/AppContext";
 import { Note, NoteImage } from "@/types";
 
@@ -97,11 +98,7 @@ export default function NotesScreen() {
     }
 
     return (
-        <KeyboardAvoidingView
-            style={styles.container}
-            behavior={Platform.OS === "ios" ? "padding" : "height"}
-            keyboardVerticalOffset={0}
-        >
+        <MyKeyboardAvoidingView style={styles.container}>
             <ThemedView style={styles.container}>
                 <TalkHeader
                     conferenceName={currentConference?.name || "My Conference"}
@@ -138,7 +135,7 @@ export default function NotesScreen() {
                     />
                 </View>
             </ThemedView>
-        </KeyboardAvoidingView>
+        </MyKeyboardAvoidingView>
     );
 }
 

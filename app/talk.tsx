@@ -1,24 +1,17 @@
-import React, { useEffect, useState } from "react";
-import {
-    StyleSheet,
-    FlatList,
-    View,
-    TouchableOpacity,
-    ActivityIndicator,
-    KeyboardAvoidingView,
-    Platform,
-} from "react-native";
-import { useLocalSearchParams, router } from "expo-router";
 import { format } from "date-fns";
+import { router, useLocalSearchParams } from "expo-router";
+import React, { useEffect, useState } from "react";
+import { ActivityIndicator, FlatList, StyleSheet, TouchableOpacity, View } from "react-native";
 
-import { ThemedView } from "@/components/ThemedView";
-import { ThemedText } from "@/components/ThemedText";
-import { IconSymbol } from "@/components/ui/IconSymbol";
+import { MyKeyboardAvoidingView } from "@/components/MyKeyboardAvoidingView";
+import { NoteInput } from "@/components/note/NoteInput";
 import { NoteItem } from "@/components/note/NoteItem";
+import { ThemedText } from "@/components/ThemedText";
+import { ThemedView } from "@/components/ThemedView";
+import { IconSymbol } from "@/components/ui/IconSymbol";
 import { useApp } from "@/context/AppContext";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { Note, NoteImage, Talk } from "@/types";
-import { NoteInput } from "@/components/note/NoteInput";
 
 export default function TalkDetailScreen() {
     const { id } = useLocalSearchParams<{ id: string }>();
@@ -94,6 +87,7 @@ export default function TalkDetailScreen() {
                 console.log("Audio recording stopped, URI:", audioUri);
                 return audioUri;
             } else {
+                Ö;
                 // Start recording
                 await addAudioNote();
                 return null;
@@ -117,7 +111,7 @@ export default function TalkDetailScreen() {
     }
 
     return (
-        <KeyboardAvoidingView style={styles.container} behavior="padding">
+        <MyKeyboardAvoidingView>
             <ThemedView style={styles.container}>
                 <View style={styles.header}>
                     <TouchableOpacity style={styles.backButton} onPress={handleBack}>
@@ -176,7 +170,7 @@ export default function TalkDetailScreen() {
                     />
                 </View>
             </ThemedView>
-        </KeyboardAvoidingView>
+        </MyKeyboardAvoidingView>
     );
 }
 
