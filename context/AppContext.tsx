@@ -48,6 +48,7 @@ interface AppContextType {
     talks: Talk[];
     activeTalk: Talk | null;
     createTalk: (title: string) => Promise<Talk>;
+    createAgendaTalk: (title: string, startTime: Date, endTime: Date) => Promise<Talk>;
     endTalk: (talk: Talk) => Promise<void>;
     endCurrentTalk: () => Promise<void>;
     getAllTalks: () => Promise<Talk[]>;
@@ -167,9 +168,25 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
             try {
                 // Fetch fresh talks data every time
                 const storedTalks = await getTalks();
+                const now = new Date();
 
-                const activeTalks = storedTalks.filter(
-                    (talk) => !talk.endTime && talk.conferenceId === currentConference.id
+                const conferenceTalks = storedTalks.filter(
+                    (talk) => talk.conferenceId === currentConference.id
+                );
+
+                // Priority 1: Talks without end time (immediate talks)
+                const immediateTalks = conferenceTalks.filter((talk) => !talk.endTime);
+                
+                if (immediateTalks.length > 0) {
+                    // Sort by start time, most recent first
+                    immediateTalks.sort((a, b) => b.startTime.getTime() - a.startTime.getTime());
+                    setActiveTalk(immediateTalks[0]);
+                    return;
+                }
+
+                // Priority 2: Scheduled talks that are currently active
+                const activeTalks = conferenceTalks.filter(
+                    (talk) => talk.endTime && talk.startTime <= now && talk.endTime > now
                 );
 
                 if (activeTalks.length > 0) {
@@ -375,6 +392,34 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         // Update state
         setTalks((prevTalks) => [...prevTalks, newTalk]);
         setActiveTalk(newTalk);
+
+        return newTalk;
+    };
+
+    const createAgendaTalk = async (title: string, startTime: Date, endTime: Date): Promise<Talk> => {
+        if (!currentConference) {
+            console.error("Conference is null or undefined");
+            throw new Error("No current conference exists");
+        }
+
+        const newTalk: Talk = {
+            id: generateId(),
+            conferenceId: currentConference.id,
+            title,
+            startTime,
+            endTime,
+        };
+
+        await saveTalk(newTalk);
+
+        // Update state
+        setTalks((prevTalks) => [...prevTalks, newTalk]);
+        
+        // Check if this talk should be active now
+        const now = new Date();
+        if (startTime <= now && endTime > now && !activeTalk) {
+            setActiveTalk(newTalk);
+        }
 
         return newTalk;
     };
@@ -726,6 +771,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         talks,
         activeTalk,
         createTalk,
+        createAgendaTalk,
         endTalk,
         endCurrentTalk,
         getAllTalks,

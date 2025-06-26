@@ -83,7 +83,7 @@ export default function TalksScreen() {
     };
 
     const handleNewTalk = () => {
-        router.push("/modals/new-talk");
+        router.push("/modals/new-agenda-talk");
     };
 
     const handleTalkPress = (talkId: string) => {
@@ -101,11 +101,14 @@ export default function TalksScreen() {
             >
                 <View style={styles.talkContent}>
                     <ThemedText style={styles.talkTitle}>{item.title}</ThemedText>
-                    <ThemedText style={styles.talkDate}>{format(item.startTime, "MMM d, yyyy • h:mm a")}</ThemedText>
-                    {item.endTime && (
-                        <ThemedText style={styles.talkDuration}>
-                            Duration: {formatDuration(item.startTime, item.endTime)}
-                        </ThemedText>
+                    <ThemedText style={styles.talkDate}>
+                        {format(item.startTime, "MMM d, yyyy • h:mm a")}
+                        {item.endTime && ` - ${format(item.endTime, "h:mm a")}`}
+                    </ThemedText>
+                    {item.endTime ? (
+                        <ThemedText style={styles.talkType}>Scheduled Talk</ThemedText>
+                    ) : (
+                        <ThemedText style={styles.talkType}>Live Talk</ThemedText>
                     )}
                 </View>
 
@@ -120,19 +123,6 @@ export default function TalksScreen() {
                 <IconSymbol size={20} name="chevron.right" color={tintColor} style={styles.chevron} />
             </TouchableOpacity>
         );
-    };
-
-    const formatDuration = (startTime: Date, endTime: Date) => {
-        const durationMs = endTime.getTime() - startTime.getTime();
-        const minutes = Math.floor(durationMs / (1000 * 60));
-
-        if (minutes < 60) {
-            return `${minutes} min`;
-        } else {
-            const hours = Math.floor(minutes / 60);
-            const remainingMinutes = minutes % 60;
-            return `${hours}h ${remainingMinutes}m`;
-        }
     };
 
     if (isLoading) {
@@ -157,7 +147,7 @@ export default function TalksScreen() {
                     activeOpacity={0.8}
                 >
                     <IconSymbol name="plus" size={22} color={backgroundColor} />
-                    <Text style={[styles.buttonText, { color: backgroundColor }]}>New Talk</Text>
+                    <Text style={[styles.buttonText, { color: backgroundColor }]}>New Agenda</Text>
                 </TouchableOpacity>
             </View>
 
@@ -246,9 +236,10 @@ const styles = StyleSheet.create({
         opacity: 0.7,
         marginBottom: 2,
     },
-    talkDuration: {
+    talkType: {
         fontSize: 12,
         opacity: 0.6,
+        fontWeight: "500",
     },
     activeIndicator: {
         paddingHorizontal: 8,

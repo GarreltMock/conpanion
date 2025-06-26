@@ -87,7 +87,6 @@ export default function TalkDetailScreen() {
                 console.log("Audio recording stopped, URI:", audioUri);
                 return audioUri;
             } else {
-                Ö;
                 // Start recording
                 await addAudioNote();
                 return null;
