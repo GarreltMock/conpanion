@@ -28,6 +28,31 @@ export default function NotesScreen() {
     } = useApp();
 
     const [talkNotes, setTalkNotes] = useState<Note[]>([]);
+    const [currentTime, setCurrentTime] = useState(new Date());
+
+    // Set timeout to update state when scheduled talk ends
+    useEffect(() => {
+        if (!activeTalk || !activeTalk.endTime) {
+            return;
+        }
+
+        const now = new Date();
+        const timeUntilEnd = activeTalk.endTime.getTime() - now.getTime();
+
+        // Only set timeout if the talk hasn't ended yet
+        if (timeUntilEnd > 0) {
+            const timeout = setTimeout(() => {
+                setCurrentTime(new Date());
+            }, timeUntilEnd);
+
+            return () => clearTimeout(timeout);
+        }
+    }, [activeTalk]);
+
+    // Update immediately when active talk changes
+    useEffect(() => {
+        setCurrentTime(new Date());
+    }, [activeTalk]);
 
     useEffect(() => {
         if (activeTalk) {
@@ -40,11 +65,10 @@ export default function NotesScreen() {
 
     const handleTalkDone = async () => {
         if (!activeTalk) return;
-        
-        const now = new Date();
+
         const isScheduledTalk = activeTalk.endTime !== undefined;
-        const isTalkActive = activeTalk.endTime ? activeTalk.endTime > now : true;
-        
+        const isTalkActive = activeTalk.endTime ? activeTalk.endTime > currentTime : true;
+
         if (isScheduledTalk && isTalkActive) {
             // For scheduled talks that are still active, create a new immediate talk
             router.push("/modals/new-talk");

@@ -105,11 +105,6 @@ export default function TalksScreen() {
                         {format(item.startTime, "MMM d, yyyy • h:mm a")}
                         {item.endTime && ` - ${format(item.endTime, "h:mm a")}`}
                     </ThemedText>
-                    {item.endTime ? (
-                        <ThemedText style={styles.talkType}>Scheduled Talk</ThemedText>
-                    ) : (
-                        <ThemedText style={styles.talkType}>Live Talk</ThemedText>
-                    )}
                 </View>
 
                 {isActive && (

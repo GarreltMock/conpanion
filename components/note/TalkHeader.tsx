@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { View, StyleSheet, Pressable, Text } from "react-native";
 import { format } from "date-fns";
 
@@ -22,8 +22,33 @@ export const TalkHeader: React.FC<TalkHeaderProps> = ({
 }) => {
     const tintColor = useThemeColor({}, "tint");
     const backgroundColor = useThemeColor({}, "background");
+    const [currentTime, setCurrentTime] = useState(new Date());
 
     const { endTalk } = useApp();
+
+    // Set timeout to update button when scheduled talk ends
+    useEffect(() => {
+        if (!talk || !talk.endTime) {
+            return;
+        }
+
+        const now = new Date();
+        const timeUntilEnd = talk.endTime.getTime() - now.getTime();
+
+        // Only set timeout if the talk hasn't ended yet
+        if (timeUntilEnd > 0) {
+            const timeout = setTimeout(() => {
+                setCurrentTime(new Date());
+            }, timeUntilEnd);
+
+            return () => clearTimeout(timeout);
+        }
+    }, [talk]);
+
+    // Update immediately when talk changes
+    useEffect(() => {
+        setCurrentTime(new Date());
+    }, [talk]);
 
     const handleDone = () => {
         if (onDone) {
@@ -80,9 +105,8 @@ export const TalkHeader: React.FC<TalkHeaderProps> = ({
                             );
                         }
                         
-                        const now = new Date();
                         const isScheduledTalk = talk.endTime !== undefined;
-                        const isTalkActive = talk.endTime ? talk.endTime > now : true;
+                        const isTalkActive = talk.endTime ? talk.endTime > currentTime : true;
                         
                         if (isScheduledTalk && isTalkActive) {
                             return (
