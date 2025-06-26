@@ -68,16 +68,42 @@ export const TalkHeader: React.FC<TalkHeaderProps> = ({
                     ]}
                     onPress={handleDone}
                 >
-                    <IconSymbol
-                        name={talk ? "checkmark" : "plus"}
-                        size={18}
-                        color={backgroundColor}
-                    />
-                    <Text
-                        style={[styles.buttonText, { color: backgroundColor }]}
-                    >
-                        {talk ? "Done" : "New Talk"}
-                    </Text>
+                    {(() => {
+                        if (!talk) {
+                            return (
+                                <>
+                                    <IconSymbol name="plus" size={18} color={backgroundColor} />
+                                    <Text style={[styles.buttonText, { color: backgroundColor }]}>
+                                        New Talk
+                                    </Text>
+                                </>
+                            );
+                        }
+                        
+                        const now = new Date();
+                        const isScheduledTalk = talk.endTime !== undefined;
+                        const isTalkActive = talk.endTime ? talk.endTime > now : true;
+                        
+                        if (isScheduledTalk && isTalkActive) {
+                            return (
+                                <>
+                                    <IconSymbol name="plus" size={18} color={backgroundColor} />
+                                    <Text style={[styles.buttonText, { color: backgroundColor }]}>
+                                        Join Another
+                                    </Text>
+                                </>
+                            );
+                        } else {
+                            return (
+                                <>
+                                    <IconSymbol name="checkmark" size={18} color={backgroundColor} />
+                                    <Text style={[styles.buttonText, { color: backgroundColor }]}>
+                                        Done
+                                    </Text>
+                                </>
+                            );
+                        }
+                    })()}
                 </Pressable>
             </View>
         </ThemedView>

@@ -39,8 +39,21 @@ export default function NotesScreen() {
     }, [activeTalk, notes, getNotesForTalk]);
 
     const handleTalkDone = async () => {
-        await endCurrentTalk();
-        router.push("/modals/new-talk");
+        if (!activeTalk) return;
+        
+        const now = new Date();
+        const isScheduledTalk = activeTalk.endTime !== undefined;
+        const isTalkActive = activeTalk.endTime ? activeTalk.endTime > now : true;
+        
+        if (isScheduledTalk && isTalkActive) {
+            // For scheduled talks that are still active, create a new immediate talk
+            router.push("/modals/new-talk");
+        } else {
+            // For immediate talks or finished scheduled talks, end current talk
+            // and let the system recalculate the next active talk
+            await endCurrentTalk();
+            // Don't navigate - let the system determine the next state
+        }
     };
 
     // Handle combined note submission (text, images, audio)
