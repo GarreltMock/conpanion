@@ -64,7 +64,10 @@ export default function NotesScreen() {
     }, [activeTalk, notes, getNotesForTalk]);
 
     const handleTalkDone = async () => {
-        if (!activeTalk) return;
+        if (!activeTalk) {
+            router.push("/modals/new-talk");
+            return;
+        }
 
         const isScheduledTalk = activeTalk.endTime !== undefined;
         const isTalkActive = activeTalk.endTime ? activeTalk.endTime > currentTime : true;
