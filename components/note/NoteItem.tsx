@@ -199,12 +199,12 @@ export const NoteItem: React.FC<NoteItemProps> = ({ note, onDelete, readOnly = f
                                 resizeMode="cover"
                             />
                             {image.originalUri && (
-                                <View style={styles.transformedIndicator}>
+                                <View style={[styles.transformedIndicator, { backgroundColor: `${tintColor}CC` }]}>
                                     <IconSymbol name="wand.and.stars" size={12} color="#fff" />
                                 </View>
                             )}
                             {image.links && image.links.length > 0 && (
-                                <View style={styles.linkIndicator}>
+                                <View style={[styles.linkIndicator, { backgroundColor: `${tintColor}CC` }]}>
                                     <IconSymbol name="link" size={12} color="#fff" />
                                 </View>
                             )}
@@ -221,7 +221,7 @@ export const NoteItem: React.FC<NoteItemProps> = ({ note, onDelete, readOnly = f
                             image.links?.map((link, linkIndex) => (
                                 <TouchableOpacity
                                     key={`link-${imageIndex}-${linkIndex}`}
-                                    style={styles.linkItem}
+                                    style={[styles.linkItem, { backgroundColor: `${tintColor}20` }]}
                                     onPress={() => handleOpenLink(link)}
                                 >
                                     <IconSymbol name="link" size={14} color={tintColor} />
@@ -273,6 +273,7 @@ const styles = StyleSheet.create({
     container: {
         marginVertical: 4,
         marginHorizontal: 16,
+        paddingBottom: 4,
         borderRadius: 12,
         overflow: "hidden",
         borderWidth: 1,
@@ -284,6 +285,7 @@ const styles = StyleSheet.create({
         alignItems: "center",
         paddingHorizontal: 12,
         paddingVertical: 2,
+        marginBottom: 4,
         borderBottomWidth: 1,
         borderBottomColor: "rgba(150, 150, 150, 0.1)",
     },
@@ -304,7 +306,7 @@ const styles = StyleSheet.create({
     },
     imagesContainer: {
         flexDirection: "row",
-        paddingVertical: 8,
+        paddingVertical: 4,
         paddingHorizontal: 12,
     },
     image: {
@@ -317,7 +319,6 @@ const styles = StyleSheet.create({
         position: "absolute",
         bottom: 4,
         right: 12,
-        backgroundColor: "rgba(0, 122, 255, 0.8)",
         borderRadius: 10,
         width: 20,
         height: 20,
@@ -328,7 +329,6 @@ const styles = StyleSheet.create({
         position: "absolute",
         bottom: 28,
         right: 12,
-        backgroundColor: "rgba(0, 200, 83, 0.8)",
         borderRadius: 10,
         width: 20,
         height: 20,
@@ -337,7 +337,7 @@ const styles = StyleSheet.create({
     },
     linksContainer: {
         flexDirection: "row",
-        paddingVertical: 8,
+        paddingVertical: 4,
         paddingHorizontal: 12,
     },
     linkItem: {
@@ -345,10 +345,8 @@ const styles = StyleSheet.create({
         alignItems: "center",
         paddingHorizontal: 12,
         paddingVertical: 6,
-        backgroundColor: "rgba(0, 122, 255, 0.1)",
         borderRadius: 16,
         marginRight: 8,
-        // maxWidth: 200,
     },
     linkText: {
         fontSize: 12,
@@ -357,15 +355,16 @@ const styles = StyleSheet.create({
     },
     audioContainer: {
         paddingHorizontal: 12,
-        paddingVertical: 8,
+        paddingVertical: 4,
+        flexDirection: "column",
+        gap: 8,
     },
     audioPlayer: {
         flexDirection: "row",
         alignItems: "center",
         paddingVertical: 8,
         borderRadius: 8,
-        backgroundColor: "rgba(150, 150, 150, 0.2)", // Increased opacity for better visibility in dark mode
-        marginBottom: 8,
+        backgroundColor: "rgba(150, 150, 150, 0.2)",
         paddingHorizontal: 12,
     },
     playButton: {
@@ -387,7 +386,7 @@ const styles = StyleSheet.create({
     },
     textContainer: {
         paddingHorizontal: 12,
-        paddingVertical: 8,
+        paddingVertical: 4,
     },
     textContent: {
         fontSize: 16,

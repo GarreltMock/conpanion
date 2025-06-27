@@ -138,7 +138,7 @@ export default function NotesScreen() {
     }
 
     return (
-        <MyKeyboardAvoidingView style={styles.container}>
+        <MyKeyboardAvoidingView>
             <ThemedView style={styles.container}>
                 <TalkHeader
                     conferenceName={currentConference?.name || "My Conference"}

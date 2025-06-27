@@ -11,7 +11,7 @@ import { readQRCode } from "./helper/qr_code";
 function isValidUrl(text: string): boolean {
     try {
         const url = new URL(text);
-        return url.protocol === 'http:' || url.protocol === 'https:';
+        return url.protocol === "http:" || url.protocol === "https:";
     } catch {
         return false;
     }
@@ -94,8 +94,14 @@ export function useImageTransform() {
                         transformed.height
                     );
 
-                    const qr = await track(() => readQRCode(transformed.img), "readQRCode");
-                    console.log("QR Code Result:", qr);
+                    const qr = await track(
+                        () =>
+                            readQRCode(transformed.img).catch((err) => {
+                                console.error("Error reading QR code:", err);
+                                return { found: false, text: "" };
+                            }),
+                        "readQRCode"
+                    );
 
                     // Check if QR code contains a valid URL
                     const detectedUrls: string[] = [];
@@ -157,18 +163,17 @@ export function useImageTransform() {
             }
 
             try {
-                // Convert image URI to ImageData
                 const imageData = await imageUriToImageData(imageUri);
-
-                // Transform image
                 const transformed = await transformImage(imageData, corners);
-
-                // Convert back to URI
                 const transformedUri = await imageDataToUriRN(transformed.img, transformed.width, transformed.height);
-
-                // Check for QR codes in the transformed image
-                const qr = await track(() => readQRCode(transformed.img), "readQRCode");
-                console.log("QR Code Result:", qr);
+                const qr = await track(
+                    () =>
+                        readQRCode(transformed.img).catch((err) => {
+                            console.error("Error reading QR code:", err);
+                            return { found: false, text: "" };
+                        }),
+                    "readQRCode"
+                );
 
                 // Check if QR code contains a valid URL
                 const detectedUrls: string[] = [];
