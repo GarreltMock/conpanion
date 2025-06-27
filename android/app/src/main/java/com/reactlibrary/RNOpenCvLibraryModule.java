@@ -50,6 +50,11 @@ public class RNOpenCvLibraryModule extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void preprocess(String imageAsBase64, Callback callback) {
+        Mat src = null;
+        Mat resized = null;
+        Mat floatImg = null;
+        List<Mat> channels = null;
+
         try {
             Bitmap image = decodeBase64Image(imageAsBase64);
             if (image == null) {
@@ -57,7 +62,7 @@ public class RNOpenCvLibraryModule extends ReactContextBaseJavaModule {
                 return;
             }
 
-            Mat src = new Mat();
+            src = new Mat();
             Utils.bitmapToMat(image, src);
 
             // Convert RGBA to RGB if needed
@@ -69,15 +74,15 @@ public class RNOpenCvLibraryModule extends ReactContextBaseJavaModule {
             int origHeight = src.rows();
 
             // Resize to 256x256
-            Mat resized = new Mat();
+            resized = new Mat();
             Imgproc.resize(src, resized, new Size(256, 256), 0, 0, Imgproc.INTER_LINEAR);
 
             // Convert to float and normalize
-            Mat floatImg = new Mat();
+            floatImg = new Mat();
             resized.convertTo(floatImg, CvType.CV_32FC3, 1.0 / 255.0);
 
             // Convert HWC to CHW
-            List<Mat> channels = new ArrayList<>();
+            channels = new ArrayList<>();
             org.opencv.core.Core.split(floatImg, channels);
 
             float[] chwData = new float[3 * 256 * 256];
@@ -109,6 +114,16 @@ public class RNOpenCvLibraryModule extends ReactContextBaseJavaModule {
             callback.invoke(null, result);
         } catch (Exception e) {
             callback.invoke("Error in preprocess: " + e.getMessage(), null);
+        } finally {
+            // Release resources
+            if (src != null) src.release();
+            if (resized != null) resized.release();
+            if (floatImg != null) floatImg.release();
+            if (channels != null) {
+                for (Mat channel : channels) {
+                    if (channel != null) channel.release();
+                }
+            }
         }
     }
 
@@ -128,54 +143,69 @@ public class RNOpenCvLibraryModule extends ReactContextBaseJavaModule {
             WritableArray polygon = Arguments.createArray();
 
             for (int c = 0; c < C; c++) {
-                // Extract channel data
-                float[] channelData = new float[H * W];
-                for (int i = 0; i < H * W; i++) {
-                    channelData[i] = buffer.getFloat();
-                }
+                Mat mat = null;
+                Mat resized = null;
+                Mat thresh = null;
+                Mat binary = null;
+                Mat hierarchy = null;
 
-                // Create Mat for this channel
-                Mat mat = new Mat(H, W, CvType.CV_32F);
-                mat.put(0, 0, channelData);
-
-                // Resize to original dimensions
-                Mat resized = new Mat();
-                Imgproc.resize(mat, resized, new Size(originalWidth, originalHeight), 0, 0, Imgproc.INTER_LINEAR);
-
-                // Threshold
-                Mat thresh = new Mat();
-                Imgproc.threshold(resized, thresh, 0.3, 1.0, Imgproc.THRESH_BINARY);
-
-                // Convert to binary
-                Mat binary = new Mat();
-                thresh.convertTo(binary, CvType.CV_8U, 255);
-
-                // Find contours
-                List<MatOfPoint> contours = new ArrayList<>();
-                Mat hierarchy = new Mat();
-                Imgproc.findContours(binary, contours, hierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
-
-                // Find largest contour
-                double maxArea = 0;
-                int maxIdx = -1;
-                for (int i = 0; i < contours.size(); i++) {
-                    double area = Imgproc.contourArea(contours.get(i));
-                    if (area > maxArea) {
-                        maxArea = area;
-                        maxIdx = i;
+                try {
+                    // Extract channel data
+                    float[] channelData = new float[H * W];
+                    for (int i = 0; i < H * W; i++) {
+                        channelData[i] = buffer.getFloat();
                     }
-                }
 
-                if (maxIdx >= 0) {
-                    Moments m = Imgproc.moments(contours.get(maxIdx));
-                    if (m.m00 != 0) {
-                        double cx = m.m10 / m.m00;
-                        double cy = m.m01 / m.m00;
-                        WritableArray point = Arguments.createArray();
-                        point.pushDouble(cx);
-                        point.pushDouble(cy);
-                        polygon.pushArray(point);
+                    // Create Mat for this channel
+                    mat = new Mat(H, W, CvType.CV_32F);
+                    mat.put(0, 0, channelData);
+
+                    // Resize to original dimensions
+                    resized = new Mat();
+                    Imgproc.resize(mat, resized, new Size(originalWidth, originalHeight), 0, 0, Imgproc.INTER_LINEAR);
+
+                    // Threshold
+                    thresh = new Mat();
+                    Imgproc.threshold(resized, thresh, 0.3, 1.0, Imgproc.THRESH_BINARY);
+
+                    // Convert to binary
+                    binary = new Mat();
+                    thresh.convertTo(binary, CvType.CV_8U, 255);
+
+                    // Find contours
+                    List<MatOfPoint> contours = new ArrayList<>();
+                    hierarchy = new Mat();
+                    Imgproc.findContours(binary, contours, hierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
+
+                    // Find largest contour
+                    double maxArea = 0;
+                    int maxIdx = -1;
+                    for (int i = 0; i < contours.size(); i++) {
+                        double area = Imgproc.contourArea(contours.get(i));
+                        if (area > maxArea) {
+                            maxArea = area;
+                            maxIdx = i;
+                        }
                     }
+
+                    if (maxIdx >= 0) {
+                        Moments m = Imgproc.moments(contours.get(maxIdx));
+                        if (m.m00 != 0) {
+                            double cx = m.m10 / m.m00;
+                            double cy = m.m01 / m.m00;
+                            WritableArray point = Arguments.createArray();
+                            point.pushDouble(cx);
+                            point.pushDouble(cy);
+                            polygon.pushArray(point);
+                        }
+                    }
+                } finally {
+                    // Release resources for this iteration
+                    if (mat != null) mat.release();
+                    if (resized != null) resized.release();
+                    if (thresh != null) thresh.release();
+                    if (binary != null) binary.release();
+                    if (hierarchy != null) hierarchy.release();
                 }
             }
 
@@ -187,6 +217,14 @@ public class RNOpenCvLibraryModule extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void transformImage(String imageAsBase64, ReadableArray corners, Callback callback) {
+        Mat src = null;
+        MatOfPoint2f srcMat = null;
+        MatOfPoint2f dstMat = null;
+        Mat M = null;
+        Mat dst = null;
+        Mat dst_rgb = null;
+        org.opencv.core.MatOfByte matOfByte = null;
+
         try {
             Bitmap image = decodeBase64Image(imageAsBase64);
             if (image == null || corners.size() != 4) {
@@ -194,7 +232,7 @@ public class RNOpenCvLibraryModule extends ReactContextBaseJavaModule {
                 return;
             }
 
-            Mat src = new Mat();
+            src = new Mat();
             Utils.bitmapToMat(image, src);
 
             // Prepare source points
@@ -224,19 +262,19 @@ public class RNOpenCvLibraryModule extends ReactContextBaseJavaModule {
             };
 
             // Create transformation matrix
-            MatOfPoint2f srcMat = new MatOfPoint2f(srcPts);
-            MatOfPoint2f dstMat = new MatOfPoint2f(dstPts);
-            Mat M = Imgproc.getPerspectiveTransform(srcMat, dstMat);
+            srcMat = new MatOfPoint2f(srcPts);
+            dstMat = new MatOfPoint2f(dstPts);
+            M = Imgproc.getPerspectiveTransform(srcMat, dstMat);
 
             // Apply perspective transformation
-            Mat dst = new Mat();
+            dst = new Mat();
             Imgproc.warpPerspective(src, dst, M, new Size(width, height), Imgproc.INTER_LINEAR);
 
-            Mat dst_rgb = new Mat();
+            dst_rgb = new Mat();
             Imgproc.cvtColor(dst, dst_rgb, Imgproc.COLOR_BGR2RGB);
 
             // Encode directly to PNG without bitmap conversion
-            org.opencv.core.MatOfByte matOfByte = new org.opencv.core.MatOfByte();
+            matOfByte = new org.opencv.core.MatOfByte();
             org.opencv.imgcodecs.Imgcodecs.imencode(".png", dst_rgb, matOfByte);
             byte[] imageBytes = matOfByte.toArray();
             String base64 = Base64.encodeToString(imageBytes, Base64.NO_WRAP);
@@ -246,23 +284,26 @@ public class RNOpenCvLibraryModule extends ReactContextBaseJavaModule {
             result.putInt("width", (int)width);
             result.putInt("height", (int)height);
 
-            // Release resources
-            src.release();
-            srcMat.release();
-            dstMat.release();
-            M.release();
-            dst.release();
-            dst_rgb.release();
-            matOfByte.release();
-
             callback.invoke(null, result);
         } catch (Exception e) {
             callback.invoke("Error in transformImage: " + e.getMessage(), null);
+        } finally {
+            // Release resources
+            if (src != null) src.release();
+            if (srcMat != null) srcMat.release();
+            if (dstMat != null) dstMat.release();
+            if (M != null) M.release();
+            if (dst != null) dst.release();
+            if (dst_rgb != null) dst_rgb.release();
+            if (matOfByte != null) matOfByte.release();
         }
     }
 
     @ReactMethod
     public void readQRCode(String imageAsBase64, Callback callback) {
+        Mat src = null;
+        Mat gray = null;
+
         try {
             Bitmap image = decodeBase64ImageForQr(imageAsBase64);
             if (image == null) {
@@ -278,11 +319,10 @@ public class RNOpenCvLibraryModule extends ReactContextBaseJavaModule {
                 image = convertedBitmap;
             }
 
-            Mat src = new Mat();
+            src = new Mat();
             Utils.bitmapToMat(image, src);
-            Mat gray = new Mat();
+            gray = new Mat();
             Imgproc.cvtColor(src, gray, Imgproc.COLOR_RGBA2GRAY);
-
 
             QRCodeDetector qrDetector = new QRCodeDetector();
             String decodedText = qrDetector.detectAndDecode(gray);
@@ -296,12 +336,13 @@ public class RNOpenCvLibraryModule extends ReactContextBaseJavaModule {
                 result.putString("text", "");
             }
 
-            src.release();
-            gray.release();
-
             callback.invoke(null, result);
         } catch (Exception e) {
             callback.invoke("Error in readQRCode: " + e.getMessage(), null);
+        } finally {
+            // Release resources
+            if (src != null) src.release();
+            if (gray != null) gray.release();
         }
     }
 
