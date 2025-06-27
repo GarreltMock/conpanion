@@ -70,17 +70,11 @@ export function useImageTransform() {
                 const imageData = await imageUriToImageData(imageUri);
 
                 // Detect corners
-                const start = Date.now();
-                const result = await processImage(imageData);
-                const end = Date.now();
-                console.log(`processImage took ${end - start}ms`);
+                const result = await track(() => processImage(imageData), "processImage");
 
                 // If valid corners were detected, transform the image
                 if (result.polygon && result.polygon.length === 4) {
-                    const startTime = Date.now();
-                    const transformed = await transformImage(imageData, result.polygon);
-                    const endTime = Date.now();
-                    console.log(`transformImage took ${endTime - startTime}ms`);
+                    const transformed = await track(() => transformImage(imageData, result.polygon!), "transformImage");
 
                     // Convert back to URI
                     const transformedUri = await imageDataToUriRN(
@@ -89,9 +83,7 @@ export function useImageTransform() {
                         transformed.height
                     );
 
-                    // Read QR code from the transformed image by converting it back to the proper format
-                    const transformedImageData = await imageUriToImageData(transformedUri);
-                    const qr = await readQRCode(transformedImageData);
+                    const qr = await track(() => readQRCode(transformed.img), "readQRCode");
                     console.log("QR Code Result:", qr);
 
                     return {
@@ -112,6 +104,20 @@ export function useImageTransform() {
         },
         [isInitialized]
     );
+
+    const track = async (fn: () => Promise<any>, name: string): Promise<any> => {
+        const start = Date.now();
+        try {
+            const result = await fn();
+            const end = Date.now();
+            console.log(`${name} took ${end - start}ms`);
+            return result;
+        } catch (err) {
+            const end = Date.now();
+            console.error(`${name} failed after ${end - start}ms:`, err);
+            throw new Error(`Failed to execute ${name}: ${err instanceof Error ? err.message : String(err)}`);
+        }
+    };
 
     // Transform image manually with provided corners
     const transformImageWithCorners = useCallback(
