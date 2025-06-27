@@ -34,6 +34,7 @@ const MAPPING = {
     timer: "timer",
     eye: "visibility",
     "wand.and.stars": "auto-fix-high",
+    link: "link",
 } as Partial<
     Record<import("expo-symbols").SymbolViewProps["name"], React.ComponentProps<typeof MaterialIcons>["name"]>
 >;

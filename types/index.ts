@@ -24,6 +24,7 @@ export interface NoteImage {
     uri: string;
     originalUri?: string; // Set only for transformed images
     corners?: Polygon; // Set only for transformed images
+    links?: string[]; // URLs detected from QR codes in this image
 }
 
 export interface Note {

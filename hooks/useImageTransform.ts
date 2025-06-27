@@ -7,6 +7,16 @@ import { Polygon } from "@/types";
 import { Platform } from "react-native";
 import { readQRCode } from "./helper/qr_code";
 
+// Simple URL validation function
+function isValidUrl(text: string): boolean {
+    try {
+        const url = new URL(text);
+        return url.protocol === 'http:' || url.protocol === 'https:';
+    } catch {
+        return false;
+    }
+}
+
 export function useImageTransform() {
     const [isInitialized, setIsInitialized] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -60,6 +70,7 @@ export function useImageTransform() {
         ): Promise<{
             corners: Polygon | null;
             transformed?: { uri: string; width: number; height: number };
+            detectedUrls?: string[];
         }> => {
             if (!isInitialized) {
                 throw new Error("Models are not initialized");
@@ -86,6 +97,12 @@ export function useImageTransform() {
                     const qr = await track(() => readQRCode(transformed.img), "readQRCode");
                     console.log("QR Code Result:", qr);
 
+                    // Check if QR code contains a valid URL
+                    const detectedUrls: string[] = [];
+                    if (qr.found && qr.text && isValidUrl(qr.text)) {
+                        detectedUrls.push(qr.text);
+                    }
+
                     return {
                         corners: result.polygon,
                         transformed: {
@@ -93,6 +110,7 @@ export function useImageTransform() {
                             width: transformed.width,
                             height: transformed.height,
                         },
+                        detectedUrls: detectedUrls.length > 0 ? detectedUrls : undefined,
                     };
                 }
 
@@ -128,6 +146,7 @@ export function useImageTransform() {
             uri: string;
             width: number;
             height: number;
+            detectedUrls?: string[];
         }> => {
             if (!isInitialized) {
                 throw new Error("Models are not initialized");
@@ -147,10 +166,21 @@ export function useImageTransform() {
                 // Convert back to URI
                 const transformedUri = await imageDataToUriRN(transformed.img, transformed.width, transformed.height);
 
+                // Check for QR codes in the transformed image
+                const qr = await track(() => readQRCode(transformed.img), "readQRCode");
+                console.log("QR Code Result:", qr);
+
+                // Check if QR code contains a valid URL
+                const detectedUrls: string[] = [];
+                if (qr.found && qr.text && isValidUrl(qr.text)) {
+                    detectedUrls.push(qr.text);
+                }
+
                 return {
                     uri: transformedUri,
                     width: transformed.width,
                     height: transformed.height,
+                    detectedUrls: detectedUrls.length > 0 ? detectedUrls : undefined,
                 };
             } catch (err) {
                 console.error("Error transforming image:", err);

@@ -2,7 +2,7 @@ import { format } from "date-fns";
 import { Audio } from "expo-av";
 import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { Alert, Image, Pressable, ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
+import { Alert, Image, Linking, Pressable, ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
@@ -44,6 +44,7 @@ export const NoteItem: React.FC<NoteItemProps> = ({ note, onDelete, readOnly = f
                             uri: lastTransformedImage.newImageUri,
                             originalUri: lastTransformedImage.originalUri,
                             corners: lastTransformedImage.corners,
+                            links: lastTransformedImage.detectedUrls,
                         };
                     }
                     return img;
@@ -127,6 +128,20 @@ export const NoteItem: React.FC<NoteItemProps> = ({ note, onDelete, readOnly = f
         ]);
     };
 
+    const handleOpenLink = async (url: string) => {
+        try {
+            const canOpen = await Linking.canOpenURL(url);
+            if (canOpen) {
+                await Linking.openURL(url);
+            } else {
+                Alert.alert("Error", "Cannot open this URL");
+            }
+        } catch (error) {
+            console.error("Error opening URL:", error);
+            Alert.alert("Error", "Failed to open URL");
+        }
+    };
+
     return (
         <ThemedView style={styles.container}>
             <View style={styles.header}>
@@ -188,8 +203,34 @@ export const NoteItem: React.FC<NoteItemProps> = ({ note, onDelete, readOnly = f
                                     <IconSymbol name="wand.and.stars" size={12} color="#fff" />
                                 </View>
                             )}
+                            {image.links && image.links.length > 0 && (
+                                <View style={styles.linkIndicator}>
+                                    <IconSymbol name="link" size={12} color="#fff" />
+                                </View>
+                            )}
                         </TouchableOpacity>
                     ))}
+                </ScrollView>
+            )}
+
+            {/* Links section - display all links from all images */}
+            {note.images.some((image) => image.links && image.links.length > 0) && (
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.linksContainer}>
+                    {note.images.flatMap(
+                        (image, imageIndex) =>
+                            image.links?.map((link, linkIndex) => (
+                                <TouchableOpacity
+                                    key={`link-${imageIndex}-${linkIndex}`}
+                                    style={styles.linkItem}
+                                    onPress={() => handleOpenLink(link)}
+                                >
+                                    <IconSymbol name="link" size={14} color={tintColor} />
+                                    <ThemedText style={styles.linkText} numberOfLines={1}>
+                                        {link.replace(/^https?:\/\//, "").replace(/\/.*/, "")}
+                                    </ThemedText>
+                                </TouchableOpacity>
+                            )) || []
+                    )}
                 </ScrollView>
             )}
 
@@ -282,6 +323,37 @@ const styles = StyleSheet.create({
         height: 20,
         justifyContent: "center",
         alignItems: "center",
+    },
+    linkIndicator: {
+        position: "absolute",
+        bottom: 28,
+        right: 12,
+        backgroundColor: "rgba(0, 200, 83, 0.8)",
+        borderRadius: 10,
+        width: 20,
+        height: 20,
+        justifyContent: "center",
+        alignItems: "center",
+    },
+    linksContainer: {
+        flexDirection: "row",
+        paddingVertical: 8,
+        paddingHorizontal: 12,
+    },
+    linkItem: {
+        flexDirection: "row",
+        alignItems: "center",
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        backgroundColor: "rgba(0, 122, 255, 0.1)",
+        borderRadius: 16,
+        marginRight: 8,
+        // maxWidth: 200,
+    },
+    linkText: {
+        fontSize: 12,
+        marginLeft: 6,
+        flex: 1,
     },
     audioContainer: {
         paddingHorizontal: 12,

@@ -222,6 +222,7 @@ export default function ImageViewModal() {
                 originalUri: sourceImageUri, // The source image used for transformation
                 corners: imageCorners, // The corners used for transformation (in image coordinates)
                 timestamp: Date.now(),
+                detectedUrls: result.detectedUrls, // URLs detected from QR codes
             });
 
             router.replace({

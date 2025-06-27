@@ -23,6 +23,7 @@ interface CachedImage {
     uri: string;
     transformedUri?: string;
     corners?: Polygon;
+    links?: string[];
     isProcessing?: boolean;
 }
 
@@ -101,6 +102,7 @@ export const NoteInput: React.FC<NoteInputProps> = ({
                 uri: img.originalUri ? img.originalUri : img.uri,
                 transformedUri: img.originalUri ? img.uri : undefined,
                 corners: img.corners,
+                links: img.links,
                 isProcessing: false,
             }));
 
@@ -129,10 +131,12 @@ export const NoteInput: React.FC<NoteInputProps> = ({
                         uri: img.transformedUri,
                         originalUri: img.uri,
                         corners: img.corners,
+                        links: img.links,
                     };
                 } else {
                     return {
                         uri: img.uri,
+                        links: img.links,
                     };
                 }
             });
@@ -186,6 +190,7 @@ export const NoteInput: React.FC<NoteInputProps> = ({
                                                 ...img,
                                                 transformedUri: result.transformed?.uri,
                                                 corners: result.corners || undefined,
+                                                links: result.detectedUrls,
                                                 isProcessing: false,
                                             };
                                         }

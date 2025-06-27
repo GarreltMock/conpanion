@@ -6,6 +6,7 @@ interface TransformedImageData {
     originalUri: string;
     corners: [number, number][]; // The corners used for transformation (in image coordinates)
     timestamp: number;
+    detectedUrls?: string[]; // URLs detected from QR codes in the transformed image
 }
 
 interface ImageTransformContextType {
