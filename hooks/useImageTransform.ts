@@ -5,6 +5,7 @@ import { transformImage } from "./helper/transform_image";
 import { imageUriToImageData, imageDataToUriRN } from "./helper/image_utils";
 import { Polygon } from "@/types";
 import { Platform } from "react-native";
+import { readQRCode } from "./helper/qr_code";
 
 export function useImageTransform() {
     const [isInitialized, setIsInitialized] = useState(false);
@@ -87,6 +88,11 @@ export function useImageTransform() {
                         transformed.width,
                         transformed.height
                     );
+
+                    // Read QR code from the transformed image by converting it back to the proper format
+                    const transformedImageData = await imageUriToImageData(transformedUri);
+                    const qr = await readQRCode(transformedImageData);
+                    console.log("QR Code Result:", qr);
 
                     return {
                         corners: result.polygon,

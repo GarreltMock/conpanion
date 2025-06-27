@@ -24,6 +24,7 @@ import org.opencv.core.MatOfPoint2f;
 import org.opencv.android.Utils;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.imgproc.Moments;
+import org.opencv.objdetect.QRCodeDetector;
 
 import android.util.Base64;
 
@@ -245,9 +246,77 @@ public class RNOpenCvLibraryModule extends ReactContextBaseJavaModule {
             result.putInt("width", (int)width);
             result.putInt("height", (int)height);
 
+            // Release resources
+            src.release();
+            srcMat.release();
+            dstMat.release();
+            M.release();
+            dst.release();
+            dst_rgb.release();
+            matOfByte.release();
+
             callback.invoke(null, result);
         } catch (Exception e) {
             callback.invoke("Error in transformImage: " + e.getMessage(), null);
+        }
+    }
+
+    @ReactMethod
+    public void readQRCode(String imageAsBase64, Callback callback) {
+        try {
+            Bitmap image = decodeBase64ImageForQr(imageAsBase64);
+            if (image == null) {
+                callback.invoke("Invalid image", null);
+                return;
+            }
+
+            if (image.getConfig() != Bitmap.Config.ARGB_8888) {
+                Bitmap convertedBitmap = image.copy(Bitmap.Config.ARGB_8888, false);
+                if (image != convertedBitmap) {
+                    image.recycle();
+                }
+                image = convertedBitmap;
+            }
+
+            Mat src = new Mat();
+            Utils.bitmapToMat(image, src);
+            Mat gray = new Mat();
+            Imgproc.cvtColor(src, gray, Imgproc.COLOR_RGBA2GRAY);
+
+
+            QRCodeDetector qrDetector = new QRCodeDetector();
+            String decodedText = qrDetector.detectAndDecode(gray);
+
+            WritableMap result = Arguments.createMap();
+            if (decodedText != null && !decodedText.isEmpty()) {
+                result.putString("text", decodedText);
+                result.putBoolean("found", true);
+            } else {
+                result.putBoolean("found", false);
+                result.putString("text", "");
+            }
+
+            src.release();
+            gray.release();
+
+            callback.invoke(null, result);
+        } catch (Exception e) {
+            callback.invoke("Error in readQRCode: " + e.getMessage(), null);
+        }
+    }
+
+    private Bitmap decodeBase64ImageForQr(String base64) {
+        try {
+            byte[] data = Base64.decode(base64, Base64.DEFAULT);
+
+            // Wichtig: explizit ARGB_8888 anfordern
+            BitmapFactory.Options opt = new BitmapFactory.Options();
+            opt.inPreferredConfig = Bitmap.Config.ARGB_8888;
+            Bitmap bmp = BitmapFactory.decodeByteArray(data, 0, data.length, opt);
+
+            return bmp != null ? normalizeImageOrientation(bmp, data) : null;
+        } catch (Exception e) {
+            return null;
         }
     }
 

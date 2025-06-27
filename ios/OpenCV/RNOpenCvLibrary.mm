@@ -3,6 +3,7 @@
 #import <opencv2/imgproc/imgproc.hpp>
 #import <opencv2/core/core.hpp>
 #import <opencv2/imgcodecs/ios.h>
+#import <opencv2/objdetect.hpp>
 
 @implementation RNOpenCvLibrary
 
@@ -166,10 +167,60 @@ RCT_EXPORT_METHOD(transformImage:(NSString *)imageAsBase64
   callback(@[[NSNull null], result]);
 }
 
-- (UIImage *)decodeAndNormalizeBase64Image:(NSString *)strEncodeData {
+RCT_EXPORT_METHOD(readQRCode:(NSString *)imageAsBase64
+                  callback:(RCTResponseSenderBlock)callback)
+{
+  UIImage* image = [self decodeBase64ImageForQr:imageAsBase64];
+  if (!image) {
+    callback(@[@"Invalid image", [NSNull null]]);
+    return;
+  }
+
+  cv::Mat src;
+  UIImageToMat(image, src);
+
+  cv::Mat gray;
+  cv::cvtColor(src, gray, cv::COLOR_RGBA2GRAY);
+
+  // Create QR code detector
+  cv::QRCodeDetector qrDetector;
+
+  // Detect and decode QR codes
+  std::vector<cv::Point2f> points;
+  std::string decodedText = qrDetector.detectAndDecode(gray, points);
+
+  NSMutableDictionary *result = [NSMutableDictionary dictionary];
+
+  if (!decodedText.empty()) {
+    result[@"text"] = [NSString stringWithUTF8String:decodedText.c_str()];
+    result[@"found"] = @YES;
+
+    // Extract corner points if available
+    if (points.size() == 4) {
+      NSMutableArray *corners = [NSMutableArray array];
+      for (const auto& point : points) {
+        [corners addObject:@[@(point.x), @(point.y)]];
+      }
+      result[@"corners"] = corners;
+    }
+  } else {
+    result[@"found"] = @NO;
+    result[@"text"] = @"";
+  }
+
+  callback(@[[NSNull null], result]);
+}
+
+- (UIImage *)decodeBase64ImageForQr:(NSString *)strEncodeData {
   NSData *data = [[NSData alloc]initWithBase64EncodedString:strEncodeData options:NSDataBase64DecodingIgnoreUnknownCharacters];
   UIImage *image = [UIImage imageWithData:data];
   if (!image) return nil;
+
+  return [self normalizeImageOrientation:image withImageData:data];
+}
+
+- (UIImage *)normalizeImageOrientation:(UIImage *)image withImageData:(NSData *)imageData {
+  // Handle orientation correction similar to Android version
   if (image.imageOrientation == UIImageOrientationUp) return image;
 
   UIGraphicsBeginImageContextWithOptions(image.size, NO, image.scale);
@@ -177,6 +228,14 @@ RCT_EXPORT_METHOD(transformImage:(NSString *)imageAsBase64
   UIImage *normalizedImage = UIGraphicsGetImageFromCurrentImageContext();
   UIGraphicsEndImageContext();
   return normalizedImage;
+}
+
+- (UIImage *)decodeAndNormalizeBase64Image:(NSString *)strEncodeData {
+  NSData *data = [[NSData alloc]initWithBase64EncodedString:strEncodeData options:NSDataBase64DecodingIgnoreUnknownCharacters];
+  UIImage *image = [UIImage imageWithData:data];
+  if (!image) return nil;
+
+  return [self normalizeImageOrientation:image withImageData:data];
 }
 
 @end

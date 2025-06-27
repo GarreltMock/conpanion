@@ -49,3 +49,12 @@ export async function transformImage(
         });
     });
 }
+
+export async function readQRCode(imageAsBase64: string): Promise<{ found: boolean; text: string }> {
+    return new Promise((resolve, reject) => {
+        RNOpenCvLibrary.readQRCode(imageAsBase64, (err: any, res: any) => {
+            if (err) return reject(err);
+            resolve({ found: res.found, text: res.text });
+        });
+    });
+}
