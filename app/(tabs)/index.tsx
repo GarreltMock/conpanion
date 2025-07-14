@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, FlatList, StyleSheet, View } from "react-native";
 
 import { MyKeyboardAvoidingView } from "@/components/MyKeyboardAvoidingView";
@@ -29,6 +29,7 @@ export default function NotesScreen() {
 
     const [talkNotes, setTalkNotes] = useState<Note[]>([]);
     const [currentTime, setCurrentTime] = useState(new Date());
+    const flatListRef = useRef<FlatList>(null);
 
     // Set timeout to update state when scheduled talk ends
     useEffect(() => {
@@ -62,6 +63,15 @@ export default function NotesScreen() {
             setTalkNotes([]);
         }
     }, [activeTalk, notes, getNotesForTalk]);
+
+    // Scroll to bottom when new notes are added
+    useEffect(() => {
+        if (talkNotes.length > 0) {
+            setTimeout(() => {
+                flatListRef.current?.scrollToEnd({ animated: true });
+            }, 100);
+        }
+    }, [talkNotes.length]);
 
     const handleTalkDone = async () => {
         if (!activeTalk) {
@@ -148,6 +158,7 @@ export default function NotesScreen() {
 
                 {activeTalk ? (
                     <FlatList
+                        ref={flatListRef}
                         data={talkNotes}
                         keyExtractor={(item) => item.id}
                         renderItem={({ item }) => <NoteItem note={item} onDelete={handleDeleteNote} />}
