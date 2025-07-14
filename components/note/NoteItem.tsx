@@ -330,7 +330,7 @@ const styles = StyleSheet.create({
     },
     imagesContainer: {
         flexDirection: "row",
-        paddingVertical: 4,
+        paddingTop: 8,
         paddingHorizontal: 12,
     },
     image: {
@@ -379,7 +379,7 @@ const styles = StyleSheet.create({
     },
     audioContainer: {
         paddingHorizontal: 12,
-        paddingVertical: 4,
+        paddingTop: 8,
         flexDirection: "column",
         gap: 8,
     },
