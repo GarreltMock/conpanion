@@ -34,7 +34,7 @@ interface CachedAudio {
 }
 
 interface NoteInputProps {
-    onTakePhoto: (fromGallery: boolean) => Promise<string>;
+    onTakePhoto: (fromGallery: boolean) => Promise<string | null>;
     onRecordAudio: () => Promise<string | null>;
     onSubmitNote: (text: string, images: NoteImage[], audioRecordings: string[]) => Promise<void>;
     isRecording?: boolean;

@@ -100,7 +100,7 @@ export default function NotesScreen() {
     };
 
     // Handle taking a photo
-    const handleTakePhoto = async (fromGallery: boolean): Promise<string> => {
+    const handleTakePhoto = async (fromGallery: boolean): Promise<string | null> => {
         try {
             return await addImageNote(fromGallery);
         } catch (error) {

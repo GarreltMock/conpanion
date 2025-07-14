@@ -56,7 +56,7 @@ interface AppContextType {
     // Note Management
     notes: Note[];
     addTextNote: (text: string) => Promise<Note>;
-    addImageNote: (fromGallery: boolean) => Promise<string>; // Returns image URI instead of creating note
+    addImageNote: (fromGallery: boolean) => Promise<string | null>; // Returns image URI instead of creating note
     addAudioNote: () => Promise<Note | null>;
     stopAudioRecording: () => Promise<string | null>; // Returns audio URI instead of creating note
     addCombinedNote: (text: string, images: NoteImage[], audioRecordings: string[]) => Promise<Note>;
@@ -473,7 +473,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         return newNote;
     };
 
-    const addImageNote = async (fromGallery: boolean): Promise<string> => {
+    const addImageNote = async (fromGallery: boolean): Promise<string | null> => {
         if (!activeTalk) {
             throw new Error("No active talk to add note to");
         }
@@ -508,7 +508,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         }
 
         if (!result || result.canceled || !result.assets || result.assets.length === 0) {
-            throw new Error("No image selected");
+            return null;
         }
 
         // Save image to file system
