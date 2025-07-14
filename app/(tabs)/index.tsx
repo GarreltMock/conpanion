@@ -220,7 +220,12 @@ const styles = StyleSheet.create({
         opacity: 0.7,
     },
     inputWrapper: {
-        borderTopWidth: 1,
-        borderTopColor: "rgba(150, 150, 150, 0.2)",
+        borderWidth: 1,
+        borderColor: "rgba(150, 150, 150, 0.2)",
+        borderTopLeftRadius: 12,
+        borderTopRightRadius: 12,
+        borderBottomWidth: 0,
+        marginHorizontal: -1,
+        overflow: "hidden",
     },
 });

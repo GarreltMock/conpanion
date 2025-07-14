@@ -420,15 +420,6 @@ export const NoteInput: React.FC<NoteInputProps> = ({
 
                 <View style={styles.buttonsContainer}>
                     <Pressable
-                        style={({ pressed }) => [styles.iconButton, pressed && styles.buttonPressed]}
-                        onPress={() => handleTakePhoto()}
-                        onLongPress={() => handleTakePhoto(true)}
-                        disabled={disabled}
-                    >
-                        <IconSymbol name="camera.fill" size={22} color={disabled ? textColor + "40" : tintColor} />
-                    </Pressable>
-
-                    <Pressable
                         style={({ pressed }) => [
                             styles.iconButton,
                             pressed && styles.buttonPressed,
@@ -440,8 +431,19 @@ export const NoteInput: React.FC<NoteInputProps> = ({
                         <IconSymbol
                             name="mic.fill"
                             size={22}
-                            color={disabled ? textColor + "40" : isRecording ? "#fff" : tintColor}
+                            color={disabled ? iconColor + "40" : isRecording ? "#fff" : iconColor}
                         />
+                    </Pressable>
+
+                    <View style={{ flex: 1 }} />
+
+                    <Pressable
+                        style={({ pressed }) => [styles.iconButton, pressed && styles.buttonPressed]}
+                        onPress={() => handleTakePhoto()}
+                        onLongPress={() => handleTakePhoto(true)}
+                        disabled={disabled}
+                    >
+                        <IconSymbol name="camera.fill" size={22} color={disabled ? iconColor + "40" : iconColor} />
                     </Pressable>
 
                     <Pressable
@@ -469,6 +471,8 @@ export const NoteInput: React.FC<NoteInputProps> = ({
 const styles = StyleSheet.create({
     container: {
         padding: 8,
+        borderTopLeftRadius: 12,
+        borderTopRightRadius: 12,
     },
     attachmentsContainer: {
         marginBottom: 8,
@@ -545,9 +549,7 @@ const styles = StyleSheet.create({
         fontSize: 16,
     },
     buttonsContainer: {
-        flexShrink: 1,
-        flexBasis: "auto",
-        marginLeft: "auto",
+        flexBasis: "100%",
         alignContent: "flex-end",
         flexDirection: "row",
         alignItems: "center",
