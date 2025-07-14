@@ -18,6 +18,16 @@ export default function RootLayout() {
     const colorScheme = useColorScheme();
     const [loaded] = useFonts({
         SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
+        "MuseoSans-Thin": require("../assets/fonts/MuseoSans-Thin.ttf"),
+        "MuseoSans-ThinItalic": require("../assets/fonts/MuseoSans-ThinItalic.ttf"),
+        "MuseoSans-Light": require("../assets/fonts/MuseoSans-Light.ttf"),
+        "MuseoSans-LightItalic": require("../assets/fonts/MuseoSans-LightItalic.ttf"),
+        "MuseoSans-Medium": require("../assets/fonts/MuseoSans-Medium.ttf"),
+        "MuseoSans-MediumItalic": require("../assets/fonts/MuseoSans-MediumItalic.ttf"),
+        "MuseoSans-Bold": require("../assets/fonts/MuseoSans-Bold.ttf"),
+        "MuseoSans-BoldItalic": require("../assets/fonts/MuseoSans-BoldItalic.ttf"),
+        "MuseoSans-Black": require("../assets/fonts/MuseoSans-Black.ttf"),
+        "MuseoSans-BlackItalic": require("../assets/fonts/MuseoSans-BlackItalic.ttf"),
     });
 
     useEffect(() => {
