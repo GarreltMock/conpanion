@@ -433,16 +433,12 @@ export const deleteNote = async (noteId: string): Promise<void> => {
             for (const image of noteToDelete.images) {
                 try {
                     // Convert relative path to absolute path for deletion
-                    const imageAbsolutePath = image.uri.startsWith("/")
-                        ? image.uri
-                        : `${FileSystem.documentDirectory}${image.uri}`;
+                    const imageAbsolutePath = getAbsolutePath(image.uri);
                     await FileSystem.deleteAsync(imageAbsolutePath);
 
                     // If it's a transformed image, also delete the original
                     if (image.originalUri) {
-                        const originalAbsolutePath = image.originalUri.startsWith("/")
-                            ? image.originalUri
-                            : `${FileSystem.documentDirectory}${image.originalUri}`;
+                        const originalAbsolutePath = getAbsolutePath(image.originalUri);
                         await FileSystem.deleteAsync(originalAbsolutePath);
                     }
                 } catch (error) {
@@ -453,9 +449,7 @@ export const deleteNote = async (noteId: string): Promise<void> => {
             for (const audioPath of noteToDelete.audioRecordings) {
                 try {
                     // Convert relative path to absolute path for deletion
-                    const audioAbsolutePath = audioPath.startsWith("/")
-                        ? audioPath
-                        : `${FileSystem.documentDirectory}${audioPath}`;
+                    const audioAbsolutePath = getAbsolutePath(audioPath);
                     await FileSystem.deleteAsync(audioAbsolutePath);
                 } catch (error) {
                     console.error("Error deleting audio file:", error);
