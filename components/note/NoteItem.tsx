@@ -2,7 +2,17 @@ import { format } from "date-fns";
 import { Audio } from "expo-av";
 import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { Alert, Image, Linking, Pressable, ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
+import {
+    Alert,
+    Image,
+    Linking,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    TouchableOpacity,
+    View,
+    ActionSheetIOS,
+} from "react-native";
 
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
@@ -25,7 +35,6 @@ export const NoteItem: React.FC<NoteItemProps> = ({ note, onDelete, readOnly = f
     const [playingIndex, setPlayingIndex] = useState<number | null>(null);
 
     const tintColor = useThemeColor({}, "tint");
-    const iconColor = useThemeColor({}, "tabIconDefault");
 
     const { updateNote } = useApp();
     const { lastTransformedImage, clearLastTransformed } = useImageTransformNotification();
@@ -142,130 +151,143 @@ export const NoteItem: React.FC<NoteItemProps> = ({ note, onDelete, readOnly = f
         }
     };
 
+    const handleLongPress = () => {
+        if (readOnly) return;
+
+        ActionSheetIOS.showActionSheetWithOptions(
+            {
+                options: ["Cancel", "Edit", "Delete"],
+                destructiveButtonIndex: 2,
+                cancelButtonIndex: 0,
+            },
+            (buttonIndex) => {
+                if (buttonIndex === 1) {
+                    handleEditNote();
+                } else if (buttonIndex === 2) {
+                    handleDeleteNote();
+                }
+            }
+        );
+    };
+
+    const handlePress = () => {
+        if (readOnly) return;
+        handleEditNote();
+    };
+
     return (
-        <ThemedView style={styles.container}>
-            <View style={styles.header}>
-                <ThemedText style={styles.timestamp}>{format(note.timestamp, "h:mm a")}</ThemedText>
+        <Pressable
+            style={({ pressed }) => [styles.container, pressed && styles.containerPressed]}
+            onPress={handlePress}
+            onLongPress={handleLongPress}
+        >
+            <ThemedView style={styles.content}>
+                {note.images.length > 0 && (
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.imagesContainer}>
+                        {note.images.map((image, index) => (
+                            <TouchableOpacity
+                                key={`image-${index}`}
+                                activeOpacity={0.9}
+                                onPress={() => {
+                                    // Pass both the primary image and original if available
+                                    const imageAbsoluteUri = getAbsolutePath(image.uri);
+                                    const params: any = {
+                                        imageUri: encodeURIComponent(imageAbsoluteUri),
+                                    };
 
-                {!readOnly && (
-                    <View style={styles.actionsContainer}>
-                        <Pressable
-                            style={({ pressed }) => [styles.actionButton, pressed && styles.buttonPressed]}
-                            onPress={handleEditNote}
-                        >
-                            <IconSymbol name="pencil" size={16} color={iconColor} />
-                        </Pressable>
+                                    // If this is a transformed image with original and corners
+                                    if (image.originalUri && image.corners) {
+                                        const originalAbsoluteUri = getAbsolutePath(image.originalUri);
+                                        params.originalUri = encodeURIComponent(originalAbsoluteUri);
+                                        // Pass the saved corners as JSON string
+                                        params.savedCorners = encodeURIComponent(JSON.stringify(image.corners));
+                                    }
 
-                        <Pressable
-                            style={({ pressed }) => [styles.actionButton, pressed && styles.buttonPressed]}
-                            onPress={handleDeleteNote}
-                        >
-                            <IconSymbol name="trash" size={16} color={iconColor} />
-                        </Pressable>
+                                    router.push({
+                                        pathname: "/modals/image-view",
+                                        params,
+                                    });
+                                }}
+                            >
+                                <Image
+                                    source={{ uri: getAbsolutePath(image.uri) }}
+                                    style={styles.image}
+                                    resizeMode="cover"
+                                />
+                                {image.originalUri && (
+                                    <View style={[styles.transformedIndicator, { backgroundColor: `${tintColor}CC` }]}>
+                                        <IconSymbol name="wand.and.stars" size={12} color="#fff" />
+                                    </View>
+                                )}
+                                {image.links && image.links.length > 0 && (
+                                    <View style={[styles.linkIndicator, { backgroundColor: `${tintColor}CC` }]}>
+                                        <IconSymbol name="link" size={12} color="#fff" />
+                                    </View>
+                                )}
+                            </TouchableOpacity>
+                        ))}
+                    </ScrollView>
+                )}
+
+                {/* Links section - display all links from all images */}
+                {note.images.some((image) => image.links && image.links.length > 0) && (
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.linksContainer}>
+                        {note.images.flatMap(
+                            (image, imageIndex) =>
+                                image.links?.map((link, linkIndex) => (
+                                    <TouchableOpacity
+                                        key={`link-${imageIndex}-${linkIndex}`}
+                                        style={[styles.linkItem, { backgroundColor: `${tintColor}20` }]}
+                                        onPress={() => handleOpenLink(link)}
+                                    >
+                                        <IconSymbol name="link" size={14} color={tintColor} />
+                                        <ThemedText style={styles.linkText} numberOfLines={1}>
+                                            {link.replace(/^https?:\/\//, "").replace(/\/.*/, "")}
+                                        </ThemedText>
+                                    </TouchableOpacity>
+                                )) || []
+                        )}
+                    </ScrollView>
+                )}
+
+                {note.audioRecordings.length > 0 && (
+                    <View style={styles.audioContainer}>
+                        {note.audioRecordings.map((audioUri, index) => (
+                            <Pressable
+                                key={`audio-${index}`}
+                                style={({ pressed }) => [styles.audioPlayer, pressed && styles.buttonPressed]}
+                                onPress={() => handlePlayPauseAudio(audioUri, index)}
+                            >
+                                <View style={[styles.playButton, { backgroundColor: tintColor }]}>
+                                    <IconSymbol
+                                        name={isPlaying && playingIndex === index ? "pause.fill" : "play.fill"}
+                                        size={14}
+                                        color="#fff"
+                                    />
+                                </View>
+                                <ThemedText style={styles.audioLabel}>Audio Recording {index + 1}</ThemedText>
+                                {isPlaying && playingIndex === index && (
+                                    <View style={styles.playingIndicator}>
+                                        <ThemedText style={{ color: tintColor }}>Playing</ThemedText>
+                                    </View>
+                                )}
+                            </Pressable>
+                        ))}
                     </View>
                 )}
-            </View>
 
-            {note.images.length > 0 && (
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.imagesContainer}>
-                    {note.images.map((image, index) => (
-                        <TouchableOpacity
-                            key={`image-${index}`}
-                            activeOpacity={0.9}
-                            onPress={() => {
-                                // Pass both the primary image and original if available
-                                const imageAbsoluteUri = getAbsolutePath(image.uri);
-                                const params: any = {
-                                    imageUri: encodeURIComponent(imageAbsoluteUri),
-                                };
-
-                                // If this is a transformed image with original and corners
-                                if (image.originalUri && image.corners) {
-                                    const originalAbsoluteUri = getAbsolutePath(image.originalUri);
-                                    params.originalUri = encodeURIComponent(originalAbsoluteUri);
-                                    // Pass the saved corners as JSON string
-                                    params.savedCorners = encodeURIComponent(JSON.stringify(image.corners));
-                                }
-
-                                router.push({
-                                    pathname: "/modals/image-view",
-                                    params,
-                                });
-                            }}
-                        >
-                            <Image
-                                source={{ uri: getAbsolutePath(image.uri) }}
-                                style={styles.image}
-                                resizeMode="cover"
-                            />
-                            {image.originalUri && (
-                                <View style={[styles.transformedIndicator, { backgroundColor: `${tintColor}CC` }]}>
-                                    <IconSymbol name="wand.and.stars" size={12} color="#fff" />
-                                </View>
-                            )}
-                            {image.links && image.links.length > 0 && (
-                                <View style={[styles.linkIndicator, { backgroundColor: `${tintColor}CC` }]}>
-                                    <IconSymbol name="link" size={12} color="#fff" />
-                                </View>
-                            )}
-                        </TouchableOpacity>
-                    ))}
-                </ScrollView>
-            )}
-
-            {/* Links section - display all links from all images */}
-            {note.images.some((image) => image.links && image.links.length > 0) && (
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.linksContainer}>
-                    {note.images.flatMap(
-                        (image, imageIndex) =>
-                            image.links?.map((link, linkIndex) => (
-                                <TouchableOpacity
-                                    key={`link-${imageIndex}-${linkIndex}`}
-                                    style={[styles.linkItem, { backgroundColor: `${tintColor}20` }]}
-                                    onPress={() => handleOpenLink(link)}
-                                >
-                                    <IconSymbol name="link" size={14} color={tintColor} />
-                                    <ThemedText style={styles.linkText} numberOfLines={1}>
-                                        {link.replace(/^https?:\/\//, "").replace(/\/.*/, "")}
-                                    </ThemedText>
-                                </TouchableOpacity>
-                            )) || []
-                    )}
-                </ScrollView>
-            )}
-
-            {note.audioRecordings.length > 0 && (
-                <View style={styles.audioContainer}>
-                    {note.audioRecordings.map((audioUri, index) => (
-                        <Pressable
-                            key={`audio-${index}`}
-                            style={({ pressed }) => [styles.audioPlayer, pressed && styles.buttonPressed]}
-                            onPress={() => handlePlayPauseAudio(audioUri, index)}
-                        >
-                            <View style={[styles.playButton, { backgroundColor: tintColor }]}>
-                                <IconSymbol
-                                    name={isPlaying && playingIndex === index ? "pause.fill" : "play.fill"}
-                                    size={14}
-                                    color="#fff"
-                                />
-                            </View>
-                            <ThemedText style={styles.audioLabel}>Audio Recording {index + 1}</ThemedText>
-                            {isPlaying && playingIndex === index && (
-                                <View style={styles.playingIndicator}>
-                                    <ThemedText style={{ color: tintColor }}>Playing</ThemedText>
-                                </View>
-                            )}
-                        </Pressable>
-                    ))}
+                <View style={styles.bottomRow}>
+                    <View style={styles.textContainer}>
+                        {note.textContent.trim() !== "" && (
+                            <ThemedText style={styles.textContent}>{note.textContent}</ThemedText>
+                        )}
+                    </View>
+                    <View style={styles.timestampContainer}>
+                        <ThemedText style={styles.timestamp}>{format(note.timestamp, "HH:mm")}</ThemedText>
+                    </View>
                 </View>
-            )}
-
-            {note.textContent.trim() !== "" && (
-                <View style={styles.textContainer}>
-                    <ThemedText style={styles.textContent}>{note.textContent}</ThemedText>
-                </View>
-            )}
-        </ThemedView>
+            </ThemedView>
+        </Pressable>
     );
 };
 
@@ -273,32 +295,34 @@ const styles = StyleSheet.create({
     container: {
         marginVertical: 4,
         marginHorizontal: 16,
-        paddingBottom: 4,
         borderRadius: 12,
         overflow: "hidden",
         borderWidth: 1,
         borderColor: "rgba(150, 150, 150, 0.2)",
     },
-    header: {
+    containerPressed: {
+        opacity: 0.7,
+    },
+    content: {
+        paddingVertical: 4,
+    },
+    bottomRow: {
+        width: "100%",
         flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
+        alignItems: "flex-end",
         paddingHorizontal: 12,
-        paddingVertical: 2,
-        marginBottom: 4,
-        borderBottomWidth: 1,
-        borderBottomColor: "rgba(150, 150, 150, 0.1)",
+        paddingVertical: 4,
+    },
+    timestampContainer: {
+        flexShrink: 1,
+        flexBasis: "auto",
+        marginLeft: 8,
+        alignSelf: "flex-end",
+        marginBottom: -8,
+        marginRight: -6,
     },
     timestamp: {
         fontSize: 12,
-        opacity: 0.7,
-    },
-    actionsContainer: {
-        flexDirection: "row",
-    },
-    actionButton: {
-        padding: 6,
-        marginLeft: 6,
         opacity: 0.7,
     },
     buttonPressed: {
@@ -385,8 +409,8 @@ const styles = StyleSheet.create({
         borderRadius: 12,
     },
     textContainer: {
-        paddingHorizontal: 12,
-        paddingVertical: 4,
+        flex: 1,
+        paddingRight: 8,
     },
     textContent: {
         fontSize: 16,
