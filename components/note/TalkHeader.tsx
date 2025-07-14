@@ -15,11 +15,7 @@ interface TalkHeaderProps {
     onDone?: () => void;
 }
 
-export const TalkHeader: React.FC<TalkHeaderProps> = ({
-    conferenceName,
-    talk,
-    onDone,
-}) => {
+export const TalkHeader: React.FC<TalkHeaderProps> = ({ conferenceName, talk, onDone }) => {
     const tintColor = useThemeColor({}, "tint");
     const backgroundColor = useThemeColor({}, "background");
     const [currentTime, setCurrentTime] = useState(new Date());
@@ -62,24 +58,19 @@ export const TalkHeader: React.FC<TalkHeaderProps> = ({
     return (
         <ThemedView style={styles.container}>
             <View style={styles.headerContent}>
-                <View>
-                    <ThemedText style={styles.conferenceName}>
-                        {conferenceName}
-                    </ThemedText>
+                <View style={styles.titleContainer}>
+                    <ThemedText style={styles.conferenceName}>{conferenceName}</ThemedText>
                     {talk ? (
                         <>
-                            <ThemedText style={styles.talkTitle}>
+                            <ThemedText style={styles.talkTitle} numberOfLines={1} ellipsizeMode="tail">
                                 {talk.title}
                             </ThemedText>
                             <ThemedText style={styles.startTime}>
-                                Started{" "}
-                                {format(talk.startTime, "h:mm a, MMM d")}
+                                Started {format(talk.startTime, "h:mm a, MMM d")}
                             </ThemedText>
                         </>
                     ) : (
-                        <ThemedText style={styles.noTalk}>
-                            No active talk
-                        </ThemedText>
+                        <ThemedText style={styles.noTalk}>No active talk</ThemedText>
                     )}
                 </View>
 
@@ -98,32 +89,26 @@ export const TalkHeader: React.FC<TalkHeaderProps> = ({
                             return (
                                 <>
                                     <IconSymbol name="plus" size={18} color={backgroundColor} />
-                                    <Text style={[styles.buttonText, { color: backgroundColor }]}>
-                                        New Talk
-                                    </Text>
+                                    <Text style={[styles.buttonText, { color: backgroundColor }]}>New Talk</Text>
                                 </>
                             );
                         }
-                        
+
                         const isScheduledTalk = talk.endTime !== undefined;
                         const isTalkActive = talk.endTime ? talk.endTime > currentTime : true;
-                        
+
                         if (isScheduledTalk && isTalkActive) {
                             return (
                                 <>
                                     <IconSymbol name="plus" size={18} color={backgroundColor} />
-                                    <Text style={[styles.buttonText, { color: backgroundColor }]}>
-                                        Join Another
-                                    </Text>
+                                    <Text style={[styles.buttonText, { color: backgroundColor }]}>Join Another</Text>
                                 </>
                             );
                         } else {
                             return (
                                 <>
                                     <IconSymbol name="checkmark" size={18} color={backgroundColor} />
-                                    <Text style={[styles.buttonText, { color: backgroundColor }]}>
-                                        Done
-                                    </Text>
+                                    <Text style={[styles.buttonText, { color: backgroundColor }]}>Done</Text>
                                 </>
                             );
                         }
@@ -146,6 +131,10 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         justifyContent: "space-between",
         alignItems: "center",
+    },
+    titleContainer: {
+        flex: 1,
+        marginRight: 16,
     },
     conferenceName: {
         fontSize: 14,
