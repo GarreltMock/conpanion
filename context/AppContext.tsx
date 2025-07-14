@@ -170,13 +170,11 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
                 const storedTalks = await getTalks();
                 const now = new Date();
 
-                const conferenceTalks = storedTalks.filter(
-                    (talk) => talk.conferenceId === currentConference.id
-                );
+                const conferenceTalks = storedTalks.filter((talk) => talk.conferenceId === currentConference.id);
 
                 // Priority 1: Talks without end time (immediate talks)
                 const immediateTalks = conferenceTalks.filter((talk) => !talk.endTime);
-                
+
                 if (immediateTalks.length > 0) {
                     // Sort by start time, most recent first
                     immediateTalks.sort((a, b) => b.startTime.getTime() - a.startTime.getTime());
@@ -414,7 +412,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
         // Update state
         setTalks((prevTalks) => [...prevTalks, newTalk]);
-        
+
         // Check if this talk should be active now
         const now = new Date();
         if (startTime <= now && endTime > now && !activeTalk) {
@@ -600,7 +598,12 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         const processedImages: NoteImage[] = await Promise.all(
             images.map(async (image) => {
                 // Check if the main image URI is from cache directory
-                if (image.uri.includes("ImageManipulator") || image.uri.includes("cacheDirectory")) {
+                if (
+                    image.uri.includes("ImageManipulator") ||
+                    image.uri.includes("cacheDirectory") ||
+                    image.uri.includes("Library/Caches") ||
+                    image.uri.includes("temp-raw-")
+                ) {
                     // Save the cache image to document directory
                     const savedImagePath = await saveImage(image.uri, currentConference?.id);
 
@@ -608,7 +611,10 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
                     let savedOriginalPath = image.originalUri;
                     if (
                         image.originalUri &&
-                        (image.originalUri.includes("ImageManipulator") || image.originalUri.includes("cacheDirectory"))
+                        (image.originalUri.includes("ImageManipulator") ||
+                            image.originalUri.includes("cacheDirectory") ||
+                            image.originalUri.includes("Library/Caches") ||
+                            image.originalUri.includes("temp-raw-"))
                     ) {
                         savedOriginalPath = await saveImage(image.originalUri, currentConference?.id);
                     }
@@ -646,7 +652,12 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         const processedImages: NoteImage[] = await Promise.all(
             updatedNote.images.map(async (image) => {
                 // Check if the main image URI is from cache directory
-                if (image.uri.includes("ImageManipulator") || image.uri.includes("cacheDirectory")) {
+                if (
+                    image.uri.includes("ImageManipulator") ||
+                    image.uri.includes("cacheDirectory") ||
+                    image.uri.includes("Library/Caches") ||
+                    image.uri.includes("temp-raw-")
+                ) {
                     // Save the cache image to document directory
                     const savedImagePath = await saveImage(image.uri, currentConference?.id);
 
@@ -654,7 +665,10 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
                     let savedOriginalPath = image.originalUri;
                     if (
                         image.originalUri &&
-                        (image.originalUri.includes("ImageManipulator") || image.originalUri.includes("cacheDirectory"))
+                        (image.originalUri.includes("ImageManipulator") ||
+                            image.originalUri.includes("cacheDirectory") ||
+                            image.originalUri.includes("Library/Caches") ||
+                            image.originalUri.includes("temp-raw-"))
                     ) {
                         savedOriginalPath = await saveImage(image.originalUri, currentConference?.id);
                     }

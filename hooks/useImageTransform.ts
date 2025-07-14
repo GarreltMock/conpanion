@@ -17,6 +17,7 @@ function isValidUrl(text: string): boolean {
     }
 }
 
+
 export function useImageTransform() {
     const [isInitialized, setIsInitialized] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -87,7 +88,7 @@ export function useImageTransform() {
                 if (result.polygon && result.polygon.length === 4) {
                     const transformed = await track(() => transformImage(imageData, result.polygon!), "transformImage");
 
-                    // Convert back to URI
+                    // Convert back to URI (temporary cache file)
                     const transformedUri = await imageDataToUriRN(
                         transformed.img,
                         transformed.width,

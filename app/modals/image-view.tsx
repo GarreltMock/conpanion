@@ -28,6 +28,7 @@ import { IconSymbol } from "@/components/ui/IconSymbol";
 import { useImageTransformNotification } from "@/context/ImageTransformContext";
 import { useImageTransform } from "@/hooks/useImageTransform";
 import { Point, Polygon as PolygonType } from "@/types";
+import { getRelativePath } from "@/storage/helper";
 
 type ImageLayout = { x: number; y: number; width: number; height: number };
 
@@ -217,9 +218,9 @@ export default function ImageViewModal() {
             const result = await transformImageWithCorners(sourceImageUri, imageCorners);
 
             notifyImageTransformed({
-                originalImageUri: decodedUri, // The image that was being viewed
-                newImageUri: result.uri, // The new transformed image
-                originalUri: sourceImageUri, // The source image used for transformation
+                originalImageUri: getRelativePath(decodedUri), // The image that was being viewed
+                newImageUri: result.uri, // The new transformed image (temporary cache file)
+                originalUri: getRelativePath(sourceImageUri), // The source image used for transformation
                 corners: imageCorners, // The corners used for transformation (in image coordinates)
                 timestamp: Date.now(),
                 detectedUrls: result.detectedUrls, // URLs detected from QR codes
@@ -229,7 +230,7 @@ export default function ImageViewModal() {
                 pathname: "/modals/image-view",
                 params: {
                     imageUri: encodeURIComponent(result.uri),
-                    originalUri: encodeURIComponent(sourceImageUri),
+                    originalUri: encodeURIComponent(getRelativePath(sourceImageUri)),
                     savedCorners: encodeURIComponent(JSON.stringify(imageCorners)),
                 },
             });
@@ -471,7 +472,7 @@ export default function ImageViewModal() {
                     <Polygon points={polygonPoints} fill="none" stroke="rgba(0, 122, 255, 0.8)" strokeWidth="3" />
                 </Svg>
 
-                {corners.map((corner, index) => {
+                {corners.map((_, index) => {
                     return (
                         <GestureDetector key={`corner-${index}`} gesture={cornerGestures[index]}>
                             <Animated.View style={[styles.cornerHandle, cornerStyles[index]]}>
