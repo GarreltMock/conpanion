@@ -18,8 +18,8 @@ You need two download the onnx models:
 
 You also need to download the opencv2 framework
 
--   iOS [here](https://github.com/opencv/opencv/releases/download/4.11.0/opencv-4.11.0-ios-framework.zip) and put the opencv2 from `Versions/A/opencv2` file here: `ios/opencv2.framework/.`
--   Android [here](https://github.com/opencv/opencv/releases/download/4.11.0/opencv-4.11.0-android-sdk.zip) and put the content from the `sdk` folder into `android/opencv/.`
+-   iOS [here](https://github.com/opencv/opencv/releases/download/4.11.0/opencv-4.11.0-ios-framework.zip) and put the content from `Versions/A/.` into here: `ios/opencv2.framework/.`
+-   Android [here](https://github.com/opencv/opencv/releases/download/4.11.0/opencv-4.11.0-android-sdk.zip) and put the content from `sdk` into here: `android/opencv/.`
 
 ## Get started
 
