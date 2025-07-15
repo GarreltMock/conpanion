@@ -38,3 +38,4 @@ yarn-error.*
 app-example
 
 ios/opencv2.framework/opencv2
+android/opencv/**/*

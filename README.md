@@ -2,15 +2,24 @@
 
 ## Install Assets
 
+### Models
+
 You need two download the onnx models:
 
 -   [model_point.onnx](docs.google.com/uc?export=download&id=1J7cRuupeEIudYrH_CCSV9WvFfu9JM_qU)
 -   [model_heat.onnx](docs.google.com/uc?export=download&id=1IlbLPkCv-TdaBLOPh_4J97P1_KHYYJ7a)
+
     and put them in the native folders.
+
 -   android: `app/src/main/assets/models/`
 -   ios: `assets/models/`
 
-You also need to download the opencv2 framework [here](https://github.com/opencv/opencv/releases/download/4.11.0/opencv-4.11.0-ios-framework.zip) and put the opencv2 from `Versions/A/opencv2` file here: `ios/opencv2.framework/`
+### OpenCV
+
+You also need to download the opencv2 framework
+
+-   iOS [here](https://github.com/opencv/opencv/releases/download/4.11.0/opencv-4.11.0-ios-framework.zip) and put the opencv2 from `Versions/A/opencv2` file here: `ios/opencv2.framework/.`
+-   Android [here](https://github.com/opencv/opencv/releases/download/4.11.0/opencv-4.11.0-android-sdk.zip) and put the content from the `sdk` folder into `android/opencv/.`
 
 ## Get started
 
