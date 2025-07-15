@@ -13,6 +13,7 @@ import {
 import { router } from "expo-router";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { format, differenceInDays, addDays } from "date-fns";
+import RNPickerSelect from "react-native-picker-select";
 
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
@@ -24,9 +25,7 @@ export default function NewAgendaTalkModal() {
     const [title, setTitle] = useState("");
     const [selectedDay, setSelectedDay] = useState(0); // Index of selected conference day
     const [startTime, setStartTime] = useState(new Date());
-    const [endTime, setEndTime] = useState(new Date(Date.now() + 60 * 60 * 1000)); // Default 1 hour from now
-    const [showStartTimePicker, setShowStartTimePicker] = useState(false);
-    const [showEndTimePicker, setShowEndTimePicker] = useState(false);
+    const [duration, setDuration] = useState(45); // Duration in minutes
     const [isCreating, setIsCreating] = useState(false);
 
     const { createAgendaTalk, currentConference } = useApp();
@@ -36,19 +35,19 @@ export default function NewAgendaTalkModal() {
 
     const conferenceDays = useMemo(() => {
         if (!currentConference) return [];
-        
+
         const days = [];
         const durationInDays = differenceInDays(currentConference.endDate, currentConference.startDate) + 1;
-        
+
         for (let i = 0; i < durationInDays; i++) {
             const day = addDays(currentConference.startDate, i);
             days.push({
                 index: i,
                 date: day,
-                label: format(day, "EEEE, MMMM d")
+                label: format(day, "EEEE, MMMM d"),
             });
         }
-        
+
         return days;
     }, [currentConference]);
 
@@ -63,8 +62,8 @@ export default function NewAgendaTalkModal() {
             return;
         }
 
-        if (endTime <= startTime) {
-            Alert.alert("Error", "End time must be after start time");
+        if (duration <= 0) {
+            Alert.alert("Error", "Duration must be greater than 0 minutes");
             return;
         }
 
@@ -81,13 +80,7 @@ export default function NewAgendaTalkModal() {
                 startTime.getHours(),
                 startTime.getMinutes()
             );
-            const endDateTime = new Date(
-                selectedDate.getFullYear(),
-                selectedDate.getMonth(),
-                selectedDate.getDate(),
-                endTime.getHours(),
-                endTime.getMinutes()
-            );
+            const endDateTime = new Date(startDateTime.getTime() + duration * 60 * 1000);
 
             await createAgendaTalk(title.trim(), startDateTime, endDateTime);
             router.back();
@@ -106,29 +99,18 @@ export default function NewAgendaTalkModal() {
     };
 
     const handleStartTimeChange = (_event: any, selectedTime?: Date) => {
-        setShowStartTimePicker(Platform.OS === "ios");
         if (selectedTime) {
             setStartTime(selectedTime);
-            // Automatically adjust end time if it's now before start time
-            if (endTime <= selectedTime) {
-                setEndTime(new Date(selectedTime.getTime() + 60 * 60 * 1000));
-            }
         }
     };
 
-    const handleEndTimeChange = (_event: any, selectedTime?: Date) => {
-        setShowEndTimePicker(Platform.OS === "ios");
-        if (selectedTime) {
-            setEndTime(selectedTime);
+    const durationOptions = useMemo(() => {
+        const options = [];
+        for (let i = 5; i <= 60; i += 5) {
+            options.push({ label: `${i} minutes`, value: i });
         }
-    };
-
-    const formatTime = (time: Date) => {
-        return time.toLocaleString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-        });
-    };
+        return options;
+    }, []);
 
     return (
         <ThemedView style={styles.container}>
@@ -176,10 +158,7 @@ export default function NewAgendaTalkModal() {
                 </View>
 
                 <View style={styles.dateContainer}>
-                    <ThemedText style={styles.sectionTitle}>Schedule</ThemedText>
-
                     <View style={styles.dayContainer}>
-                        <ThemedText style={styles.dayLabel}>Conference Day</ThemedText>
                         <View style={styles.dayButtonsContainer}>
                             {conferenceDays.map((day) => (
                                 <TouchableOpacity
@@ -202,37 +181,53 @@ export default function NewAgendaTalkModal() {
                             ))}
                         </View>
                         {conferenceDays.length > 0 && (
-                            <ThemedText style={styles.selectedDayText}>
-                                {conferenceDays[selectedDay]?.label}
-                            </ThemedText>
+                            <ThemedText style={styles.selectedDayText}>{conferenceDays[selectedDay]?.label}</ThemedText>
                         )}
                     </View>
 
-                    <TouchableOpacity style={styles.dateButton} onPress={() => setShowStartTimePicker(true)}>
-                        <IconSymbol name="clock" size={20} color={textColor + "80"} style={styles.dateIcon} />
-                        <View style={styles.dateInfo}>
+                    <View style={styles.timePickerContainer}>
+                        <View style={[styles.timePickerButton, styles.startTimeButton]}>
+                            <IconSymbol name="clock" size={20} color={textColor + "80"} style={styles.dateIcon} />
                             <ThemedText style={styles.dateLabel}>Start Time</ThemedText>
-                            <ThemedText style={styles.dateValue}>{formatTime(startTime)}</ThemedText>
+                            <DateTimePicker
+                                value={startTime}
+                                mode="time"
+                                display={Platform.OS === "ios" ? "compact" : "default"}
+                                onChange={handleStartTimeChange}
+                                style={styles.timePicker}
+                            />
                         </View>
-                    </TouchableOpacity>
 
-                    <TouchableOpacity style={styles.dateButton} onPress={() => setShowEndTimePicker(true)}>
-                        <IconSymbol name="clock" size={20} color={textColor + "80"} style={styles.dateIcon} />
-                        <View style={styles.dateInfo}>
-                            <ThemedText style={styles.dateLabel}>End Time</ThemedText>
-                            <ThemedText style={styles.dateValue}>{formatTime(endTime)}</ThemedText>
-                        </View>
-                    </TouchableOpacity>
+                        <RNPickerSelect
+                            onValueChange={(value) => setDuration(value)}
+                            items={durationOptions}
+                            value={duration}
+                            style={{
+                                inputIOS: {
+                                    fontFamily: "MuseoSans-Medium",
+                                    fontSize: 16,
+                                    fontWeight: "500",
+                                    color: textColor,
+                                },
+                                inputAndroid: {
+                                    fontFamily: "MuseoSans-Medium",
+                                    fontSize: 16,
+                                    fontWeight: "500",
+                                    color: textColor,
+                                },
+                            }}
+                            useNativeAndroidPickerStyle={false}
+                            darkTheme={true}
+                        >
+                            <View style={[styles.timePickerButton, styles.durationButton]}>
+                                <IconSymbol name="timer" size={20} color={textColor + "80"} style={styles.dateIcon} />
+                                <ThemedText style={styles.dateLabel}>Duration</ThemedText>
+                                <ThemedText style={styles.dateValue}>{duration} minutes</ThemedText>
+                            </View>
+                        </RNPickerSelect>
+                    </View>
                 </View>
             </View>
-
-            {showStartTimePicker && (
-                <DateTimePicker value={startTime} mode="time" display="default" onChange={handleStartTimeChange} />
-            )}
-
-            {showEndTimePicker && (
-                <DateTimePicker value={endTime} mode="time" display="default" onChange={handleEndTimeChange} />
-            )}
         </ThemedView>
     );
 }
@@ -245,9 +240,7 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         justifyContent: "space-between",
         alignItems: "center",
-        paddingHorizontal: 16,
-        paddingTop: 60,
-        paddingBottom: 16,
+        padding: 16,
         borderBottomWidth: 1,
         borderBottomColor: "rgba(150, 150, 150, 0.2)",
     },
@@ -301,14 +294,22 @@ const styles = StyleSheet.create({
         fontWeight: "600",
         marginBottom: 12,
     },
-    dateButton: {
-        flexDirection: "row",
-        alignItems: "center",
+    timePickerContainer: {
         borderWidth: 1,
         borderColor: "rgba(150, 150, 150, 0.3)",
         borderRadius: 8,
+    },
+    timePickerButton: {
+        flexDirection: "row",
+        alignItems: "center",
         padding: 12,
-        marginBottom: 12,
+    },
+    startTimeButton: {
+        borderBottomColor: "rgba(150, 150, 150, 0.2)",
+        borderBottomWidth: 1,
+    },
+    durationButton: {
+        paddingVertical: 16,
     },
     dateIcon: {
         marginRight: 12,
@@ -319,7 +320,7 @@ const styles = StyleSheet.create({
     dateLabel: {
         fontSize: 14,
         opacity: 0.7,
-        marginBottom: 2,
+        flex: 1,
     },
     dateValue: {
         fontSize: 16,
@@ -359,5 +360,9 @@ const styles = StyleSheet.create({
         fontSize: 12,
         opacity: 0.6,
         fontStyle: "italic",
+    },
+    timePicker: {
+        alignSelf: "flex-end",
+        fontFamily: "MuseoSans-Medium",
     },
 });
