@@ -120,10 +120,11 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
                 // Initialize audio session for iOS to enable playback in silent mode
                 try {
                     await Audio.setAudioModeAsync({
-                        allowsRecordingIOS: false,
+                        allowsRecordingIOS: true,
                         playsInSilentModeIOS: true,
                         shouldDuckAndroid: true,
                         playThroughEarpieceAndroid: false,
+                        staysActiveInBackground: true,
                     });
                 } catch (audioError) {
                     console.error("Error initializing audio session:", audioError);
@@ -532,12 +533,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         }
 
         try {
-            // Start recording
-            await Audio.setAudioModeAsync({
-                allowsRecordingIOS: true,
-                playsInSilentModeIOS: true,
-            });
-
+            // Start recording (session is already configured)
             const { recording } = await Audio.Recording.createAsync(Audio.RecordingOptionsPresets.HIGH_QUALITY);
 
             setRecording(recording);
