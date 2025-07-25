@@ -1,7 +1,16 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { StyleSheet, FlatList, View, TouchableOpacity, ActivityIndicator, Text } from "react-native";
+import {
+    StyleSheet,
+    FlatList,
+    View,
+    TouchableOpacity,
+    ActivityIndicator,
+    Text,
+    useWindowDimensions,
+} from "react-native";
 import { router, useFocusEffect } from "expo-router";
 import { format } from "date-fns";
+import { TabView, SceneMap, TabBar } from "react-native-tab-view";
 
 import { ThemedView } from "@/components/ThemedView";
 import { ThemedText } from "@/components/ThemedText";
@@ -11,76 +20,58 @@ import { Talk } from "@/types";
 import { useThemeColor } from "@/hooks/useThemeColor";
 
 export default function TalksScreen() {
-    const { currentConference, activeTalk, talks: appTalks, getAllTalks, isLoading } = useApp();
+    const {
+        currentConference,
+        activeTalk,
+        getAllTalks,
+        isLoading,
+        getUserSelectedTalks,
+        getAgendaTalks,
+        toggleTalkSelection,
+    } = useApp();
 
-    const [talks, setTalks] = useState<Talk[]>([]);
     const [refreshing, setRefreshing] = useState(false);
+    const [index, setIndex] = useState(0);
+    const [routes] = useState([
+        { key: "myTalks", title: "My Talks" },
+        { key: "agenda", title: "Agenda" },
+    ]);
 
+    const layout = useWindowDimensions();
     const tintColor = useThemeColor({}, "tint");
+    const textColor = useThemeColor({}, "text");
     const backgroundColor = useThemeColor({}, "background");
 
-    // Update local talks state from app context, filtering for current conference
-    useEffect(() => {
-        if (!currentConference) {
-            setTalks([]);
-            return;
-        }
+    // Reload talks when the screen comes into focus
+    useFocusEffect(
+        useCallback(() => {
+            const loadTalks = async () => {
+                try {
+                    setRefreshing(true);
+                    await getAllTalks();
+                } catch (error) {
+                    console.error("Error loading talks:", error);
+                } finally {
+                    setRefreshing(false);
+                }
+            };
+            loadTalks();
+            return () => {
+                // Cleanup if needed
+            };
+        }, [getAllTalks])
+    );
 
-        // Filter for talks in the current conference
-        const conferenceTalks = appTalks.filter((talk) => talk.conferenceId === currentConference.id);
-
-        // Sort talks by start time (newest first)
-        if (conferenceTalks.length > 0) {
-            const sortedTalks = [...conferenceTalks].sort((a, b) => b.startTime.getTime() - a.startTime.getTime());
-            setTalks(sortedTalks);
-        } else {
-            setTalks([]);
-        }
-    }, [appTalks, currentConference]);
-
-    const loadTalks = useCallback(async () => {
+    const handleRefresh = useCallback(async () => {
         try {
-            if (!currentConference) {
-                setTalks([]);
-                setRefreshing(false);
-                return;
-            }
-
             setRefreshing(true);
-            const allTalks = await getAllTalks();
-
-            // Filter for current conference
-            const conferenceTalks = allTalks.filter((talk) => talk.conferenceId === currentConference.id);
-
-            // Sort talks by start time (newest first)
-            const sortedTalks = [...conferenceTalks].sort((a, b) => b.startTime.getTime() - a.startTime.getTime());
-
-            setTalks(sortedTalks);
+            await getAllTalks();
         } catch (error) {
             console.error("Error loading talks:", error);
         } finally {
             setRefreshing(false);
         }
-    }, [getAllTalks, currentConference]);
-
-    // Load talks when the component mounts or when the current conference changes
-    useEffect(() => {
-        loadTalks();
-    }, [loadTalks, currentConference]);
-
-    // Reload talks when the screen comes into focus
-    useFocusEffect(
-        useCallback(() => {
-            loadTalks();
-            return () => {
-                // Cleanup if needed
-            };
-        }, [loadTalks])
-    );
-
-    const handleRefresh = () => {
-        loadTalks();
-    };
+    }, [getAllTalks]);
 
     const handleNewTalk = () => {
         router.push("/modals/new-agenda-talk");
@@ -92,6 +83,15 @@ export default function TalksScreen() {
 
     const renderTalkItem = ({ item }: { item: Talk }) => {
         const isActive = activeTalk?.id === item.id;
+
+        const handleBookmarkPress = async (e: any) => {
+            e.stopPropagation();
+            try {
+                await toggleTalkSelection(item.id);
+            } catch (error) {
+                console.error("Error toggling talk selection:", error);
+            }
+        };
 
         return (
             <TouchableOpacity
@@ -115,10 +115,61 @@ export default function TalksScreen() {
                     </View>
                 )}
 
-                <IconSymbol size={20} name="chevron.right" color={tintColor} style={styles.chevron} />
+                <TouchableOpacity style={styles.bookmarkButton} onPress={handleBookmarkPress} activeOpacity={0.7}>
+                    <IconSymbol size={20} name={item.isUserSelected ? "bookmark.fill" : "bookmark"} color={tintColor} />
+                </TouchableOpacity>
+
+                {/* <IconSymbol size={20} name="chevron.right" color={textColor + "80"} style={styles.chevron} /> */}
             </TouchableOpacity>
         );
     };
+
+    const renderTalksList = (talksData: Talk[], emptyTitle: string, emptyDescription: string) => (
+        <FlatList
+            data={talksData}
+            keyExtractor={(item) => item.id}
+            renderItem={renderTalkItem}
+            contentContainerStyle={styles.talksList}
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            ListEmptyComponent={() => (
+                <View style={styles.emptyContainer}>
+                    <ThemedText style={styles.emptyTitle}>{emptyTitle}</ThemedText>
+                    <ThemedText style={styles.emptyDescription}>{emptyDescription}</ThemedText>
+                </View>
+            )}
+        />
+    );
+
+    const MyTalksRoute = () => {
+        const userSelectedTalks = getUserSelectedTalks()
+            .filter((talk) => talk.conferenceId === currentConference?.id)
+            .sort((a, b) => b.startTime.getTime() - a.startTime.getTime());
+
+        return renderTalksList(userSelectedTalks, "No talks selected", "Browse the agenda to bookmark talks");
+    };
+
+    const AgendaRoute = () => {
+        const agendaTalks = getAgendaTalks().sort((a, b) => b.startTime.getTime() - a.startTime.getTime());
+
+        return renderTalksList(agendaTalks, "No talks scheduled yet", "Create a new talk to start taking notes");
+    };
+
+    const renderScene = SceneMap({
+        myTalks: MyTalksRoute,
+        agenda: AgendaRoute,
+    });
+
+    const renderTabBar = (props: any) => (
+        <TabBar
+            {...props}
+            indicatorStyle={{ backgroundColor: textColor + "40" }}
+            style={{ backgroundColor: backgroundColor }}
+            labelStyle={{ color: textColor, fontWeight: "600" }}
+            inactiveColor={textColor + "80"}
+            activeColor={textColor}
+        />
+    );
 
     if (isLoading) {
         return (
@@ -146,19 +197,12 @@ export default function TalksScreen() {
                 </TouchableOpacity>
             </View>
 
-            <FlatList
-                data={talks}
-                keyExtractor={(item) => item.id}
-                renderItem={renderTalkItem}
-                contentContainerStyle={styles.talksList}
-                refreshing={refreshing}
-                onRefresh={handleRefresh}
-                ListEmptyComponent={() => (
-                    <View style={styles.emptyContainer}>
-                        <ThemedText style={styles.emptyTitle}>No Talks Yet</ThemedText>
-                        <ThemedText style={styles.emptyDescription}>Create a new talk to start taking notes</ThemedText>
-                    </View>
-                )}
+            <TabView
+                navigationState={{ index, routes }}
+                renderScene={renderScene}
+                renderTabBar={renderTabBar}
+                onIndexChange={setIndex}
+                initialLayout={{ width: layout.width }}
             />
         </ThemedView>
     );
@@ -247,7 +291,10 @@ const styles = StyleSheet.create({
         fontWeight: "600",
     },
     chevron: {
-        marginLeft: 8,
+        marginLeft: 4,
+    },
+    bookmarkButton: {
+        marginLeft: 4,
     },
     emptyContainer: {
         flex: 1,

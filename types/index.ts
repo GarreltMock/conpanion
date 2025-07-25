@@ -18,6 +18,7 @@ export interface Talk {
     title: string;
     startTime: Date;
     endTime?: Date;
+    isUserSelected?: boolean;
 }
 
 export interface NoteImage {

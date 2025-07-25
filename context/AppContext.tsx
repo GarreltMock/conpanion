@@ -52,6 +52,9 @@ interface AppContextType {
     endTalk: (talk: Talk) => Promise<void>;
     endCurrentTalk: () => Promise<void>;
     getAllTalks: () => Promise<Talk[]>;
+    toggleTalkSelection: (talkId: string) => Promise<void>;
+    getUserSelectedTalks: () => Talk[];
+    getAgendaTalks: () => Talk[];
 
     // Note Management
     notes: Note[];
@@ -384,6 +387,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
             conferenceId: currentConference.id,
             title,
             startTime: new Date(),
+            isUserSelected: true,
         };
 
         await saveTalk(newTalk);
@@ -407,6 +411,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
             title,
             startTime,
             endTime,
+            isUserSelected: false,
         };
 
         await saveTalk(newTalk);
@@ -764,6 +769,32 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         return await getExportOptionsFromStorage();
     };
 
+    // Talk Selection Functions
+    const toggleTalkSelection = async (talkId: string): Promise<void> => {
+        const talk = talks.find((t) => t.id === talkId);
+        if (!talk) {
+            throw new Error("Talk not found");
+        }
+
+        const updatedTalk: Talk = {
+            ...talk,
+            isUserSelected: !talk.isUserSelected,
+        };
+
+        await saveTalk(updatedTalk);
+
+        // Update state
+        setTalks((prevTalks) => prevTalks.map((t) => (t.id === talkId ? updatedTalk : t)));
+    };
+
+    const getUserSelectedTalks = (): Talk[] => {
+        return talks.filter((talk) => talk.isUserSelected === true);
+    };
+
+    const getAgendaTalks = (): Talk[] => {
+        return talks.filter((talk) => talk.conferenceId === currentConference?.id);
+    };
+
     const contextValue: AppContextType = {
         // Conference Management
         currentConference,
@@ -785,6 +816,9 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         endTalk,
         endCurrentTalk,
         getAllTalks,
+        toggleTalkSelection,
+        getUserSelectedTalks,
+        getAgendaTalks,
 
         // Note Management
         notes,
