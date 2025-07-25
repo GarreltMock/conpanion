@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
 import * as ImagePicker from "expo-image-picker";
 import { Audio } from "expo-av";
-import { Conference, Talk, Note, ExportOptions, ConferenceStatus, NoteImage } from "../types";
+import { Conference, Talk, Note, ExportOptions, ConferenceStatus, NoteImage, Speaker } from "../types";
 import {
     getTalks,
     getNotes,
@@ -48,7 +48,7 @@ interface AppContextType {
     talks: Talk[];
     activeTalk: Talk | null;
     createTalk: (title: string) => Promise<Talk>;
-    createAgendaTalk: (title: string, startTime: Date, endTime: Date) => Promise<Talk>;
+    createAgendaTalk: (title: string, startTime: Date, endTime: Date, speakers?: Speaker[], stage?: string, description?: string) => Promise<Talk>;
     endTalk: (talk: Talk) => Promise<void>;
     endCurrentTalk: () => Promise<void>;
     getAllTalks: () => Promise<Talk[]>;
@@ -399,7 +399,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         return newTalk;
     };
 
-    const createAgendaTalk = async (title: string, startTime: Date, endTime: Date): Promise<Talk> => {
+    const createAgendaTalk = async (title: string, startTime: Date, endTime: Date, speakers?: Speaker[], stage?: string, description?: string): Promise<Talk> => {
         if (!currentConference) {
             console.error("Conference is null or undefined");
             throw new Error("No current conference exists");
@@ -412,6 +412,9 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
             startTime,
             endTime,
             isUserSelected: false,
+            speakers,
+            stage,
+            description,
         };
 
         await saveTalk(newTalk);

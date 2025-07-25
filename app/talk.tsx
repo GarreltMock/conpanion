@@ -1,7 +1,7 @@
 import { format } from "date-fns";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, FlatList, StyleSheet, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, FlatList, StyleSheet, TouchableOpacity, View, Image } from "react-native";
 
 import { MyKeyboardAvoidingView } from "@/components/MyKeyboardAvoidingView";
 import { NoteInput } from "@/components/note/NoteInput";
@@ -17,6 +17,7 @@ export default function TalkDetailScreen() {
     const { id } = useLocalSearchParams<{ id: string }>();
     const [talk, setTalk] = useState<Talk | null>(null);
     const [talkNotes, setTalkNotes] = useState<Note[]>([]);
+    const [detailsExpanded, setDetailsExpanded] = useState(false);
 
     const {
         talks,
@@ -139,6 +140,97 @@ export default function TalkDetailScreen() {
                         </View>
                     </View>
                 </View>
+
+                {/* Talk Details Section - Collapsible */}
+                {(talk.speakers?.length || talk.stage || talk.description) && (
+                    <View style={styles.detailsSection}>
+                        <TouchableOpacity
+                            style={styles.detailsToggle}
+                            onPress={() => setDetailsExpanded(!detailsExpanded)}
+                        >
+                            <ThemedText style={styles.detailsToggleText}>Talk Details</ThemedText>
+                            <IconSymbol
+                                name={detailsExpanded ? "chevron.up" : "chevron.down"}
+                                size={16}
+                                color={textColor + "80"}
+                            />
+                        </TouchableOpacity>
+
+                        {detailsExpanded && (
+                            <View style={styles.detailsContent}>
+                                {/* Speakers */}
+                                {talk.speakers && talk.speakers.length > 0 && (
+                                    <View style={styles.talkDetailItem}>
+                                        <View style={styles.talkDetailHeader}>
+                                            <IconSymbol
+                                                name="person.2"
+                                                size={16}
+                                                color={textColor + "80"}
+                                                style={styles.talkDetailIcon}
+                                            />
+                                            <ThemedText style={styles.talkDetailLabel}>
+                                                {talk.speakers.length === 1 ? "Speaker" : "Speakers"}
+                                            </ThemedText>
+                                        </View>
+                                        <View style={styles.speakersContainer}>
+                                            {talk.speakers.map((speaker, index) => (
+                                                <View key={index} style={styles.speakerItem}>
+                                                    <View style={styles.speakerContent}>
+                                                        {speaker.photo && (
+                                                            <Image 
+                                                                source={{ uri: speaker.photo }} 
+                                                                style={styles.speakerPhoto}
+                                                                resizeMode="cover"
+                                                            />
+                                                        )}
+                                                        <View style={styles.speakerTextContent}>
+                                                            <ThemedText style={styles.speakerName}>{speaker.name}</ThemedText>
+                                                            {speaker.bio && (
+                                                                <ThemedText style={styles.speakerBio}>{speaker.bio}</ThemedText>
+                                                            )}
+                                                        </View>
+                                                    </View>
+                                                </View>
+                                            ))}
+                                        </View>
+                                    </View>
+                                )}
+
+                                {/* Stage/Location */}
+                                {talk.stage && (
+                                    <View style={styles.talkDetailItem}>
+                                        <View style={styles.talkDetailHeader}>
+                                            <IconSymbol
+                                                name="location"
+                                                size={16}
+                                                color={textColor + "80"}
+                                                style={styles.talkDetailIcon}
+                                            />
+                                            <ThemedText style={styles.talkDetailLabel}>Location</ThemedText>
+                                        </View>
+                                        <ThemedText style={styles.talkDetailValue}>{talk.stage}</ThemedText>
+                                    </View>
+                                )}
+
+                                {/* Description */}
+                                {talk.description && (
+                                    <View style={styles.talkDetailItem}>
+                                        <View style={styles.talkDetailHeader}>
+                                            <IconSymbol
+                                                name="doc.text"
+                                                size={16}
+                                                color={textColor + "80"}
+                                                style={styles.talkDetailIcon}
+                                            />
+                                            <ThemedText style={styles.talkDetailLabel}>Description</ThemedText>
+                                        </View>
+                                        <ThemedText style={styles.talkDetailValue}>{talk.description}</ThemedText>
+                                    </View>
+                                )}
+                            </View>
+                        )}
+                    </View>
+                )}
 
                 <View style={styles.notesSectionHeader}>
                     <ThemedText style={styles.notesTitle}>Notes</ThemedText>
@@ -267,5 +359,78 @@ const styles = StyleSheet.create({
         marginHorizontal: -1,
         overflow: "hidden",
         marginBottom: 16,
+    },
+    detailsSection: {
+        borderBottomWidth: 1,
+        borderBottomColor: "rgba(150, 150, 150, 0.2)",
+    },
+    detailsToggle: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        backgroundColor: "rgba(150, 150, 150, 0.05)",
+    },
+    detailsToggleText: {
+        fontSize: 16,
+        fontWeight: "600",
+    },
+    detailsContent: {
+        paddingHorizontal: 16,
+        paddingBottom: 16,
+    },
+    talkDetailItem: {
+        marginBottom: 16,
+    },
+    talkDetailHeader: {
+        flexDirection: "row",
+        alignItems: "center",
+        marginBottom: 8,
+    },
+    talkDetailIcon: {
+        marginRight: 8,
+    },
+    talkDetailLabel: {
+        fontSize: 14,
+        fontWeight: "600",
+        opacity: 0.8,
+    },
+    talkDetailValue: {
+        fontSize: 14,
+        opacity: 0.7,
+        lineHeight: 20,
+        marginLeft: 24,
+    },
+    speakersContainer: {
+        marginLeft: 24,
+    },
+    speakerItem: {
+        marginBottom: 12,
+    },
+    speakerContent: {
+        flexDirection: "row",
+        alignItems: "flex-start",
+    },
+    speakerPhoto: {
+        width: 48,
+        height: 48,
+        borderRadius: 24,
+        marginRight: 12,
+        backgroundColor: "rgba(150, 150, 150, 0.1)",
+    },
+    speakerTextContent: {
+        flex: 1,
+    },
+    speakerName: {
+        fontSize: 14,
+        fontWeight: "500",
+        marginBottom: 4,
+    },
+    speakerBio: {
+        fontSize: 13,
+        opacity: 0.7,
+        lineHeight: 18,
+        fontStyle: "italic",
     },
 });

@@ -9,6 +9,7 @@ import {
     Alert,
     Text,
     Platform,
+    ScrollView,
 } from "react-native";
 import { router } from "expo-router";
 import DateTimePicker from "@react-native-community/datetimepicker";
@@ -18,14 +19,39 @@ import RNPickerSelect from "react-native-picker-select";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { IconSymbol } from "@/components/ui/IconSymbol";
+import { MyKeyboardAvoidingView } from "@/components/MyKeyboardAvoidingView";
 import { useApp } from "@/context/AppContext";
 import { useThemeColor } from "@/hooks/useThemeColor";
+import { Speaker } from "@/types";
+
+const roundToNearestFiveMinutes = (date: Date): Date => {
+    const rounded = new Date(date);
+    const minutes = rounded.getMinutes();
+    const remainder = minutes % 5;
+
+    if (remainder === 0) {
+        return rounded; // Already rounded
+    } else if (remainder < 3) {
+        // Round down
+        rounded.setMinutes(minutes - remainder);
+    } else {
+        // Round up
+        rounded.setMinutes(minutes + (5 - remainder));
+    }
+
+    rounded.setSeconds(0);
+    rounded.setMilliseconds(0);
+    return rounded;
+};
 
 export default function NewAgendaTalkModal() {
     const [title, setTitle] = useState("");
     const [selectedDay, setSelectedDay] = useState(0); // Index of selected conference day
-    const [startTime, setStartTime] = useState(new Date());
+    const [startTime, setStartTime] = useState(roundToNearestFiveMinutes(new Date()));
     const [duration, setDuration] = useState(45); // Duration in minutes
+    const [speakers, setSpeakers] = useState<Speaker[]>([]);
+    const [stage, setStage] = useState("");
+    const [description, setDescription] = useState("");
     const [isCreating, setIsCreating] = useState(false);
 
     const { createAgendaTalk, currentConference } = useApp();
@@ -82,7 +108,14 @@ export default function NewAgendaTalkModal() {
             );
             const endDateTime = new Date(startDateTime.getTime() + duration * 60 * 1000);
 
-            await createAgendaTalk(title.trim(), startDateTime, endDateTime);
+            await createAgendaTalk(
+                title.trim(),
+                startDateTime,
+                endDateTime,
+                speakers.length > 0 ? speakers : undefined,
+                stage.trim() || undefined,
+                description.trim() || undefined
+            );
             router.back();
         } catch (error) {
             console.error("Error creating agenda talk:", error);
@@ -112,129 +145,267 @@ export default function NewAgendaTalkModal() {
         return options;
     }, []);
 
+    const addSpeaker = () => {
+        setSpeakers([...speakers, { name: "", photo: undefined, bio: undefined }]);
+    };
+
+    const updateSpeaker = (index: number, field: keyof Speaker, value: string) => {
+        const updatedSpeakers = [...speakers];
+        updatedSpeakers[index] = { ...updatedSpeakers[index], [field]: value };
+        setSpeakers(updatedSpeakers);
+    };
+
+    const removeSpeaker = (index: number) => {
+        setSpeakers(speakers.filter((_, i) => i !== index));
+    };
+
     return (
-        <ThemedView style={styles.container}>
-            <View style={styles.header}>
-                <TouchableOpacity style={styles.cancelButton} onPress={handleCancel} disabled={isCreating}>
-                    <ThemedText style={styles.cancelText}>Cancel</ThemedText>
-                </TouchableOpacity>
+        <MyKeyboardAvoidingView>
+            <ThemedView style={styles.container}>
+                <View style={styles.header}>
+                    <TouchableOpacity style={styles.cancelButton} onPress={handleCancel} disabled={isCreating}>
+                        <ThemedText style={styles.cancelText}>Cancel</ThemedText>
+                    </TouchableOpacity>
 
-                <ThemedText style={styles.title}>New Agenda Talk</ThemedText>
+                    <ThemedText style={styles.title}>New Agenda Talk</ThemedText>
 
-                <TouchableOpacity
-                    style={[
-                        styles.createButton,
-                        { backgroundColor: tintColor },
-                        !title.trim() && styles.disabledButton,
-                    ]}
-                    onPress={handleCreate}
-                    disabled={!title.trim() || isCreating}
-                >
-                    {isCreating ? (
-                        <ActivityIndicator size="small" color={backgroundColor} />
-                    ) : (
-                        <Text style={[styles.createText, { color: backgroundColor }]}>Create</Text>
-                    )}
-                </TouchableOpacity>
-            </View>
-
-            <View style={styles.formContainer}>
-                <ThemedText style={styles.helpText}>
-                    Create a scheduled talk for your agenda. The talk will become active when its start time arrives.
-                </ThemedText>
-
-                <View style={styles.inputContainer}>
-                    <IconSymbol name="mic.fill" size={22} color={textColor + "80"} style={styles.inputIcon} />
-                    <TextInput
-                        style={[styles.input, { color: textColor }]}
-                        placeholder="Enter talk title"
-                        placeholderTextColor={textColor + "60"}
-                        value={title}
-                        onChangeText={setTitle}
-                        autoFocus
-                        maxLength={100}
-                        returnKeyType="done"
-                    />
-                </View>
-
-                <View style={styles.dateContainer}>
-                    <View style={styles.dayContainer}>
-                        <View style={styles.dayButtonsContainer}>
-                            {conferenceDays.map((day) => (
-                                <TouchableOpacity
-                                    key={day.index}
-                                    style={[
-                                        styles.dayButton,
-                                        selectedDay === day.index && { backgroundColor: tintColor },
-                                    ]}
-                                    onPress={() => setSelectedDay(day.index)}
-                                >
-                                    <Text
-                                        style={[
-                                            styles.dayButtonText,
-                                            { color: selectedDay === day.index ? backgroundColor : textColor },
-                                        ]}
-                                    >
-                                        {format(day.date, "EEE d")}
-                                    </Text>
-                                </TouchableOpacity>
-                            ))}
-                        </View>
-                        {conferenceDays.length > 0 && (
-                            <ThemedText style={styles.selectedDayText}>{conferenceDays[selectedDay]?.label}</ThemedText>
+                    <TouchableOpacity
+                        style={[
+                            styles.createButton,
+                            { backgroundColor: tintColor },
+                            !title.trim() && styles.disabledButton,
+                        ]}
+                        onPress={handleCreate}
+                        disabled={!title.trim() || isCreating}
+                    >
+                        {isCreating ? (
+                            <ActivityIndicator size="small" color={backgroundColor} />
+                        ) : (
+                            <Text style={[styles.createText, { color: backgroundColor }]}>Create</Text>
                         )}
+                    </TouchableOpacity>
+                </View>
+
+                <ScrollView
+                    style={styles.scrollContainer}
+                    contentContainerStyle={styles.formContainer}
+                    keyboardShouldPersistTaps="handled"
+                    showsVerticalScrollIndicator={false}
+                >
+                    <ThemedText style={styles.helpText}>
+                        Create a scheduled talk for your agenda. The talk will become active when its start time
+                        arrives.
+                    </ThemedText>
+
+                    <View style={styles.inputContainer}>
+                        <IconSymbol name="mic.fill" size={22} color={textColor + "80"} style={styles.inputIcon} />
+                        <TextInput
+                            style={[styles.input, { color: textColor }]}
+                            placeholder="Enter talk title"
+                            placeholderTextColor={textColor + "60"}
+                            value={title}
+                            onChangeText={setTitle}
+                            autoFocus
+                            maxLength={100}
+                            returnKeyType="done"
+                        />
                     </View>
 
-                    <View style={styles.timePickerContainer}>
-                        <View style={[styles.timePickerButton, styles.startTimeButton]}>
-                            <IconSymbol name="clock" size={20} color={textColor + "80"} style={styles.dateIcon} />
-                            <ThemedText style={styles.dateLabel}>Start Time</ThemedText>
-                            <DateTimePicker
-                                value={startTime}
-                                mode="time"
-                                display={Platform.OS === "ios" ? "compact" : "default"}
-                                onChange={handleStartTimeChange}
-                                style={styles.timePicker}
-                            />
+                    <View style={styles.dateContainer}>
+                        <View style={styles.dayContainer}>
+                            <View style={styles.dayButtonsContainer}>
+                                {conferenceDays.map((day) => (
+                                    <TouchableOpacity
+                                        key={day.index}
+                                        style={[
+                                            styles.dayButton,
+                                            selectedDay === day.index && { backgroundColor: tintColor },
+                                        ]}
+                                        onPress={() => setSelectedDay(day.index)}
+                                    >
+                                        <Text
+                                            style={[
+                                                styles.dayButtonText,
+                                                { color: selectedDay === day.index ? backgroundColor : textColor },
+                                            ]}
+                                        >
+                                            {format(day.date, "EEE d")}
+                                        </Text>
+                                    </TouchableOpacity>
+                                ))}
+                            </View>
+                            {conferenceDays.length > 0 && (
+                                <ThemedText style={styles.selectedDayText}>
+                                    {conferenceDays[selectedDay]?.label}
+                                </ThemedText>
+                            )}
                         </View>
 
-                        <RNPickerSelect
-                            onValueChange={(value) => setDuration(value)}
-                            items={durationOptions}
-                            value={duration}
-                            style={{
-                                inputIOS: {
-                                    fontFamily: "MuseoSans-Medium",
-                                    fontSize: 16,
-                                    fontWeight: "500",
-                                    color: textColor,
-                                },
-                                inputAndroid: {
-                                    fontFamily: "MuseoSans-Medium",
-                                    fontSize: 16,
-                                    fontWeight: "500",
-                                    color: textColor,
-                                },
-                            }}
-                            useNativeAndroidPickerStyle={false}
-                            darkTheme={true}
-                        >
-                            <View style={[styles.timePickerButton, styles.durationButton]}>
-                                <IconSymbol name="timer" size={20} color={textColor + "80"} style={styles.dateIcon} />
-                                <ThemedText style={styles.dateLabel}>Duration</ThemedText>
-                                <ThemedText style={styles.dateValue}>{duration} minutes</ThemedText>
+                        <View style={styles.timePickerContainer}>
+                            <View style={[styles.timePickerButton, styles.startTimeButton]}>
+                                <IconSymbol name="clock" size={20} color={textColor + "80"} style={styles.dateIcon} />
+                                <ThemedText style={styles.dateLabel}>Start Time</ThemedText>
+                                <DateTimePicker
+                                    value={startTime}
+                                    mode="time"
+                                    display={Platform.OS === "ios" ? "compact" : "default"}
+                                    onChange={handleStartTimeChange}
+                                    style={styles.timePicker}
+                                />
                             </View>
-                        </RNPickerSelect>
+
+                            <RNPickerSelect
+                                onValueChange={(value) => setDuration(value)}
+                                items={durationOptions}
+                                value={duration}
+                                style={{
+                                    inputIOS: {
+                                        fontFamily: "MuseoSans-Medium",
+                                        fontSize: 16,
+                                        fontWeight: "500",
+                                        color: textColor,
+                                    },
+                                    inputAndroid: {
+                                        fontFamily: "MuseoSans-Medium",
+                                        fontSize: 16,
+                                        fontWeight: "500",
+                                        color: textColor,
+                                    },
+                                }}
+                                useNativeAndroidPickerStyle={false}
+                                darkTheme={true}
+                            >
+                                <View style={[styles.timePickerButton, styles.durationButton]}>
+                                    <IconSymbol
+                                        name="timer"
+                                        size={20}
+                                        color={textColor + "80"}
+                                        style={styles.dateIcon}
+                                    />
+                                    <ThemedText style={styles.dateLabel}>Duration</ThemedText>
+                                    <ThemedText style={styles.dateValue}>{duration} minutes</ThemedText>
+                                </View>
+                            </RNPickerSelect>
+                        </View>
                     </View>
-                </View>
-            </View>
-        </ThemedView>
+
+                    {/* Stage Field */}
+                    <View style={styles.inputContainer}>
+                        <IconSymbol name="location" size={22} color={textColor + "80"} style={styles.inputIcon} />
+                        <TextInput
+                            style={[styles.input, { color: textColor }]}
+                            placeholder="Stage (optional)"
+                            placeholderTextColor={textColor + "60"}
+                            value={stage}
+                            onChangeText={setStage}
+                            maxLength={50}
+                            returnKeyType="done"
+                        />
+                    </View>
+
+                    {/* Description Field */}
+                    <View style={styles.inputContainer}>
+                        <IconSymbol name="doc.text" size={22} color={textColor + "80"} style={styles.inputIcon} />
+                        <TextInput
+                            style={[styles.input, styles.multilineInput, { color: textColor }]}
+                            placeholder="Description (optional)"
+                            placeholderTextColor={textColor + "60"}
+                            value={description}
+                            onChangeText={setDescription}
+                            multiline
+                            numberOfLines={3}
+                            maxLength={500}
+                            textAlignVertical="top"
+                        />
+                    </View>
+
+                    {/* Speakers Section */}
+                    <View style={styles.speakersSection}>
+                        <View style={styles.speakersHeader}>
+                            <ThemedText style={styles.sectionTitle}>Speakers (optional)</ThemedText>
+                            <TouchableOpacity style={styles.addButton} onPress={addSpeaker}>
+                                <IconSymbol name="plus.circle.fill" size={24} color={tintColor} />
+                            </TouchableOpacity>
+                        </View>
+
+                        {speakers.map((speaker, index) => (
+                            <View key={index} style={styles.speakerContainer}>
+                                <View style={styles.speakerHeader}>
+                                    <ThemedText style={styles.speakerLabel}>Speaker {index + 1}</ThemedText>
+                                    <TouchableOpacity onPress={() => removeSpeaker(index)}>
+                                        <IconSymbol name="minus.circle.fill" size={20} color="#ff3b30" />
+                                    </TouchableOpacity>
+                                </View>
+
+                                <View style={styles.speakerInputContainer}>
+                                    <IconSymbol
+                                        name="person"
+                                        size={18}
+                                        color={textColor + "80"}
+                                        style={styles.speakerInputIcon}
+                                    />
+                                    <TextInput
+                                        style={[styles.speakerInput, { color: textColor }]}
+                                        placeholder="Speaker name"
+                                        placeholderTextColor={textColor + "60"}
+                                        value={speaker.name}
+                                        onChangeText={(text) => updateSpeaker(index, "name", text)}
+                                        maxLength={100}
+                                    />
+                                </View>
+
+                                <View style={styles.speakerInputContainer}>
+                                    <IconSymbol
+                                        name="photo"
+                                        size={18}
+                                        color={textColor + "80"}
+                                        style={styles.speakerInputIcon}
+                                    />
+                                    <TextInput
+                                        style={[styles.speakerInput, { color: textColor }]}
+                                        placeholder="Photo URL (optional)"
+                                        placeholderTextColor={textColor + "60"}
+                                        value={speaker.photo || ""}
+                                        onChangeText={(text) => updateSpeaker(index, "photo", text)}
+                                        maxLength={500}
+                                        keyboardType="url"
+                                        autoCapitalize="none"
+                                        autoCorrect={false}
+                                    />
+                                </View>
+
+                                <View style={styles.speakerInputContainer}>
+                                    <IconSymbol
+                                        name="doc.text"
+                                        size={18}
+                                        color={textColor + "80"}
+                                        style={styles.speakerInputIcon}
+                                    />
+                                    <TextInput
+                                        style={[styles.speakerInput, styles.bioInput, { color: textColor }]}
+                                        placeholder="Bio (optional)"
+                                        placeholderTextColor={textColor + "60"}
+                                        value={speaker.bio || ""}
+                                        onChangeText={(text) => updateSpeaker(index, "bio", text)}
+                                        multiline
+                                        numberOfLines={2}
+                                        maxLength={200}
+                                        textAlignVertical="top"
+                                    />
+                                </View>
+                            </View>
+                        ))}
+                    </View>
+                </ScrollView>
+            </ThemedView>
+        </MyKeyboardAvoidingView>
     );
 }
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+        paddingBottom: 22,
     },
     header: {
         flexDirection: "row",
@@ -266,8 +437,12 @@ const styles = StyleSheet.create({
     disabledButton: {
         opacity: 0.5,
     },
+    scrollContainer: {
+        flex: 1,
+    },
     formContainer: {
         padding: 16,
+        paddingBottom: 32, // Extra padding at bottom for scrolling
     },
     inputContainer: {
         flexDirection: "row",
@@ -364,5 +539,61 @@ const styles = StyleSheet.create({
     timePicker: {
         alignSelf: "flex-end",
         fontFamily: "MuseoSans-Medium",
+    },
+    multilineInput: {
+        height: 80,
+        textAlignVertical: "top",
+        paddingTop: 12,
+    },
+    speakersSection: {
+        marginTop: 8,
+    },
+    speakersHeader: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        marginBottom: 12,
+    },
+    addButton: {
+        padding: 4,
+    },
+    speakerContainer: {
+        borderWidth: 1,
+        borderColor: "rgba(150, 150, 150, 0.3)",
+        borderRadius: 8,
+        padding: 12,
+        marginBottom: 12,
+    },
+    speakerHeader: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        marginBottom: 8,
+    },
+    speakerLabel: {
+        fontSize: 14,
+        fontWeight: "600",
+    },
+    speakerInputContainer: {
+        flexDirection: "row",
+        alignItems: "center",
+        marginBottom: 8,
+    },
+    speakerInputIcon: {
+        marginRight: 8,
+    },
+    speakerInput: {
+        flex: 1,
+        fontSize: 14,
+        paddingVertical: 8,
+        paddingHorizontal: 8,
+        borderWidth: 1,
+        borderColor: "rgba(150, 150, 150, 0.2)",
+        borderRadius: 6,
+    },
+    bioInput: {
+        height: 60,
+        textAlignVertical: "top",
+        paddingTop: 8,
     },
 });

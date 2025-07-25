@@ -12,6 +12,12 @@ export interface Conference {
     updatedAt: Date;
 }
 
+export interface Speaker {
+    name: string;
+    photo?: string;
+    bio?: string;
+}
+
 export interface Talk {
     id: string;
     conferenceId: string;
@@ -19,6 +25,9 @@ export interface Talk {
     startTime: Date;
     endTime?: Date;
     isUserSelected?: boolean;
+    speakers?: Speaker[];
+    stage?: string;
+    description?: string;
 }
 
 export interface NoteImage {
