@@ -66,7 +66,7 @@ export const TalkHeader: React.FC<TalkHeaderProps> = ({ conferenceName, talk, on
                                 {talk.title}
                             </ThemedText>
                             <ThemedText style={styles.startTime}>
-                                Started {format(talk.startTime, "h:mm a, MMM d")}
+                                Started {format(talk.startTime, "HH:mm, MMM d")}
                             </ThemedText>
                         </>
                     ) : (

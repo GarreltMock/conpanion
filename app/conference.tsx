@@ -86,7 +86,7 @@ export default function ConferenceDetailScreen() {
     };
 
     const formatTime = (date: Date) => {
-        return format(date, "h:mm a");
+        return format(date, "HH:mm");
     };
 
     const getNotesCount = (talkId: string) => {

@@ -130,7 +130,7 @@ export default function TalkDetailScreen() {
                         </View>
                         <View style={styles.detailItem}>
                             <IconSymbol name="clock" size={16} color={textColor + "80"} style={styles.detailIcon} />
-                            <ThemedText style={styles.detailText}>{format(talk.startTime, "h:mm a")}</ThemedText>
+                            <ThemedText style={styles.detailText}>{format(talk.startTime, "HH:mm")}</ThemedText>
                         </View>
                         <View style={styles.detailItem}>
                             <IconSymbol name="timer" size={16} color={textColor + "80"} style={styles.detailIcon} />

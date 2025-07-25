@@ -133,7 +133,7 @@ export const ExportOptionsForm: React.FC<ExportOptionsFormProps> = ({ conference
     };
 
     const formatTalkTime = (talk: Talk) => {
-        return format(talk.startTime, "MMM d, h:mm a");
+        return format(talk.startTime, "MMM d, HH:mm");
     };
 
     if (!conference) {
