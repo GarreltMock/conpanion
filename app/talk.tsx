@@ -1,7 +1,7 @@
 import { format } from "date-fns";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, FlatList, StyleSheet, TouchableOpacity, View, Image } from "react-native";
+import { ActivityIndicator, FlatList, StyleSheet, TouchableOpacity, View, Image, Text, ScrollView } from "react-native";
 
 import { MyKeyboardAvoidingView } from "@/components/MyKeyboardAvoidingView";
 import { NoteInput } from "@/components/note/NoteInput";
@@ -30,9 +30,12 @@ export default function TalkDetailScreen() {
         deleteNote,
         isLoading,
         isRecording,
+        toggleTalkSelection,
     } = useApp();
 
     const textColor = useThemeColor({}, "text");
+    const tintColor = useThemeColor({}, "tint");
+    const backgroundColor = useThemeColor({}, "background");
 
     useEffect(() => {
         if (id) {
@@ -41,6 +44,8 @@ export default function TalkDetailScreen() {
                 setTalk(foundTalk);
                 const notes = getNotesForTalk(foundTalk.id);
                 setTalkNotes(notes);
+                // Set details expanded based on user selection - expand if NOT user selected
+                setDetailsExpanded(!foundTalk.isUserSelected);
             }
         }
     }, [id, talks, getNotesForTalk]);
@@ -99,6 +104,15 @@ export default function TalkDetailScreen() {
         await deleteNote(noteId);
     };
 
+    const handleAddToUserTalks = async () => {
+        if (!talk) return;
+        try {
+            await toggleTalkSelection(talk.id);
+        } catch (error) {
+            console.error("Error adding talk to user talks:", error);
+        }
+    };
+
     if (isLoading || !talk) {
         return (
             <ThemedView style={styles.loadingContainer}>
@@ -131,30 +145,37 @@ export default function TalkDetailScreen() {
                         </View>
                         <View style={styles.detailItem}>
                             <IconSymbol name="timer" size={16} color={textColor + "80"} style={styles.detailIcon} />
-                            <ThemedText style={styles.detailText}>
-                                {formatDuration(talk.duration)}
-                            </ThemedText>
+                            <ThemedText style={styles.detailText}>{formatDuration(talk.duration)}</ThemedText>
                         </View>
                     </View>
                 </View>
 
-                {/* Talk Details Section - Collapsible */}
+                {/* Talk Details Section - Collapsible only if user selected */}
                 {(talk.speakers?.length || talk.stage || talk.description) && (
-                    <View style={styles.detailsSection}>
-                        <TouchableOpacity
-                            style={styles.detailsToggle}
-                            onPress={() => setDetailsExpanded(!detailsExpanded)}
-                        >
-                            <ThemedText style={styles.detailsToggleText}>Talk Details</ThemedText>
-                            <IconSymbol
-                                name={detailsExpanded ? "chevron.up" : "chevron.down"}
-                                size={16}
-                                color={textColor + "80"}
-                            />
-                        </TouchableOpacity>
+                    <View style={[styles.detailsSection, detailsExpanded && { flex: 1 }]}>
+                        {talk.isUserSelected ? (
+                            <TouchableOpacity
+                                style={styles.detailsToggle}
+                                onPress={() => setDetailsExpanded(!detailsExpanded)}
+                            >
+                                <ThemedText style={styles.detailsToggleText}>Talk Details</ThemedText>
+                                <IconSymbol
+                                    name={detailsExpanded ? "chevron.up" : "chevron.down"}
+                                    size={16}
+                                    color={textColor + "80"}
+                                />
+                            </TouchableOpacity>
+                        ) : (
+                            <View style={styles.detailsToggle}>
+                                <ThemedText style={styles.detailsToggleText}>Talk Details</ThemedText>
+                            </View>
+                        )}
 
                         {detailsExpanded && (
-                            <View style={styles.detailsContent}>
+                            <ScrollView
+                                contentContainerStyle={styles.detailsContent}
+                                showsVerticalScrollIndicator={true}
+                            >
                                 {/* Speakers */}
                                 {talk.speakers && talk.speakers.length > 0 && (
                                     <View style={styles.talkDetailItem}>
@@ -174,16 +195,20 @@ export default function TalkDetailScreen() {
                                                 <View key={index} style={styles.speakerItem}>
                                                     <View style={styles.speakerContent}>
                                                         {speaker.photo && (
-                                                            <Image 
-                                                                source={{ uri: speaker.photo }} 
+                                                            <Image
+                                                                source={{ uri: speaker.photo }}
                                                                 style={styles.speakerPhoto}
                                                                 resizeMode="cover"
                                                             />
                                                         )}
                                                         <View style={styles.speakerTextContent}>
-                                                            <ThemedText style={styles.speakerName}>{speaker.name}</ThemedText>
+                                                            <ThemedText style={styles.speakerName}>
+                                                                {speaker.name}
+                                                            </ThemedText>
                                                             {speaker.bio && (
-                                                                <ThemedText style={styles.speakerBio}>{speaker.bio}</ThemedText>
+                                                                <ThemedText style={styles.speakerBio}>
+                                                                    {speaker.bio}
+                                                                </ThemedText>
                                                             )}
                                                         </View>
                                                     </View>
@@ -224,39 +249,60 @@ export default function TalkDetailScreen() {
                                         <ThemedText style={styles.talkDetailValue}>{talk.description}</ThemedText>
                                     </View>
                                 )}
-                            </View>
+                            </ScrollView>
                         )}
                     </View>
                 )}
 
-                <View style={styles.notesSectionHeader}>
-                    <ThemedText style={styles.notesTitle}>Notes</ThemedText>
-                    <ThemedText style={styles.notesCount}>
-                        {talkNotes.length} {talkNotes.length === 1 ? "note" : "notes"}
-                    </ThemedText>
-                </View>
-
-                <FlatList
-                    data={talkNotes}
-                    keyExtractor={(item) => item.id}
-                    renderItem={({ item }) => <NoteItem note={item} onDelete={handleDeleteNote} />}
-                    contentContainerStyle={styles.notesList}
-                    keyboardShouldPersistTaps="handled"
-                    ListEmptyComponent={() => (
-                        <View style={styles.emptyContainer}>
-                            <ThemedText style={styles.emptyText}>No notes available for this talk</ThemedText>
+                {talk.isUserSelected && !detailsExpanded ? (
+                    <>
+                        <View style={styles.notesSectionHeader}>
+                            <ThemedText style={styles.notesTitle}>Notes</ThemedText>
+                            <ThemedText style={styles.notesCount}>
+                                {talkNotes.length} {talkNotes.length === 1 ? "note" : "notes"}
+                            </ThemedText>
                         </View>
-                    )}
-                />
 
-                <View style={styles.inputWrapper}>
-                    <NoteInput
-                        onSubmitNote={handleSubmitNote}
-                        onTakePhoto={handleTakePhoto}
-                        onRecordAudio={handleRecordAudio}
-                        isRecording={isRecording}
-                    />
-                </View>
+                        <FlatList
+                            data={talkNotes}
+                            keyExtractor={(item) => item.id}
+                            renderItem={({ item }) => <NoteItem note={item} onDelete={handleDeleteNote} />}
+                            contentContainerStyle={styles.notesList}
+                            keyboardShouldPersistTaps="handled"
+                            ListEmptyComponent={() => (
+                                <View style={styles.emptyContainer}>
+                                    <ThemedText style={styles.emptyText}>No notes available for this talk</ThemedText>
+                                </View>
+                            )}
+                        />
+
+                        <View style={styles.inputWrapper}>
+                            <NoteInput
+                                onSubmitNote={handleSubmitNote}
+                                onTakePhoto={handleTakePhoto}
+                                onRecordAudio={handleRecordAudio}
+                                isRecording={isRecording}
+                            />
+                        </View>
+                    </>
+                ) : !talk.isUserSelected ? (
+                    <>
+                        <View style={styles.addToUserTalksWrapper}>
+                            <TouchableOpacity
+                                style={[styles.addToUserTalksButton, { backgroundColor: tintColor }]}
+                                onPress={handleAddToUserTalks}
+                                activeOpacity={0.8}
+                            >
+                                <IconSymbol name="bookmark.fill" size={20} color={backgroundColor} />
+                                <Text style={[styles.addToUserTalksText, { color: backgroundColor }]}>
+                                    Add to My Talks
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+                    </>
+                ) : (
+                    <></>
+                )}
             </ThemedView>
         </MyKeyboardAvoidingView>
     );
@@ -308,7 +354,6 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         marginRight: 16,
-        marginBottom: 8,
     },
     detailIcon: {
         marginRight: 4,
@@ -358,6 +403,7 @@ const styles = StyleSheet.create({
         marginBottom: 16,
     },
     detailsSection: {
+        // flex: 1,
         borderBottomWidth: 1,
         borderBottomColor: "rgba(150, 150, 150, 0.2)",
     },
@@ -375,7 +421,7 @@ const styles = StyleSheet.create({
     },
     detailsContent: {
         paddingHorizontal: 16,
-        paddingBottom: 16,
+        paddingVertical: 16,
     },
     talkDetailItem: {
         marginBottom: 16,
@@ -429,5 +475,43 @@ const styles = StyleSheet.create({
         opacity: 0.7,
         lineHeight: 18,
         fontStyle: "italic",
+    },
+    emptyNotesContainer: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        paddingHorizontal: 24,
+        paddingVertical: 48,
+    },
+    emptyNotesTitle: {
+        fontSize: 20,
+        fontWeight: "bold",
+        textAlign: "center",
+        marginBottom: 12,
+    },
+    emptyNotesDescription: {
+        fontSize: 16,
+        textAlign: "center",
+        opacity: 0.7,
+        lineHeight: 22,
+    },
+    addToUserTalksWrapper: {
+        paddingHorizontal: 16,
+        paddingVertical: 16,
+        borderTopWidth: 1,
+        borderTopColor: "rgba(150, 150, 150, 0.2)",
+    },
+    addToUserTalksButton: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        paddingVertical: 16,
+        paddingHorizontal: 24,
+        borderRadius: 12,
+    },
+    addToUserTalksText: {
+        fontSize: 17,
+        fontWeight: "600",
+        marginLeft: 8,
     },
 });
