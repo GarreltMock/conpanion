@@ -49,17 +49,14 @@ export default function TalkDetailScreen() {
         router.back();
     };
 
-    const formatDuration = (startTime: Date, endTime?: Date) => {
-        if (!endTime) return "Ongoing";
+    const formatDuration = (duration?: number) => {
+        if (!duration) return "Ongoing";
 
-        const durationMs = endTime.getTime() - startTime.getTime();
-        const minutes = Math.floor(durationMs / (1000 * 60));
-
-        if (minutes < 60) {
-            return `${minutes} min`;
+        if (duration < 60) {
+            return `${duration} min`;
         } else {
-            const hours = Math.floor(minutes / 60);
-            const remainingMinutes = minutes % 60;
+            const hours = Math.floor(duration / 60);
+            const remainingMinutes = duration % 60;
             return `${hours}h ${remainingMinutes}m`;
         }
     };
@@ -135,7 +132,7 @@ export default function TalkDetailScreen() {
                         <View style={styles.detailItem}>
                             <IconSymbol name="timer" size={16} color={textColor + "80"} style={styles.detailIcon} />
                             <ThemedText style={styles.detailText}>
-                                {formatDuration(talk.startTime, talk.endTime)}
+                                {formatDuration(talk.duration)}
                             </ThemedText>
                         </View>
                     </View>

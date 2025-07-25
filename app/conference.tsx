@@ -211,9 +211,9 @@ export default function ConferenceDetailScreen() {
                                 >
                                     <View style={styles.timeContainer}>
                                         <ThemedText style={styles.timeText}>{formatTime(talk.startTime)}</ThemedText>
-                                        {talk.endTime && (
+                                        {talk.duration && (
                                             <ThemedText style={styles.endTimeText}>
-                                                - {formatTime(talk.endTime)}
+                                                ({talk.duration} min)
                                             </ThemedText>
                                         )}
                                     </View>

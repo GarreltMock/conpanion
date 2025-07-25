@@ -138,7 +138,7 @@ describe('Storage Utilities', () => {
         conferenceId: 'conf1',
         title: 'Updated Title',
         startTime: new Date(),
-        endTime: new Date()
+        duration: 45
       };
       
       await saveTalk(updatedTalk);

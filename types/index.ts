@@ -23,7 +23,7 @@ export interface Talk {
     conferenceId: string;
     title: string;
     startTime: Date;
-    endTime?: Date;
+    duration?: number; // Duration in minutes
     isUserSelected?: boolean;
     speakers?: Speaker[];
     stage?: string;

@@ -48,7 +48,14 @@ interface AppContextType {
     talks: Talk[];
     activeTalk: Talk | null;
     createTalk: (title: string) => Promise<Talk>;
-    createAgendaTalk: (title: string, startTime: Date, endTime: Date, speakers?: Speaker[], stage?: string, description?: string) => Promise<Talk>;
+    createAgendaTalk: (
+        title: string,
+        startTime: Date,
+        duration: number,
+        speakers?: Speaker[],
+        stage?: string,
+        description?: string
+    ) => Promise<Talk>;
     endTalk: (talk: Talk) => Promise<void>;
     endCurrentTalk: () => Promise<void>;
     getAllTalks: () => Promise<Talk[]>;
@@ -176,8 +183,8 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
                 const conferenceTalks = storedTalks.filter((talk) => talk.conferenceId === currentConference.id);
 
-                // Priority 1: Talks without end time (immediate talks)
-                const immediateTalks = conferenceTalks.filter((talk) => !talk.endTime);
+                // Priority 1: Talks without duration (immediate talks) that are user selected
+                const immediateTalks = conferenceTalks.filter((talk) => !talk.duration && talk.isUserSelected);
 
                 if (immediateTalks.length > 0) {
                     // Sort by start time, most recent first
@@ -186,10 +193,12 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
                     return;
                 }
 
-                // Priority 2: Scheduled talks that are currently active
-                const activeTalks = conferenceTalks.filter(
-                    (talk) => talk.endTime && talk.startTime <= now && talk.endTime > now
-                );
+                // Priority 2: Scheduled talks that are currently active and user selected
+                const activeTalks = conferenceTalks.filter((talk) => {
+                    if (!talk.duration || !talk.isUserSelected) return false;
+                    const endTime = new Date(talk.startTime.getTime() + talk.duration * 60 * 1000);
+                    return talk.startTime <= now && endTime > now;
+                });
 
                 if (activeTalks.length > 0) {
                     // Sort by start time, most recent first
@@ -399,7 +408,14 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         return newTalk;
     };
 
-    const createAgendaTalk = async (title: string, startTime: Date, endTime: Date, speakers?: Speaker[], stage?: string, description?: string): Promise<Talk> => {
+    const createAgendaTalk = async (
+        title: string,
+        startTime: Date,
+        duration: number,
+        speakers?: Speaker[],
+        stage?: string,
+        description?: string
+    ): Promise<Talk> => {
         if (!currentConference) {
             console.error("Conference is null or undefined");
             throw new Error("No current conference exists");
@@ -410,7 +426,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
             conferenceId: currentConference.id,
             title,
             startTime,
-            endTime,
+            duration,
             isUserSelected: false,
             speakers,
             stage,
@@ -422,11 +438,8 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         // Update state
         setTalks((prevTalks) => [...prevTalks, newTalk]);
 
-        // Check if this talk should be active now
-        const now = new Date();
-        if (startTime <= now && endTime > now && !activeTalk) {
-            setActiveTalk(newTalk);
-        }
+        // Agenda talks are not automatically set as active since they start as not user-selected
+        // Users must manually select them to make them eligible for becoming active
 
         return newTalk;
     };
@@ -437,9 +450,12 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     };
 
     const endTalk = async (talk: Talk): Promise<void> => {
+        const now = new Date();
+        const durationInMinutes = Math.round((now.getTime() - talk.startTime.getTime()) / (60 * 1000));
+
         const updatedTalk: Talk = {
             ...talk,
-            endTime: new Date(),
+            duration: durationInMinutes,
         };
 
         await saveTalk(updatedTalk);

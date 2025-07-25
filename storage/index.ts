@@ -346,7 +346,7 @@ export const getTalks = async (): Promise<Talk[]> => {
             return parsedTalks.map((talk: any) => ({
                 ...talk,
                 startTime: new Date(talk.startTime),
-                endTime: talk.endTime ? new Date(talk.endTime) : undefined,
+                duration: talk.duration,
             }));
         }
         return [];

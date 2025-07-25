@@ -97,7 +97,7 @@ export default function NewAgendaTalkModal() {
             setIsCreating(true);
             Keyboard.dismiss();
 
-            // Combine selected day with start/end times
+            // Combine selected day with start time
             const selectedDate = conferenceDays[selectedDay].date;
             const startDateTime = new Date(
                 selectedDate.getFullYear(),
@@ -106,12 +106,11 @@ export default function NewAgendaTalkModal() {
                 startTime.getHours(),
                 startTime.getMinutes()
             );
-            const endDateTime = new Date(startDateTime.getTime() + duration * 60 * 1000);
 
             await createAgendaTalk(
                 title.trim(),
                 startDateTime,
-                endDateTime,
+                duration,
                 speakers.length > 0 ? speakers : undefined,
                 stage.trim() || undefined,
                 description.trim() || undefined

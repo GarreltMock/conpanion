@@ -103,7 +103,7 @@ export default function TalksScreen() {
                     <ThemedText style={styles.talkTitle}>{item.title}</ThemedText>
                     <ThemedText style={styles.talkDate}>
                         {format(item.startTime, "MMM d, yyyy • HH:mm")}
-                        {item.endTime && ` - ${format(item.endTime, "HH:mm")}`}
+                        {item.duration && ` (${item.duration} min)`}
                     </ThemedText>
                 </View>
 

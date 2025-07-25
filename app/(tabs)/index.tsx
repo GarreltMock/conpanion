@@ -33,12 +33,13 @@ export default function NotesScreen() {
 
     // Set timeout to update state when scheduled talk ends
     useEffect(() => {
-        if (!activeTalk || !activeTalk.endTime) {
+        if (!activeTalk || !activeTalk.duration) {
             return;
         }
 
         const now = new Date();
-        const timeUntilEnd = activeTalk.endTime.getTime() - now.getTime();
+        const endTime = new Date(activeTalk.startTime.getTime() + activeTalk.duration * 60 * 1000);
+        const timeUntilEnd = endTime.getTime() - now.getTime();
 
         // Only set timeout if the talk hasn't ended yet
         if (timeUntilEnd > 0) {
@@ -79,8 +80,10 @@ export default function NotesScreen() {
             return;
         }
 
-        const isScheduledTalk = activeTalk.endTime !== undefined;
-        const isTalkActive = activeTalk.endTime ? activeTalk.endTime > currentTime : true;
+        const isScheduledTalk = activeTalk.duration !== undefined;
+        const isTalkActive = activeTalk.duration ? 
+            new Date(activeTalk.startTime.getTime() + activeTalk.duration * 60 * 1000) > currentTime : 
+            true;
 
         if (isScheduledTalk && isTalkActive) {
             // For scheduled talks that are still active, create a new immediate talk
