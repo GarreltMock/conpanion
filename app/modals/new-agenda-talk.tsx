@@ -212,7 +212,11 @@ export default function NewAgendaTalkModal() {
 
                     <View style={styles.dateContainer}>
                         <View style={styles.dayContainer}>
-                            <View style={styles.dayButtonsContainer}>
+                            <ScrollView 
+                                horizontal 
+                                style={styles.dayButtonsContainer}
+                                showsHorizontalScrollIndicator={false}
+                            >
                                 {conferenceDays.map((day) => (
                                     <TouchableOpacity
                                         key={day.index}
@@ -232,7 +236,7 @@ export default function NewAgendaTalkModal() {
                                         </Text>
                                     </TouchableOpacity>
                                 ))}
-                            </View>
+                            </ScrollView>
                             {conferenceDays.length > 0 && (
                                 <ThemedText style={styles.selectedDayText}>
                                     {conferenceDays[selectedDay]?.label}

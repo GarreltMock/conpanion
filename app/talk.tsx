@@ -132,7 +132,6 @@ export default function TalkDetailScreen() {
                 </View>
 
                 <View style={styles.talkHeader}>
-                    <ThemedText style={styles.conferenceName}>{currentConference?.name || "My Conference"}</ThemedText>
                     <ThemedText style={styles.talkTitle}>{talk.title}</ThemedText>
                     <View style={styles.talkDetails}>
                         <View style={styles.detailItem}>
@@ -335,11 +334,6 @@ const styles = StyleSheet.create({
         paddingBottom: 16,
         borderBottomWidth: 1,
         borderBottomColor: "rgba(150, 150, 150, 0.2)",
-    },
-    conferenceName: {
-        fontSize: 14,
-        opacity: 0.7,
-        marginBottom: 4,
     },
     talkTitle: {
         fontSize: 24,
