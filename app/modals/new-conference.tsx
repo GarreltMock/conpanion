@@ -36,6 +36,9 @@ export default function NewConferenceModal() {
     const tintColor = useThemeColor({}, "tint");
     const textColor = useThemeColor({}, "text");
     const placeholderColor = useThemeColor({}, "tabIconDefault");
+    const errorColor = useThemeColor({}, "error");
+    const borderColor = useThemeColor({}, "border");
+    const borderLightColor = useThemeColor({}, "borderLight");
 
     const handleCreateConference = async () => {
         if (!name.trim()) {
@@ -69,7 +72,7 @@ export default function NewConferenceModal() {
     return (
         <SafeAreaView style={styles.safeArea}>
             <ThemedView style={styles.container}>
-                <View style={styles.header}>
+                <View style={[styles.header, { borderBottomColor: borderLightColor }]}>
                     <TouchableOpacity style={styles.cancelButton} onPress={handleCancel} disabled={isSubmitting}>
                         <ThemedText style={styles.cancelText}>Cancel</ThemedText>
                     </TouchableOpacity>
@@ -108,6 +111,7 @@ export default function NewConferenceModal() {
                                 {
                                     color: textColor,
                                     backgroundColor: backgroundColor,
+                                    borderColor: borderColor,
                                 },
                             ]}
                             value={name}
@@ -125,6 +129,7 @@ export default function NewConferenceModal() {
                                 {
                                     color: textColor,
                                     backgroundColor: backgroundColor,
+                                    borderColor: borderColor,
                                 },
                             ]}
                             value={location}
@@ -142,6 +147,7 @@ export default function NewConferenceModal() {
                                 {
                                     color: textColor,
                                     backgroundColor: backgroundColor,
+                                    borderColor: borderColor,
                                 },
                             ]}
                             value={description}
@@ -156,7 +162,7 @@ export default function NewConferenceModal() {
                         <ThemedText style={styles.label}>Date Range *</ThemedText>
 
                         <TouchableOpacity
-                            style={[styles.dateButton, { backgroundColor: backgroundColor }]}
+                            style={[styles.dateButton, { backgroundColor: backgroundColor, borderColor: borderColor }]}
                             onPress={() => {
                                 setShowStartCalendar(!showStartCalendar);
                                 setShowEndCalendar(false);
@@ -167,7 +173,7 @@ export default function NewConferenceModal() {
                         </TouchableOpacity>
 
                         {showStartCalendar && (
-                            <View style={styles.calendarContainer}>
+                            <View style={[styles.calendarContainer, { borderColor: borderColor }]}>
                                 <Calendar
                                     onDayPress={(day) => {
                                         const selectedDate = new Date(day.timestamp);
@@ -199,7 +205,7 @@ export default function NewConferenceModal() {
                         )}
 
                         <TouchableOpacity
-                            style={[styles.dateButton, { backgroundColor: backgroundColor }]}
+                            style={[styles.dateButton, { backgroundColor: backgroundColor, borderColor: borderColor }]}
                             onPress={() => {
                                 setShowEndCalendar(!showEndCalendar);
                                 setShowStartCalendar(false);
@@ -210,7 +216,7 @@ export default function NewConferenceModal() {
                         </TouchableOpacity>
 
                         {showEndCalendar && (
-                            <View style={styles.calendarContainer}>
+                            <View style={[styles.calendarContainer, { borderColor: borderColor }]}>
                                 <Calendar
                                     minDate={formatCalendarDate(startDate)}
                                     onDayPress={(day) => {
@@ -232,7 +238,7 @@ export default function NewConferenceModal() {
                             </View>
                         )}
 
-                        {error ? <ThemedText style={styles.errorText}>{error}</ThemedText> : null}
+                        {error ? <ThemedText style={[styles.errorText, { color: errorColor }]}>{error}</ThemedText> : null}
                     </ThemedView>
                 </ScrollView>
             </ThemedView>
@@ -253,7 +259,6 @@ const styles = StyleSheet.create({
         alignItems: "center",
         padding: 16,
         borderBottomWidth: 1,
-        borderBottomColor: "rgba(150, 150, 150, 0.2)",
     },
     title: {
         fontSize: 17,
@@ -295,7 +300,6 @@ const styles = StyleSheet.create({
     },
     input: {
         borderWidth: 1,
-        borderColor: "rgba(150, 150, 150, 0.3)",
         borderRadius: 8,
         padding: Platform.OS === "ios" ? 12 : 8,
         fontSize: 16,
@@ -303,7 +307,6 @@ const styles = StyleSheet.create({
     },
     textArea: {
         borderWidth: 1,
-        borderColor: "rgba(150, 150, 150, 0.3)",
         borderRadius: 8,
         padding: Platform.OS === "ios" ? 12 : 8,
         fontSize: 16,
@@ -314,7 +317,6 @@ const styles = StyleSheet.create({
         justifyContent: "space-between",
         alignItems: "center",
         borderWidth: 1,
-        borderColor: "rgba(150, 150, 150, 0.3)",
         borderRadius: 8,
         padding: 12,
         marginBottom: 8,
@@ -322,12 +324,10 @@ const styles = StyleSheet.create({
     calendarContainer: {
         marginBottom: 16,
         borderWidth: 1,
-        borderColor: "rgba(150, 150, 150, 0.3)",
         borderRadius: 8,
         overflow: "hidden",
     },
     errorText: {
-        color: "red",
         marginTop: 16,
     },
 });

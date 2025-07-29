@@ -14,6 +14,14 @@ export const Colors = {
     icon: '#687076',
     tabIconDefault: '#687076',
     tabIconSelected: tintColorLight,
+    error: '#FF3B30',
+    success: '#34C759',
+    warning: '#FF9500',
+    white: '#FFFFFF',
+    border: 'rgba(150, 150, 150, 0.3)',
+    borderLight: 'rgba(150, 150, 150, 0.2)',
+    backgroundOverlay: 'rgba(150, 150, 150, 0.1)',
+    backgroundOverlayLight: 'rgba(150, 150, 150, 0.05)',
   },
   dark: {
     text: '#ECEDEE',
@@ -22,5 +30,13 @@ export const Colors = {
     icon: '#D0D3D6', // Brighter for better contrast
     tabIconDefault: '#D0D3D6', // Brighter for better contrast
     tabIconSelected: tintColorDark,
+    error: '#FF453A',
+    success: '#32D74B',
+    warning: '#FF9F0A',
+    white: '#FFFFFF',
+    border: 'rgba(150, 150, 150, 0.4)',
+    borderLight: 'rgba(150, 150, 150, 0.3)',
+    backgroundOverlay: 'rgba(150, 150, 150, 0.15)',
+    backgroundOverlayLight: 'rgba(150, 150, 150, 0.08)',
   },
 };

@@ -22,6 +22,7 @@ export default function ConferencesScreen() {
     const router = useRouter();
     const tintColor = useThemeColor({}, "tint");
     const backgroundColor = useThemeColor({}, "background");
+    const borderLight = useThemeColor({}, "borderLight");
 
     useEffect(() => {
         const checkConferencesAndLoad = async () => {
@@ -102,17 +103,6 @@ export default function ConferencesScreen() {
         );
     };
 
-    const handleSwitchConference = async (conference: Conference) => {
-        if (currentConference?.id !== conference.id) {
-            try {
-                await switchActiveConference(conference.id);
-                Alert.alert("Success", `Switched to ${conference.name}`);
-            } catch {
-                Alert.alert("Error", "Failed to switch conference");
-            }
-        }
-    };
-
     const handleViewConferenceDetails = (conference: Conference) => {
         // Make sure we have an ID to navigate with
         if (!conference || !conference.id) {
@@ -140,7 +130,7 @@ export default function ConferencesScreen() {
 
     return (
         <ThemedView style={styles.container}>
-            <View style={styles.header}>
+            <View style={[styles.header, { borderBottomColor: borderLight }]}>
                 <ThemedText style={styles.headerTitle}>Conferences</ThemedText>
                 <Pressable
                     style={({ pressed }) => [
@@ -187,10 +177,6 @@ export default function ConferencesScreen() {
 }
 
 const styles = StyleSheet.create({
-    safeArea: {
-        flex: 1,
-        backgroundColor: "#fff",
-    },
     container: {
         flex: 1,
     },
@@ -207,7 +193,6 @@ const styles = StyleSheet.create({
         paddingTop: 60,
         paddingBottom: 16,
         borderBottomWidth: 1,
-        borderBottomColor: "rgba(150, 150, 150, 0.2)",
     },
     headerTitle: {
         fontSize: 22,

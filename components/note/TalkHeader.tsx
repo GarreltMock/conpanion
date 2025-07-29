@@ -18,6 +18,7 @@ interface TalkHeaderProps {
 export const TalkHeader: React.FC<TalkHeaderProps> = ({ conferenceName, talk, onDone }) => {
     const tintColor = useThemeColor({}, "tint");
     const backgroundColor = useThemeColor({}, "background");
+    const borderLightColor = useThemeColor({}, "borderLight");
     const [currentTime, setCurrentTime] = useState(new Date());
 
     const { endTalk } = useApp();
@@ -57,7 +58,7 @@ export const TalkHeader: React.FC<TalkHeaderProps> = ({ conferenceName, talk, on
     };
 
     return (
-        <ThemedView style={styles.container}>
+        <ThemedView style={[styles.container, { borderBottomColor: borderLightColor }]}>
             <View style={styles.headerContent}>
                 <View style={styles.titleContainer}>
                     <ThemedText style={styles.conferenceName}>{conferenceName}</ThemedText>
@@ -96,9 +97,9 @@ export const TalkHeader: React.FC<TalkHeaderProps> = ({ conferenceName, talk, on
                         }
 
                         const isScheduledTalk = talk.duration !== undefined;
-                        const isTalkActive = talk.duration ? 
-                            new Date(talk.startTime.getTime() + talk.duration * 60 * 1000) > currentTime : 
-                            true;
+                        const isTalkActive = talk.duration
+                            ? new Date(talk.startTime.getTime() + talk.duration * 60 * 1000) > currentTime
+                            : true;
 
                         if (isScheduledTalk && isTalkActive) {
                             return (
@@ -128,7 +129,6 @@ const styles = StyleSheet.create({
         paddingTop: 60,
         paddingBottom: 16,
         borderBottomWidth: 1,
-        borderBottomColor: "rgba(150, 150, 150, 0.2)",
     },
     headerContent: {
         flexDirection: "row",

@@ -41,6 +41,9 @@ export const ExportOptionsForm: React.FC<ExportOptionsFormProps> = ({ conference
     const tintColor = useThemeColor({}, "tint");
     const textColor = useThemeColor({}, "text");
     const placeholderColor = useThemeColor({}, "tabIconDefault");
+    const errorColor = useThemeColor({}, "error");
+    const borderColor = useThemeColor({}, "border");
+    const borderLightColor = useThemeColor({}, "borderLight");
 
     useEffect(() => {
         const loadSavedOptions = async () => {
@@ -240,6 +243,7 @@ export const ExportOptionsForm: React.FC<ExportOptionsFormProps> = ({ conference
                             {
                                 color: textColor,
                                 backgroundColor: backgroundColor,
+                                borderColor: borderColor,
                             },
                         ]}
                         value={options.filename}
@@ -269,7 +273,7 @@ export const ExportOptionsForm: React.FC<ExportOptionsFormProps> = ({ conference
                             conferenceTalks.map((talk) => (
                                 <TouchableOpacity
                                     key={talk.id}
-                                    style={styles.talkItem}
+                                    style={[styles.talkItem, { borderBottomColor: borderLightColor }]}
                                     onPress={() => toggleTalkSelection(talk.id)}
                                 >
                                     <View style={styles.talkCheckbox}>
@@ -288,12 +292,12 @@ export const ExportOptionsForm: React.FC<ExportOptionsFormProps> = ({ conference
                         )}
                     </View>
 
-                    {error ? <ThemedText style={styles.errorMessage}>{error}</ThemedText> : null}
+                    {error ? <ThemedText style={[styles.errorMessage, { color: errorColor }]}>{error}</ThemedText> : null}
 
                     <View style={styles.buttonRow}>
                         {onCancel && (
                             <TouchableOpacity
-                                style={[styles.button, styles.cancelButton]}
+                                style={[styles.button, styles.cancelButton, { borderColor: borderColor }]}
                                 onPress={onCancel}
                                 disabled={isSubmitting}
                             >
@@ -313,7 +317,7 @@ export const ExportOptionsForm: React.FC<ExportOptionsFormProps> = ({ conference
                             onPress={handleExport}
                             disabled={isSubmitting || options.includeTalkIds.length === 0}
                         >
-                            <ThemedText style={styles.exportButtonText}>
+                            <ThemedText style={[styles.exportButtonText, { color: "white" }]}>
                                 {isSubmitting ? "Exporting..." : "Export"}
                             </ThemedText>
                         </TouchableOpacity>
@@ -380,7 +384,6 @@ const styles = StyleSheet.create({
     },
     input: {
         borderWidth: 1,
-        borderColor: "#ddd",
         borderRadius: 8,
         padding: Platform.OS === "ios" ? 12 : 8,
         fontSize: 16,
@@ -408,7 +411,6 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         borderBottomWidth: 1,
-        borderBottomColor: "#eee",
         paddingVertical: 12,
     },
     talkCheckbox: {
@@ -426,7 +428,6 @@ const styles = StyleSheet.create({
         fontSize: 14,
     },
     errorMessage: {
-        color: "red",
         marginBottom: 16,
     },
     noTalksText: {
@@ -448,7 +449,6 @@ const styles = StyleSheet.create({
     cancelButton: {
         marginRight: 8,
         borderWidth: 1,
-        borderColor: "#ddd",
     },
     cancelButtonText: {
         fontSize: 16,
@@ -457,7 +457,6 @@ const styles = StyleSheet.create({
         marginLeft: 8,
     },
     exportButtonText: {
-        color: "white",
         fontSize: 16,
         fontWeight: "bold",
     },

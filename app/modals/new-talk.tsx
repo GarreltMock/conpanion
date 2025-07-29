@@ -1,14 +1,5 @@
 import React, { useState } from "react";
-import {
-    StyleSheet,
-    View,
-    TextInput,
-    TouchableOpacity,
-    Keyboard,
-    ActivityIndicator,
-    Alert,
-    Text,
-} from "react-native";
+import { StyleSheet, View, TextInput, TouchableOpacity, Keyboard, ActivityIndicator, Alert, Text } from "react-native";
 import { router } from "expo-router";
 
 import { ThemedText } from "@/components/ThemedText";
@@ -25,6 +16,8 @@ export default function NewTalkModal() {
     const textColor = useThemeColor({}, "text");
     const tintColor = useThemeColor({}, "tint");
     const backgroundColor = useThemeColor({}, "background");
+    const borderLight = useThemeColor({}, "borderLight");
+    const border = useThemeColor({}, "border");
 
     const handleCreate = async () => {
         if (!title.trim()) {
@@ -45,10 +38,7 @@ export default function NewTalkModal() {
         } catch (error) {
             console.error("Error creating talk:", error);
             // Show more detailed error message
-            const errorMessage =
-                error instanceof Error
-                    ? error.message
-                    : "Failed to create talk. Please try again.";
+            const errorMessage = error instanceof Error ? error.message : "Failed to create talk. Please try again.";
             Alert.alert("Error", errorMessage);
         } finally {
             setIsCreating(false);
@@ -61,12 +51,8 @@ export default function NewTalkModal() {
 
     return (
         <ThemedView style={styles.container}>
-            <View style={styles.header}>
-                <TouchableOpacity
-                    style={styles.cancelButton}
-                    onPress={handleCancel}
-                    disabled={isCreating}
-                >
+            <View style={[styles.header, { borderBottomColor: borderLight }]}>
+                <TouchableOpacity style={styles.cancelButton} onPress={handleCancel} disabled={isCreating}>
                     <ThemedText style={styles.cancelText}>Cancel</ThemedText>
                 </TouchableOpacity>
 
@@ -82,31 +68,16 @@ export default function NewTalkModal() {
                     disabled={!title.trim() || isCreating}
                 >
                     {isCreating ? (
-                        <ActivityIndicator
-                            size="small"
-                            color={backgroundColor}
-                        />
+                        <ActivityIndicator size="small" color={backgroundColor} />
                     ) : (
-                        <Text
-                            style={[
-                                styles.createText,
-                                { color: backgroundColor },
-                            ]}
-                        >
-                            Create
-                        </Text>
+                        <Text style={[styles.createText, { color: backgroundColor }]}>Create</Text>
                     )}
                 </TouchableOpacity>
             </View>
 
             <View style={styles.formContainer}>
-                <View style={styles.inputContainer}>
-                    <IconSymbol
-                        name="mic.fill"
-                        size={22}
-                        color={textColor + "80"}
-                        style={styles.inputIcon}
-                    />
+                <View style={[styles.inputContainer, { borderColor: border }]}>
+                    <IconSymbol name="mic.fill" size={22} color={textColor + "80"} style={styles.inputIcon} />
 
                     <TextInput
                         style={[styles.input, { color: textColor }]}
@@ -117,15 +88,12 @@ export default function NewTalkModal() {
                         autoFocus
                         maxLength={100}
                         returnKeyType="done"
-                        onSubmitEditing={
-                            title.trim() ? handleCreate : undefined
-                        }
+                        onSubmitEditing={title.trim() ? handleCreate : undefined}
                     />
                 </View>
 
                 <ThemedText style={styles.helpText}>
-                    This will create a new talk and set it as the active talk
-                    for taking notes.
+                    This will create a new talk and set it as the active talk for taking notes.
                 </ThemedText>
             </View>
         </ThemedView>
@@ -144,7 +112,6 @@ const styles = StyleSheet.create({
         paddingTop: 16,
         paddingBottom: 16,
         borderBottomWidth: 1,
-        borderBottomColor: "rgba(150, 150, 150, 0.2)",
     },
     title: {
         fontSize: 17,
@@ -175,7 +142,6 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         borderWidth: 1,
-        borderColor: "rgba(150, 150, 150, 0.3)",
         borderRadius: 8,
         paddingHorizontal: 12,
         marginBottom: 16,

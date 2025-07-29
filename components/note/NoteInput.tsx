@@ -69,6 +69,9 @@ export const NoteInput: React.FC<NoteInputProps> = ({
     const textColor = useThemeColor({}, "text");
     const tintColor = useThemeColor({}, "tint");
     const iconColor = useThemeColor({}, "icon");
+    const errorColor = useThemeColor({}, "error");
+    const whiteColor = useThemeColor({}, "white");
+    const backgroundOverlayColor = useThemeColor({}, "backgroundOverlay");
 
     // Initialize the image transformation hook
     const { isInitialized, processImageFromUri } = useImageTransform();
@@ -361,7 +364,7 @@ export const NoteInput: React.FC<NoteInputProps> = ({
                             />
                             {image.isProcessing && (
                                 <View style={styles.loadingOverlay}>
-                                    <ActivityIndicator size="small" color="#fff" />
+                                    <ActivityIndicator size="small" color={whiteColor} />
                                 </View>
                             )}
                             <TouchableOpacity style={styles.deleteButton} onPress={() => handleDeleteImage(image.id)}>
@@ -379,14 +382,14 @@ export const NoteInput: React.FC<NoteInputProps> = ({
                     {cachedAudio.map((audio) => (
                         <View key={audio.id} style={styles.audioPreviewContainer}>
                             <TouchableOpacity
-                                style={styles.audioPreview}
+                                style={[styles.audioPreview, { backgroundColor: backgroundOverlayColor }]}
                                 onPress={() => handlePlayPauseAudio(audio.uri, audio.id)}
                             >
                                 <View style={[styles.playButton, { backgroundColor: tintColor }]}>
                                     <IconSymbol
                                         name={playingId === audio.id && isPlaying ? "pause" : "play"}
                                         size={14}
-                                        color="#fff"
+                                        color={whiteColor}
                                     />
                                 </View>
                                 <ThemedText style={styles.audioLabel}>Audio Recording</ThemedText>
@@ -424,6 +427,7 @@ export const NoteInput: React.FC<NoteInputProps> = ({
                             styles.iconButton,
                             pressed && styles.buttonPressed,
                             isRecording && styles.recordingButton,
+                            isRecording && { backgroundColor: errorColor },
                         ]}
                         onPress={handleRecordAudio}
                         disabled={disabled}
@@ -431,7 +435,7 @@ export const NoteInput: React.FC<NoteInputProps> = ({
                         <IconSymbol
                             name="mic.fill"
                             size={22}
-                            color={disabled ? iconColor + "40" : isRecording ? "#fff" : iconColor}
+                            color={disabled ? iconColor + "40" : isRecording ? whiteColor : iconColor}
                         />
                     </Pressable>
 
@@ -457,9 +461,9 @@ export const NoteInput: React.FC<NoteInputProps> = ({
                         disabled={(!text.trim() && !hasAttachments) || disabled}
                     >
                         {isSubmitting ? (
-                            <ActivityIndicator color="#fff" size="small" />
+                            <ActivityIndicator color={whiteColor} size="small" />
                         ) : (
-                            <IconSymbol name="arrow.up" size={20} color="#fff" />
+                            <IconSymbol name="arrow.up" size={20} color={whiteColor} />
                         )}
                     </Pressable>
                 </View>
@@ -511,7 +515,6 @@ const styles = StyleSheet.create({
         width: 140,
         height: 50,
         borderRadius: 8,
-        backgroundColor: "rgba(150, 150, 150, 0.2)",
         flexDirection: "row",
         alignItems: "center",
         paddingHorizontal: 8,
@@ -578,7 +581,6 @@ const styles = StyleSheet.create({
         opacity: 0.5,
     },
     recordingButton: {
-        backgroundColor: "#FF4136",
         borderRadius: 20,
     },
 });

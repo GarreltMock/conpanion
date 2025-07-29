@@ -21,7 +21,6 @@ export default function TalkDetailScreen() {
 
     const {
         talks,
-        currentConference,
         addCombinedNote,
         addImageNote,
         stopAudioRecording,
@@ -36,6 +35,8 @@ export default function TalkDetailScreen() {
     const textColor = useThemeColor({}, "text");
     const tintColor = useThemeColor({}, "tint");
     const backgroundColor = useThemeColor({}, "background");
+    const borderLightColor = useThemeColor({}, "borderLight");
+    const backgroundOverlayLightColor = useThemeColor({}, "backgroundOverlayLight");
 
     useEffect(() => {
         if (id) {
@@ -131,7 +132,7 @@ export default function TalkDetailScreen() {
                     </TouchableOpacity>
                 </View>
 
-                <View style={styles.talkHeader}>
+                <View style={[styles.talkHeader, { borderBottomColor: borderLightColor }]}>
                     <ThemedText style={styles.talkTitle}>{talk.title}</ThemedText>
                     <View style={styles.talkDetails}>
                         <View style={styles.detailItem}>
@@ -151,10 +152,16 @@ export default function TalkDetailScreen() {
 
                 {/* Talk Details Section - Collapsible only if user selected */}
                 {(talk.speakers?.length || talk.stage || talk.description) && (
-                    <View style={[styles.detailsSection, detailsExpanded && { flex: 1 }]}>
+                    <View
+                        style={[
+                            styles.detailsSection,
+                            { borderBottomColor: borderLightColor },
+                            detailsExpanded && { flex: 1 },
+                        ]}
+                    >
                         {talk.isUserSelected ? (
                             <TouchableOpacity
-                                style={styles.detailsToggle}
+                                style={[styles.detailsToggle, { backgroundColor: backgroundOverlayLightColor }]}
                                 onPress={() => setDetailsExpanded(!detailsExpanded)}
                             >
                                 <ThemedText style={styles.detailsToggleText}>Talk Details</ThemedText>
@@ -165,7 +172,7 @@ export default function TalkDetailScreen() {
                                 />
                             </TouchableOpacity>
                         ) : (
-                            <View style={styles.detailsToggle}>
+                            <View style={[styles.detailsToggle, { backgroundColor: backgroundOverlayLightColor }]}>
                                 <ThemedText style={styles.detailsToggleText}>Talk Details</ThemedText>
                             </View>
                         )}
@@ -196,7 +203,10 @@ export default function TalkDetailScreen() {
                                                         {speaker.photo && (
                                                             <Image
                                                                 source={{ uri: speaker.photo }}
-                                                                style={styles.speakerPhoto}
+                                                                style={[
+                                                                    styles.speakerPhoto,
+                                                                    { backgroundColor: backgroundOverlayLightColor },
+                                                                ]}
                                                                 resizeMode="cover"
                                                             />
                                                         )}
@@ -255,7 +265,7 @@ export default function TalkDetailScreen() {
 
                 {talk.isUserSelected && !detailsExpanded ? (
                     <>
-                        <View style={styles.notesSectionHeader}>
+                        <View style={[styles.notesSectionHeader, { borderBottomColor: backgroundOverlayLightColor }]}>
                             <ThemedText style={styles.notesTitle}>Notes</ThemedText>
                             <ThemedText style={styles.notesCount}>
                                 {talkNotes.length} {talkNotes.length === 1 ? "note" : "notes"}
@@ -275,7 +285,7 @@ export default function TalkDetailScreen() {
                             )}
                         />
 
-                        <View style={styles.inputWrapper}>
+                        <View style={[styles.inputWrapper, { borderColor: borderLightColor }]}>
                             <NoteInput
                                 onSubmitNote={handleSubmitNote}
                                 onTakePhoto={handleTakePhoto}
@@ -286,7 +296,7 @@ export default function TalkDetailScreen() {
                     </>
                 ) : !talk.isUserSelected ? (
                     <>
-                        <View style={styles.addToUserTalksWrapper}>
+                        <View style={[styles.addToUserTalksWrapper, { borderTopColor: borderLightColor }]}>
                             <TouchableOpacity
                                 style={[styles.addToUserTalksButton, { backgroundColor: tintColor }]}
                                 onPress={handleAddToUserTalks}
@@ -333,7 +343,6 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         paddingBottom: 16,
         borderBottomWidth: 1,
-        borderBottomColor: "rgba(150, 150, 150, 0.2)",
     },
     talkTitle: {
         fontSize: 24,
@@ -363,7 +372,6 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         paddingVertical: 12,
         borderBottomWidth: 1,
-        borderBottomColor: "rgba(150, 150, 150, 0.1)",
     },
     notesTitle: {
         fontSize: 18,
@@ -388,7 +396,6 @@ const styles = StyleSheet.create({
     },
     inputWrapper: {
         borderWidth: 1,
-        borderColor: "rgba(150, 150, 150, 0.2)",
         borderTopLeftRadius: 12,
         borderTopRightRadius: 12,
         borderBottomWidth: 0,
@@ -397,9 +404,7 @@ const styles = StyleSheet.create({
         marginBottom: 16,
     },
     detailsSection: {
-        // flex: 1,
         borderBottomWidth: 1,
-        borderBottomColor: "rgba(150, 150, 150, 0.2)",
     },
     detailsToggle: {
         flexDirection: "row",
@@ -407,7 +412,6 @@ const styles = StyleSheet.create({
         alignItems: "center",
         paddingHorizontal: 16,
         paddingVertical: 12,
-        backgroundColor: "rgba(150, 150, 150, 0.05)",
     },
     detailsToggleText: {
         fontSize: 16,
@@ -454,7 +458,6 @@ const styles = StyleSheet.create({
         height: 48,
         borderRadius: 24,
         marginRight: 12,
-        backgroundColor: "rgba(150, 150, 150, 0.1)",
     },
     speakerTextContent: {
         flex: 1,
@@ -493,7 +496,6 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         paddingVertical: 16,
         borderTopWidth: 1,
-        borderTopColor: "rgba(150, 150, 150, 0.2)",
     },
     addToUserTalksButton: {
         flexDirection: "row",

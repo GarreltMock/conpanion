@@ -27,6 +27,7 @@ import { ThemedView } from "@/components/ThemedView";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { useImageTransformNotification } from "@/context/ImageTransformContext";
 import { useImageTransform } from "@/hooks/useImageTransform";
+import { useThemeColor } from "@/hooks/useThemeColor";
 import { Point, Polygon as PolygonType } from "@/types";
 import { getRelativePath } from "@/storage/helper";
 
@@ -52,6 +53,11 @@ export default function ImageViewModal() {
 
     // For image transformations
     const { transformImageWithCorners } = useImageTransform();
+
+    // Theme colors
+    const tintColor = useThemeColor({}, "tint");
+    const whiteColor = useThemeColor({}, "white");
+    const backgroundOverlayColor = useThemeColor({}, "backgroundOverlay");
     const { notifyImageTransformed } = useImageTransformNotification();
 
     // Normal view mode state
@@ -476,7 +482,7 @@ export default function ImageViewModal() {
                     return (
                         <GestureDetector key={`corner-${index}`} gesture={cornerGestures[index]}>
                             <Animated.View style={[styles.cornerHandle, cornerStyles[index]]}>
-                                <View style={styles.cornerHandleInner} />
+                                <View style={[styles.cornerHandleInner, { backgroundColor: tintColor + "99" }]} />
                             </Animated.View>
                         </GestureDetector>
                     );
@@ -498,21 +504,21 @@ export default function ImageViewModal() {
             <SafeAreaView style={styles.safeArea}>
                 <View style={styles.header}>
                     <TouchableOpacity style={styles.editButton} onPress={handleToggleEditMode} disabled={loading}>
-                        <IconSymbol name={isEditMode ? "eye" : "pencil"} size={22} color="white" />
+                        <IconSymbol name={isEditMode ? "eye" : "pencil"} size={22} color={whiteColor} />
                         <ThemedText style={styles.editButtonText}>{isEditMode ? "View" : "Edit"}</ThemedText>
                     </TouchableOpacity>
 
                     <View style={{ flex: 1 }} />
 
                     <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
-                        <IconSymbol name="xmark" size={24} color="white" />
+                        <IconSymbol name="xmark" size={24} color={whiteColor} />
                     </TouchableOpacity>
                 </View>
 
                 {loading ? (
                     <View style={styles.loadingContainer}>
-                        <ActivityIndicator size="large" color="#007AFF" />
-                        <ThemedText style={styles.loadingText}>
+                        <ActivityIndicator size="large" color={tintColor} />
+                        <ThemedText style={[styles.loadingText, { color: whiteColor }]}>
                             {isEditMode ? "Processing image..." : "Loading..."}
                         </ThemedText>
                     </View>
@@ -547,18 +553,20 @@ export default function ImageViewModal() {
 
                         <View style={styles.editActions}>
                             <TouchableOpacity
-                                style={[styles.actionButton, styles.cancelButton]}
+                                style={[styles.actionButton, { backgroundColor: backgroundOverlayColor }]}
                                 onPress={() => setIsEditMode(false)}
                             >
-                                <ThemedText style={styles.actionButtonText}>Cancel</ThemedText>
+                                <ThemedText style={[styles.actionButtonText, { color: whiteColor }]}>Cancel</ThemedText>
                             </TouchableOpacity>
 
                             <TouchableOpacity
-                                style={[styles.actionButton, styles.saveButton]}
+                                style={[styles.actionButton, styles.saveButton, { backgroundColor: tintColor + "CC" }]}
                                 onPress={() => handleSaveCorners()}
                                 disabled={!corners}
                             >
-                                <ThemedText style={styles.actionButtonText}>Transform</ThemedText>
+                                <ThemedText style={[styles.actionButtonText, { color: whiteColor }]}>
+                                    Transform
+                                </ThemedText>
                             </TouchableOpacity>
                         </View>
                     </View>
@@ -652,9 +660,8 @@ const styles = StyleSheet.create({
         width: 60,
         height: 60,
         borderRadius: 60,
-        backgroundColor: "rgba(0, 122, 255, 0.6)", // Changed from rgba to rgb (fully opaque)
         borderWidth: 20,
-        borderColor: "rgba(255, 255, 255, 0.8)", // Changed from rgba to rgb (fully opaque)
+        borderColor: "rgba(255, 255, 255, 0.8)",
     },
     cornerLabels: {
         position: "absolute",
@@ -693,10 +700,7 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: "600",
     },
-    cancelButton: {
-        backgroundColor: "rgba(150, 150, 150, 0.8)",
-    },
     saveButton: {
-        backgroundColor: "rgba(0, 122, 255, 0.8)",
+        // backgroundColor applied inline with theme color
     },
 });

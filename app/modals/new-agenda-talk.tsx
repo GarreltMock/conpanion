@@ -58,6 +58,9 @@ export default function NewAgendaTalkModal() {
     const textColor = useThemeColor({}, "text");
     const tintColor = useThemeColor({}, "tint");
     const backgroundColor = useThemeColor({}, "background");
+    const errorColor = useThemeColor({}, "error");
+    const borderColor = useThemeColor({}, "border");
+    const borderLightColor = useThemeColor({}, "borderLight");
 
     const conferenceDays = useMemo(() => {
         if (!currentConference) return [];
@@ -161,7 +164,7 @@ export default function NewAgendaTalkModal() {
     return (
         <MyKeyboardAvoidingView>
             <ThemedView style={styles.container}>
-                <View style={styles.header}>
+                <View style={[styles.header, { borderBottomColor: borderLightColor }]}>
                     <TouchableOpacity style={styles.cancelButton} onPress={handleCancel} disabled={isCreating}>
                         <ThemedText style={styles.cancelText}>Cancel</ThemedText>
                     </TouchableOpacity>
@@ -196,7 +199,7 @@ export default function NewAgendaTalkModal() {
                         arrives.
                     </ThemedText>
 
-                    <View style={styles.inputContainer}>
+                    <View style={[styles.inputContainer, { borderColor: borderColor }]}>
                         <IconSymbol name="mic.fill" size={22} color={textColor + "80"} style={styles.inputIcon} />
                         <TextInput
                             style={[styles.input, { color: textColor }]}
@@ -212,8 +215,8 @@ export default function NewAgendaTalkModal() {
 
                     <View style={styles.dateContainer}>
                         <View style={styles.dayContainer}>
-                            <ScrollView 
-                                horizontal 
+                            <ScrollView
+                                horizontal
                                 style={styles.dayButtonsContainer}
                                 showsHorizontalScrollIndicator={false}
                             >
@@ -222,6 +225,7 @@ export default function NewAgendaTalkModal() {
                                         key={day.index}
                                         style={[
                                             styles.dayButton,
+                                            { borderColor: borderColor },
                                             selectedDay === day.index && { backgroundColor: tintColor },
                                         ]}
                                         onPress={() => setSelectedDay(day.index)}
@@ -244,8 +248,8 @@ export default function NewAgendaTalkModal() {
                             )}
                         </View>
 
-                        <View style={styles.timePickerContainer}>
-                            <View style={[styles.timePickerButton, styles.startTimeButton]}>
+                        <View style={[styles.timePickerContainer, { borderColor: borderColor }]}>
+                            <View style={[styles.timePickerButton, styles.startTimeButton, { borderBottomColor: borderLightColor }]}>
                                 <IconSymbol name="clock" size={20} color={textColor + "80"} style={styles.dateIcon} />
                                 <ThemedText style={styles.dateLabel}>Start Time</ThemedText>
                                 <DateTimePicker
@@ -293,7 +297,7 @@ export default function NewAgendaTalkModal() {
                     </View>
 
                     {/* Stage Field */}
-                    <View style={styles.inputContainer}>
+                    <View style={[styles.inputContainer, { borderColor: borderColor }]}>
                         <IconSymbol name="location" size={22} color={textColor + "80"} style={styles.inputIcon} />
                         <TextInput
                             style={[styles.input, { color: textColor }]}
@@ -307,7 +311,7 @@ export default function NewAgendaTalkModal() {
                     </View>
 
                     {/* Description Field */}
-                    <View style={styles.inputContainer}>
+                    <View style={[styles.inputContainer, { borderColor: borderColor }]}>
                         <IconSymbol name="doc.text" size={22} color={textColor + "80"} style={styles.inputIcon} />
                         <TextInput
                             style={[styles.input, styles.multilineInput, { color: textColor }]}
@@ -332,11 +336,11 @@ export default function NewAgendaTalkModal() {
                         </View>
 
                         {speakers.map((speaker, index) => (
-                            <View key={index} style={styles.speakerContainer}>
+                            <View key={index} style={[styles.speakerContainer, { borderColor: borderColor }]}>
                                 <View style={styles.speakerHeader}>
                                     <ThemedText style={styles.speakerLabel}>Speaker {index + 1}</ThemedText>
                                     <TouchableOpacity onPress={() => removeSpeaker(index)}>
-                                        <IconSymbol name="minus.circle.fill" size={20} color="#ff3b30" />
+                                        <IconSymbol name="minus.circle.fill" size={20} color={errorColor} />
                                     </TouchableOpacity>
                                 </View>
 
@@ -348,7 +352,7 @@ export default function NewAgendaTalkModal() {
                                         style={styles.speakerInputIcon}
                                     />
                                     <TextInput
-                                        style={[styles.speakerInput, { color: textColor }]}
+                                        style={[styles.speakerInput, { color: textColor, borderColor: borderLightColor }]}
                                         placeholder="Speaker name"
                                         placeholderTextColor={textColor + "60"}
                                         value={speaker.name}
@@ -365,7 +369,7 @@ export default function NewAgendaTalkModal() {
                                         style={styles.speakerInputIcon}
                                     />
                                     <TextInput
-                                        style={[styles.speakerInput, { color: textColor }]}
+                                        style={[styles.speakerInput, { color: textColor, borderColor: borderLightColor }]}
                                         placeholder="Photo URL (optional)"
                                         placeholderTextColor={textColor + "60"}
                                         value={speaker.photo || ""}
@@ -385,7 +389,7 @@ export default function NewAgendaTalkModal() {
                                         style={styles.speakerInputIcon}
                                     />
                                     <TextInput
-                                        style={[styles.speakerInput, styles.bioInput, { color: textColor }]}
+                                        style={[styles.speakerInput, styles.bioInput, { color: textColor, borderColor: borderLightColor }]}
                                         placeholder="Bio (optional)"
                                         placeholderTextColor={textColor + "60"}
                                         value={speaker.bio || ""}
@@ -416,7 +420,6 @@ const styles = StyleSheet.create({
         alignItems: "center",
         padding: 16,
         borderBottomWidth: 1,
-        borderBottomColor: "rgba(150, 150, 150, 0.2)",
     },
     title: {
         fontSize: 17,
@@ -451,7 +454,6 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         borderWidth: 1,
-        borderColor: "rgba(150, 150, 150, 0.3)",
         borderRadius: 8,
         paddingHorizontal: 12,
         marginBottom: 24,
@@ -474,7 +476,6 @@ const styles = StyleSheet.create({
     },
     timePickerContainer: {
         borderWidth: 1,
-        borderColor: "rgba(150, 150, 150, 0.3)",
         borderRadius: 8,
     },
     timePickerButton: {
@@ -483,7 +484,6 @@ const styles = StyleSheet.create({
         padding: 12,
     },
     startTimeButton: {
-        borderBottomColor: "rgba(150, 150, 150, 0.2)",
         borderBottomWidth: 1,
     },
     durationButton: {
@@ -528,7 +528,6 @@ const styles = StyleSheet.create({
         borderRadius: 6,
         marginRight: 8,
         borderWidth: 1,
-        borderColor: "rgba(150, 150, 150, 0.3)",
     },
     dayButtonText: {
         fontSize: 14,
@@ -562,7 +561,6 @@ const styles = StyleSheet.create({
     },
     speakerContainer: {
         borderWidth: 1,
-        borderColor: "rgba(150, 150, 150, 0.3)",
         borderRadius: 8,
         padding: 12,
         marginBottom: 12,
@@ -591,7 +589,6 @@ const styles = StyleSheet.create({
         paddingVertical: 8,
         paddingHorizontal: 8,
         borderWidth: 1,
-        borderColor: "rgba(150, 150, 150, 0.2)",
         borderRadius: 6,
     },
     bioInput: {

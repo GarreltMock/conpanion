@@ -31,6 +31,9 @@ export const ConferenceItem: React.FC<ConferenceItemProps> = ({
     const tintColor = useThemeColor({}, "tint");
     const mutedColor = useThemeColor({}, "tabIconDefault");
     const backgroundColor = useThemeColor({}, "background");
+    const errorColor = useThemeColor({}, "error");
+    const borderLightColor = useThemeColor({}, "borderLight");
+    const backgroundOverlayLightColor = useThemeColor({}, "backgroundOverlayLight");
 
     const getStatusColor = (status: string) => {
         switch (status) {
@@ -56,7 +59,12 @@ export const ConferenceItem: React.FC<ConferenceItemProps> = ({
     return (
         <TouchableOpacity onPress={onPress} activeOpacity={0.7}>
             <ThemedView
-                style={[styles.container, isActive && styles.activeContainer, isActive && { borderColor: tintColor }]}
+                style={[
+                    styles.container,
+                    { borderColor: borderLightColor },
+                    isActive && styles.activeContainer,
+                    isActive && { borderColor: tintColor },
+                ]}
             >
                 <View style={styles.contentContainer}>
                     <View style={styles.mainContent}>
@@ -76,7 +84,7 @@ export const ConferenceItem: React.FC<ConferenceItemProps> = ({
                     <View style={styles.statusContainer}>{getStatusBadge(conference.status)}</View>
                 </View>
 
-                <View style={styles.actions}>
+                <View style={[styles.actions, { borderTopColor: backgroundOverlayLightColor }]}>
                     {onExport && (
                         <TouchableOpacity style={styles.actionButton} onPress={onExport}>
                             <Ionicons name="share-outline" size={20} color={tintColor} />
@@ -91,7 +99,7 @@ export const ConferenceItem: React.FC<ConferenceItemProps> = ({
                     )}
                     {onDelete && (
                         <TouchableOpacity style={styles.actionButton} onPress={onDelete}>
-                            <Ionicons name="trash-outline" size={20} color="#FF3B30" />
+                            <Ionicons name="trash-outline" size={20} color={errorColor} />
                             <ThemedText style={styles.actionText}>Delete</ThemedText>
                         </TouchableOpacity>
                     )}
@@ -112,7 +120,6 @@ const styles = StyleSheet.create({
         shadowRadius: 4,
         elevation: 2,
         borderWidth: 1,
-        borderColor: "rgba(150, 150, 150, 0.2)",
     },
     activeContainer: {
         borderWidth: 2,
@@ -160,7 +167,6 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         justifyContent: "flex-end",
         borderTopWidth: 1,
-        borderTopColor: "rgba(0,0,0,0.1)",
         paddingTop: 12,
     },
     actionButton: {

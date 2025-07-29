@@ -10,6 +10,7 @@ import { NoteItem } from "@/components/note/NoteItem";
 import { TalkHeader } from "@/components/note/TalkHeader";
 import { useApp } from "@/context/AppContext";
 import { Note, NoteImage } from "@/types";
+import { useThemeColor } from "@/hooks/useThemeColor";
 
 export default function NotesScreen() {
     const {
@@ -30,6 +31,8 @@ export default function NotesScreen() {
     const [talkNotes, setTalkNotes] = useState<Note[]>([]);
     const [currentTime, setCurrentTime] = useState(new Date());
     const flatListRef = useRef<FlatList>(null);
+
+    const borderLight = useThemeColor({}, "borderLight");
 
     // Set timeout to update state when scheduled talk ends
     useEffect(() => {
@@ -81,9 +84,9 @@ export default function NotesScreen() {
         }
 
         const isScheduledTalk = activeTalk.duration !== undefined;
-        const isTalkActive = activeTalk.duration ? 
-            new Date(activeTalk.startTime.getTime() + activeTalk.duration * 60 * 1000) > currentTime : 
-            true;
+        const isTalkActive = activeTalk.duration
+            ? new Date(activeTalk.startTime.getTime() + activeTalk.duration * 60 * 1000) > currentTime
+            : true;
 
         if (isScheduledTalk && isTalkActive) {
             // For scheduled talks that are still active, create a new immediate talk
@@ -179,7 +182,7 @@ export default function NotesScreen() {
                     renderEmptyState()
                 )}
 
-                <View style={styles.inputWrapper}>
+                <View style={[styles.inputWrapper, { borderColor: borderLight }]}>
                     <NoteInput
                         onSubmitNote={handleSubmitNote}
                         onTakePhoto={handleTakePhoto}
@@ -235,7 +238,6 @@ const styles = StyleSheet.create({
     },
     inputWrapper: {
         borderWidth: 1,
-        borderColor: "rgba(150, 150, 150, 0.2)",
         borderTopLeftRadius: 12,
         borderTopRightRadius: 12,
         borderBottomWidth: 0,

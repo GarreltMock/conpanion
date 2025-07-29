@@ -41,6 +41,7 @@ export default function TalksScreen() {
     const tintColor = useThemeColor({}, "tint");
     const textColor = useThemeColor({}, "text");
     const backgroundColor = useThemeColor({}, "background");
+    const borderLight = useThemeColor({}, "borderLight");
 
     // Reload talks when the screen comes into focus
     useFocusEffect(
@@ -95,7 +96,11 @@ export default function TalksScreen() {
 
         return (
             <TouchableOpacity
-                style={[styles.talkItem, isActive && { borderColor: tintColor, borderWidth: 2 }]}
+                style={[
+                    styles.talkItem,
+                    { borderColor: borderLight },
+                    isActive && { borderColor: tintColor, borderWidth: 2 },
+                ]}
                 onPress={() => handleTalkPress(item.id)}
                 activeOpacity={0.7}
             >
@@ -181,7 +186,7 @@ export default function TalksScreen() {
 
     return (
         <ThemedView style={styles.container}>
-            <View style={styles.header}>
+            <View style={[styles.header, { borderBottomColor: borderLight }]}>
                 <View>
                     <ThemedText style={styles.conferenceLabel}>CONFERENCE</ThemedText>
                     <ThemedText style={styles.conferenceName}>{currentConference?.name || "My Conference"}</ThemedText>
@@ -225,7 +230,6 @@ const styles = StyleSheet.create({
         paddingTop: 60,
         paddingBottom: 16,
         borderBottomWidth: 1,
-        borderBottomColor: "rgba(150, 150, 150, 0.2)",
     },
     conferenceLabel: {
         fontSize: 12,
@@ -260,7 +264,6 @@ const styles = StyleSheet.create({
         padding: 16,
         borderRadius: 12,
         borderWidth: 1,
-        borderColor: "rgba(150, 150, 150, 0.2)",
     },
     talkContent: {
         flex: 1,

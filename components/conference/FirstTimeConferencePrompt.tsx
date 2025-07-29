@@ -1,11 +1,5 @@
 import React, { useState } from "react";
-import {
-    View,
-    StyleSheet,
-    TouchableOpacity,
-    Platform,
-    ScrollView,
-} from "react-native";
+import { View, StyleSheet, TouchableOpacity, Platform, ScrollView } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Calendar } from "react-native-calendars";
 import { useApp } from "../../context/AppContext";
@@ -20,9 +14,7 @@ export const FirstTimeConferencePrompt: React.FC = () => {
     const [name, setName] = useState("");
     const [location, setLocation] = useState("");
     const [startDate, setStartDate] = useState(new Date());
-    const [endDate, setEndDate] = useState(
-        new Date(Date.now() + 3 * 24 * 60 * 60 * 1000)
-    ); // Default to 3 days
+    const [endDate, setEndDate] = useState(new Date(Date.now() + 3 * 24 * 60 * 60 * 1000)); // Default to 3 days
     const [showStartCalendar, setShowStartCalendar] = useState(false);
     const [showEndCalendar, setShowEndCalendar] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -32,6 +24,9 @@ export const FirstTimeConferencePrompt: React.FC = () => {
     const tintColor = useThemeColor({}, "tint");
     const textColor = useThemeColor({}, "text");
     const placeholderColor = useThemeColor({}, "tabIconDefault");
+    const errorColor = useThemeColor({}, "error");
+    const borderColor = useThemeColor({}, "border");
+    const whiteColor = useThemeColor({}, "white");
 
     const handleCreateConference = async () => {
         if (!name.trim()) {
@@ -45,11 +40,7 @@ export const FirstTimeConferencePrompt: React.FC = () => {
 
             // The conference creation will redirect automatically or be handled by parent component
         } catch (err) {
-            setError(
-                err instanceof Error
-                    ? err.message
-                    : "Failed to create conference"
-            );
+            setError(err instanceof Error ? err.message : "Failed to create conference");
         } finally {
             setIsSubmitting(false);
         }
@@ -67,32 +58,23 @@ export const FirstTimeConferencePrompt: React.FC = () => {
         <ScrollView showsVerticalScrollIndicator={false}>
             <ThemedView style={styles.container}>
                 <ThemedView style={styles.welcomeSection}>
-                    <Ionicons
-                        name="calendar"
-                        size={40}
-                        color={tintColor}
-                        style={styles.icon}
-                    />
-                    <ThemedText style={styles.title}>
-                        Welcome to Conpanion!
-                    </ThemedText>
+                    <Ionicons name="calendar" size={40} color={tintColor} style={styles.icon} />
+                    <ThemedText style={styles.title}>Welcome to Conpanion!</ThemedText>
                     <ThemedText style={styles.description}>
-                        Let's set up your first conference to get started.
-                        Later, you can create more conferences and switch
-                        between them.
+                        Let's set up your first conference to get started. Later, you can create more conferences and
+                        switch between them.
                     </ThemedText>
                 </ThemedView>
 
                 <ThemedView style={styles.formSection}>
-                    <ThemedText style={styles.label}>
-                        Conference Name *
-                    </ThemedText>
+                    <ThemedText style={styles.label}>Conference Name *</ThemedText>
                     <TextInput
                         style={[
                             styles.input,
                             {
                                 color: textColor,
                                 backgroundColor: backgroundColor,
+                                borderColor: borderColor,
                             },
                         ]}
                         value={name}
@@ -101,15 +83,14 @@ export const FirstTimeConferencePrompt: React.FC = () => {
                         placeholderTextColor={placeholderColor}
                     />
 
-                    <ThemedText style={styles.label}>
-                        Location (Optional)
-                    </ThemedText>
+                    <ThemedText style={styles.label}>Location (Optional)</ThemedText>
                     <TextInput
                         style={[
                             styles.input,
                             {
                                 color: textColor,
                                 backgroundColor: backgroundColor,
+                                borderColor: borderColor,
                             },
                         ]}
                         value={location}
@@ -121,43 +102,28 @@ export const FirstTimeConferencePrompt: React.FC = () => {
                     <ThemedText style={styles.label}>Date Range *</ThemedText>
 
                     <TouchableOpacity
-                        style={[
-                            styles.dateButton,
-                            { backgroundColor: backgroundColor },
-                        ]}
+                        style={[styles.dateButton, { backgroundColor: backgroundColor, borderColor: borderColor }]}
                         onPress={() => {
                             setShowStartCalendar(!showStartCalendar);
                             setShowEndCalendar(false);
                         }}
                     >
-                        <ThemedText>
-                            Start: {formatDisplayDate(startDate)}
-                        </ThemedText>
-                        <Ionicons
-                            name="calendar-outline"
-                            size={20}
-                            color={textColor}
-                        />
+                        <ThemedText>Start: {formatDisplayDate(startDate)}</ThemedText>
+                        <Ionicons name="calendar-outline" size={20} color={textColor} />
                     </TouchableOpacity>
 
                     {showStartCalendar && (
-                        <View style={styles.calendarContainer}>
+                        <View style={[styles.calendarContainer, { borderColor: borderColor }]}>
                             <Calendar
                                 onDayPress={(day) => {
-                                    const selectedDate = new Date(
-                                        day.timestamp
-                                    );
+                                    const selectedDate = new Date(day.timestamp);
                                     setStartDate(selectedDate);
 
                                     // If end date is before start date, adjust it
                                     if (endDate < selectedDate) {
                                         // Set end date to start date + 1 day
-                                        const newEndDate = new Date(
-                                            selectedDate
-                                        );
-                                        newEndDate.setDate(
-                                            newEndDate.getDate() + 1
-                                        );
+                                        const newEndDate = new Date(selectedDate);
+                                        newEndDate.setDate(newEndDate.getDate() + 1);
                                         setEndDate(newEndDate);
                                     }
 
@@ -179,27 +145,18 @@ export const FirstTimeConferencePrompt: React.FC = () => {
                     )}
 
                     <TouchableOpacity
-                        style={[
-                            styles.dateButton,
-                            { backgroundColor: backgroundColor },
-                        ]}
+                        style={[styles.dateButton, { backgroundColor: backgroundColor, borderColor: borderColor }]}
                         onPress={() => {
                             setShowEndCalendar(!showEndCalendar);
                             setShowStartCalendar(false);
                         }}
                     >
-                        <ThemedText>
-                            End: {formatDisplayDate(endDate)}
-                        </ThemedText>
-                        <Ionicons
-                            name="calendar-outline"
-                            size={20}
-                            color={textColor}
-                        />
+                        <ThemedText>End: {formatDisplayDate(endDate)}</ThemedText>
+                        <Ionicons name="calendar-outline" size={20} color={textColor} />
                     </TouchableOpacity>
 
                     {showEndCalendar && (
-                        <View style={styles.calendarContainer}>
+                        <View style={[styles.calendarContainer, { borderColor: borderColor }]}>
                             <Calendar
                                 minDate={formatCalendarDate(startDate)}
                                 onDayPress={(day) => {
@@ -221,11 +178,7 @@ export const FirstTimeConferencePrompt: React.FC = () => {
                         </View>
                     )}
 
-                    {error ? (
-                        <ThemedText style={styles.errorText}>
-                            {error}
-                        </ThemedText>
-                    ) : null}
+                    {error ? <ThemedText style={[styles.errorText, { color: errorColor }]}>{error}</ThemedText> : null}
 
                     <TouchableOpacity
                         style={[
@@ -238,61 +191,29 @@ export const FirstTimeConferencePrompt: React.FC = () => {
                         onPress={handleCreateConference}
                         disabled={isSubmitting}
                     >
-                        <ThemedText style={styles.createButtonText}>
-                            {isSubmitting
-                                ? "Creating..."
-                                : "Create My First Conference"}
+                        <ThemedText style={[styles.createButtonText, { color: whiteColor }]}>
+                            {isSubmitting ? "Creating..." : "Create My First Conference"}
                         </ThemedText>
                     </TouchableOpacity>
                 </ThemedView>
 
-                <ThemedView style={styles.tipsSection}>
-                    <ThemedText style={styles.tipsTitle}>
-                        What's Next?
-                    </ThemedText>
+                <ThemedView style={[styles.tipsSection, { borderColor: borderColor }]}>
+                    <ThemedText style={styles.tipsTitle}>What's Next?</ThemedText>
                     <View style={styles.tipItem}>
-                        <Ionicons
-                            name="mic-outline"
-                            size={20}
-                            color={tintColor}
-                            style={styles.tipIcon}
-                        />
-                        <ThemedText style={styles.tipText}>
-                            Create talks for your sessions
-                        </ThemedText>
+                        <Ionicons name="mic-outline" size={20} color={tintColor} style={styles.tipIcon} />
+                        <ThemedText style={styles.tipText}>Create talks for your sessions</ThemedText>
                     </View>
                     <View style={styles.tipItem}>
-                        <Ionicons
-                            name="document-text-outline"
-                            size={20}
-                            color={tintColor}
-                            style={styles.tipIcon}
-                        />
-                        <ThemedText style={styles.tipText}>
-                            Take notes during each talk
-                        </ThemedText>
+                        <Ionicons name="document-text-outline" size={20} color={tintColor} style={styles.tipIcon} />
+                        <ThemedText style={styles.tipText}>Take notes during each talk</ThemedText>
                     </View>
                     <View style={styles.tipItem}>
-                        <Ionicons
-                            name="camera-outline"
-                            size={20}
-                            color={tintColor}
-                            style={styles.tipIcon}
-                        />
-                        <ThemedText style={styles.tipText}>
-                            Add images and audio recordings
-                        </ThemedText>
+                        <Ionicons name="camera-outline" size={20} color={tintColor} style={styles.tipIcon} />
+                        <ThemedText style={styles.tipText}>Add images and audio recordings</ThemedText>
                     </View>
                     <View style={styles.tipItem}>
-                        <Ionicons
-                            name="share-outline"
-                            size={20}
-                            color={tintColor}
-                            style={styles.tipIcon}
-                        />
-                        <ThemedText style={styles.tipText}>
-                            Export your conference notes
-                        </ThemedText>
+                        <Ionicons name="share-outline" size={20} color={tintColor} style={styles.tipIcon} />
+                        <ThemedText style={styles.tipText}>Export your conference notes</ThemedText>
                     </View>
                 </ThemedView>
             </ThemedView>
@@ -333,7 +254,6 @@ const styles = StyleSheet.create({
     },
     input: {
         borderWidth: 1,
-        borderColor: "#ddd",
         borderRadius: 8,
         padding: Platform.OS === "ios" ? 12 : 8,
         fontSize: 16,
@@ -343,7 +263,6 @@ const styles = StyleSheet.create({
         justifyContent: "space-between",
         alignItems: "center",
         borderWidth: 1,
-        borderColor: "#ddd",
         borderRadius: 8,
         padding: 12,
         marginBottom: 8,
@@ -351,12 +270,10 @@ const styles = StyleSheet.create({
     calendarContainer: {
         marginBottom: 16,
         borderWidth: 1,
-        borderColor: "#ddd",
         borderRadius: 8,
         overflow: "hidden",
     },
     errorText: {
-        color: "red",
         marginTop: 8,
     },
     createButton: {
@@ -366,7 +283,6 @@ const styles = StyleSheet.create({
         marginTop: 24,
     },
     createButtonText: {
-        color: "white",
         fontSize: 16,
         fontWeight: "bold",
     },
@@ -374,7 +290,6 @@ const styles = StyleSheet.create({
         padding: 16,
         borderRadius: 8,
         borderWidth: 1,
-        borderColor: "#ddd",
     },
     tipsTitle: {
         fontSize: 18,
@@ -393,3 +308,4 @@ const styles = StyleSheet.create({
         fontSize: 16,
     },
 });
+

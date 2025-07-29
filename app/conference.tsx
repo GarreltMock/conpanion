@@ -19,6 +19,8 @@ export default function ConferenceDetailScreen() {
     const router = useRouter();
     const tintColor = useThemeColor({}, "tint");
     const backgroundColor = useThemeColor({}, "background");
+    const whiteColor = useThemeColor({}, "white");
+    const borderLight = useThemeColor({}, "borderLight");
 
     useEffect(() => {
         // Log when accessed without ID, but don't try to redirect
@@ -139,7 +141,7 @@ export default function ConferenceDetailScreen() {
     return (
         <ThemedView style={styles.container}>
             <ScrollView contentContainerStyle={styles.scrollContent}>
-                <View style={styles.headerContainer}>
+                <View style={[styles.headerContainer, { borderBottomColor: borderLight }]}>
                     <View style={styles.headerContent}>
                         <ThemedText type="title" style={styles.title}>
                             {conference.name}
@@ -167,13 +169,13 @@ export default function ConferenceDetailScreen() {
                 </View>
 
                 {conference.description && (
-                    <ThemedView style={styles.section}>
+                    <ThemedView style={[styles.section, { borderBottomColor: borderLight }]}>
                         <ThemedText style={styles.sectionTitle}>Description</ThemedText>
                         <ThemedText style={styles.description}>{conference.description}</ThemedText>
                     </ThemedView>
                 )}
 
-                <ThemedView style={styles.section}>
+                <ThemedView style={[styles.section, { borderBottomColor: borderLight }]}>
                     <ThemedText style={styles.sectionTitle}>Statistics</ThemedText>
                     <View style={styles.statsContainer}>
                         <View style={styles.statItem}>
@@ -193,12 +195,9 @@ export default function ConferenceDetailScreen() {
                     </View>
                 </ThemedView>
 
-                <ThemedView style={styles.section}>
+                <ThemedView style={[styles.section]}>
                     <View style={[styles.sectionHeader]}>
                         <ThemedText style={[styles.sectionTitle, { marginBottom: 0 }]}>Talks Timeline</ThemedText>
-                        <TouchableOpacity onPress={() => router.push("/modals/new-talk")}>
-                            <ThemedText style={[styles.addTalkText, { color: tintColor }]}>+ Add Talk</ThemedText>
-                        </TouchableOpacity>
                     </View>
 
                     {conferenceTalks.length > 0 ? (
@@ -212,9 +211,7 @@ export default function ConferenceDetailScreen() {
                                     <View style={styles.timeContainer}>
                                         <ThemedText style={styles.timeText}>{formatTime(talk.startTime)}</ThemedText>
                                         {talk.duration && (
-                                            <ThemedText style={styles.endTimeText}>
-                                                ({talk.duration} min)
-                                            </ThemedText>
+                                            <ThemedText style={styles.endTimeText}>({talk.duration} min)</ThemedText>
                                         )}
                                     </View>
                                     <View style={[styles.timelineLine, { backgroundColor: tintColor }]} />
@@ -242,13 +239,13 @@ export default function ConferenceDetailScreen() {
                 </ThemedView>
             </ScrollView>
 
-            <View style={styles.actionBar}>
+            <View style={[styles.actionBar, { borderTopColor: borderLight }]}>
                 {!isActive && (
                     <TouchableOpacity
                         style={[styles.actionButton, styles.makeActiveButton, { backgroundColor: tintColor }]}
                         onPress={handleMakeActive}
                     >
-                        <Ionicons name="checkmark-circle-outline" size={20} color="white" />
+                        <Ionicons name="checkmark-circle-outline" size={20} color={whiteColor} />
                         <ThemedText style={styles.actionButtonText}>Make Active</ThemedText>
                     </TouchableOpacity>
                 )}
@@ -272,10 +269,6 @@ export default function ConferenceDetailScreen() {
 }
 
 const styles = StyleSheet.create({
-    safeArea: {
-        flex: 1,
-        backgroundColor: "#fff",
-    },
     container: {
         flex: 1,
     },
@@ -306,7 +299,6 @@ const styles = StyleSheet.create({
     headerContainer: {
         padding: 16,
         borderBottomWidth: 1,
-        borderBottomColor: "rgba(0,0,0,0.1)",
     },
     headerContent: {
         paddingBottom: 8,
@@ -348,8 +340,6 @@ const styles = StyleSheet.create({
     },
     section: {
         padding: 16,
-        borderBottomWidth: 1,
-        borderBottomColor: "rgba(0,0,0,0.1)",
     },
     sectionHeader: {
         flexDirection: "row",
@@ -454,7 +444,6 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         padding: 16,
         borderTopWidth: 1,
-        borderTopColor: "rgba(0,0,0,0.1)",
     },
     actionButton: {
         flex: 1,
@@ -464,8 +453,6 @@ const styles = StyleSheet.create({
         padding: 12,
         borderRadius: 8,
         marginHorizontal: 4,
-        borderWidth: 1,
-        borderColor: "rgba(0,0,0,0.1)",
     },
     makeActiveButton: {
         flex: 1.5,

@@ -35,6 +35,9 @@ export const NoteItem: React.FC<NoteItemProps> = ({ note, onDelete, readOnly = f
     const [playingIndex, setPlayingIndex] = useState<number | null>(null);
 
     const tintColor = useThemeColor({}, "tint");
+    const whiteColor = useThemeColor({}, "white");
+    const borderLightColor = useThemeColor({}, "borderLight");
+    const backgroundOverlayColor = useThemeColor({}, "backgroundOverlay");
 
     const { updateNote } = useApp();
     const { lastTransformedImage, clearLastTransformed } = useImageTransformNotification();
@@ -177,7 +180,11 @@ export const NoteItem: React.FC<NoteItemProps> = ({ note, onDelete, readOnly = f
 
     return (
         <Pressable
-            style={({ pressed }) => [styles.container, pressed && styles.containerPressed]}
+            style={({ pressed }) => [
+                styles.container,
+                { borderColor: borderLightColor },
+                pressed && styles.containerPressed,
+            ]}
             onPress={handlePress}
             onLongPress={handleLongPress}
         >
@@ -216,12 +223,12 @@ export const NoteItem: React.FC<NoteItemProps> = ({ note, onDelete, readOnly = f
                                 />
                                 {image.originalUri && (
                                     <View style={[styles.transformedIndicator, { backgroundColor: `${tintColor}CC` }]}>
-                                        <IconSymbol name="wand.and.stars" size={12} color="#fff" />
+                                        <IconSymbol name="wand.and.stars" size={12} color={whiteColor} />
                                     </View>
                                 )}
                                 {image.links && image.links.length > 0 && (
                                     <View style={[styles.linkIndicator, { backgroundColor: `${tintColor}CC` }]}>
-                                        <IconSymbol name="link" size={12} color="#fff" />
+                                        <IconSymbol name="link" size={12} color={whiteColor} />
                                     </View>
                                 )}
                             </TouchableOpacity>
@@ -255,14 +262,18 @@ export const NoteItem: React.FC<NoteItemProps> = ({ note, onDelete, readOnly = f
                         {note.audioRecordings.map((audioUri, index) => (
                             <Pressable
                                 key={`audio-${index}`}
-                                style={({ pressed }) => [styles.audioPlayer, pressed && styles.buttonPressed]}
+                                style={({ pressed }) => [
+                                    styles.audioPlayer,
+                                    { backgroundColor: backgroundOverlayColor },
+                                    pressed && styles.buttonPressed,
+                                ]}
                                 onPress={() => handlePlayPauseAudio(audioUri, index)}
                             >
                                 <View style={[styles.playButton, { backgroundColor: tintColor }]}>
                                     <IconSymbol
                                         name={isPlaying && playingIndex === index ? "pause.fill" : "play.fill"}
                                         size={14}
-                                        color="#fff"
+                                        color={whiteColor}
                                     />
                                 </View>
                                 <ThemedText style={styles.audioLabel}>Audio Recording {index + 1}</ThemedText>
@@ -298,7 +309,6 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         overflow: "hidden",
         borderWidth: 1,
-        borderColor: "rgba(150, 150, 150, 0.2)",
     },
     containerPressed: {
         opacity: 0.7,
@@ -388,7 +398,6 @@ const styles = StyleSheet.create({
         alignItems: "center",
         paddingVertical: 8,
         borderRadius: 8,
-        backgroundColor: "rgba(150, 150, 150, 0.2)",
         paddingHorizontal: 12,
     },
     playButton: {
