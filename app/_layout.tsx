@@ -88,6 +88,7 @@ export default function RootLayout() {
                             <Stack.Screen
                                 name="modals/new-conference"
                                 options={{
+                                    headerShown: false,
                                     presentation: "modal",
                                     title: "New Conference",
                                 }}
