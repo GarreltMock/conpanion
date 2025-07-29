@@ -33,11 +33,9 @@ export default function NewTalkModal() {
             await createTalk(title.trim());
             console.log("Talk created successfully");
 
-            // Navigate back to the notes screen
             router.back();
         } catch (error) {
             console.error("Error creating talk:", error);
-            // Show more detailed error message
             const errorMessage = error instanceof Error ? error.message : "Failed to create talk. Please try again.";
             Alert.alert("Error", errorMessage);
         } finally {

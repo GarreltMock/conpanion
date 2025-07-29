@@ -44,7 +44,6 @@ export default function NotesScreen() {
         const endTime = new Date(activeTalk.startTime.getTime() + activeTalk.duration * 60 * 1000);
         const timeUntilEnd = endTime.getTime() - now.getTime();
 
-        // Only set timeout if the talk hasn't ended yet
         if (timeUntilEnd > 0) {
             const timeout = setTimeout(() => {
                 setCurrentTime(new Date());
@@ -54,7 +53,6 @@ export default function NotesScreen() {
         }
     }, [activeTalk]);
 
-    // Update immediately when active talk changes
     useEffect(() => {
         setCurrentTime(new Date());
     }, [activeTalk]);

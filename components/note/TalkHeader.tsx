@@ -23,7 +23,6 @@ export const TalkHeader: React.FC<TalkHeaderProps> = ({ conferenceName, talk, on
 
     const { endTalk } = useApp();
 
-    // Set timeout to update button when scheduled talk ends
     useEffect(() => {
         if (!talk || !talk.duration) {
             return;
@@ -33,7 +32,6 @@ export const TalkHeader: React.FC<TalkHeaderProps> = ({ conferenceName, talk, on
         const endTime = new Date(talk.startTime.getTime() + talk.duration * 60 * 1000);
         const timeUntilEnd = endTime.getTime() - now.getTime();
 
-        // Only set timeout if the talk hasn't ended yet
         if (timeUntilEnd > 0) {
             const timeout = setTimeout(() => {
                 setCurrentTime(new Date());
@@ -43,7 +41,6 @@ export const TalkHeader: React.FC<TalkHeaderProps> = ({ conferenceName, talk, on
         }
     }, [talk]);
 
-    // Update immediately when talk changes
     useEffect(() => {
         setCurrentTime(new Date());
     }, [talk]);
