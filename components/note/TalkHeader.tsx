@@ -102,7 +102,7 @@ export const TalkHeader: React.FC<TalkHeaderProps> = ({ conferenceName, talk, on
                             return (
                                 <>
                                     <IconSymbol name="plus" size={18} color={backgroundColor} />
-                                    <Text style={[styles.buttonText, { color: backgroundColor }]}>Join Another</Text>
+                                    <Text style={[styles.buttonText, { color: backgroundColor }]}>Switch Talk</Text>
                                 </>
                             );
                         } else {
