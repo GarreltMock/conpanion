@@ -845,22 +845,49 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     };
 
     const shouldShowEvaluationModal = (): boolean => {
-        if (!activeTalk) return false;
+        if (!activeTalk || !currentConference) return false;
 
         // Don't show if already evaluated
         if (activeTalk.hasBeenEvaluated) return false;
 
-        // Show if talk is finished (has duration and time has passed)
+        const now = new Date();
+
+        // Check if the active talk is finished
+        let isActiveTalkFinished = false;
         if (activeTalk.duration) {
-            const now = new Date();
             const endTime = new Date(activeTalk.startTime.getTime() + activeTalk.duration * 60 * 1000);
-            return endTime <= now;
+            isActiveTalkFinished = endTime <= now;
+        }
+        // Only show modal if active talk is finished AND there's another talk that should be active
+        if (!isActiveTalkFinished) return false;
+
+        const conferenceTalks = talks.filter((talk) => talk.conferenceId === currentConference.id);
+
+        // Check if there's another talk that should be active right now
+        // Priority 1: Immediate talks (no duration) that are user selected
+        const otherImmediateTalks = conferenceTalks.filter(
+            (talk) => !talk.duration && talk.isUserSelected && talk.id !== activeTalk.id
+        );
+
+        if (otherImmediateTalks.length > 0) {
+            // Check if any of these started more recently than the current active talk
+            const moreRecentTalks = otherImmediateTalks.filter(
+                (talk) => talk.startTime.getTime() > activeTalk.startTime.getTime()
+            );
+            if (moreRecentTalks.length > 0) return true;
         }
 
-        // For immediate talks (no duration), don't auto-show - only when user presses "Done"
+        // Priority 2: Scheduled talks that are currently active and user selected
+        const otherActiveTalks = conferenceTalks.filter((talk) => {
+            if (!talk.duration || !talk.isUserSelected || talk.id === activeTalk.id) return false;
+            const endTime = new Date(talk.startTime.getTime() + talk.duration * 60 * 1000);
+            return talk.startTime <= now && endTime > now;
+        });
+
+        if (otherActiveTalks.length > 0) return true;
+
         return false;
     };
-
 
     const contextValue: AppContextType = {
         // Conference Management

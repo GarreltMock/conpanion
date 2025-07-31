@@ -1,13 +1,5 @@
-import React, { useEffect, useState, useCallback } from "react";
-import {
-    StyleSheet,
-    FlatList,
-    View,
-    TouchableOpacity,
-    ActivityIndicator,
-    Text,
-    useWindowDimensions,
-} from "react-native";
+import React, { useState, useCallback } from "react";
+import { StyleSheet, FlatList, View, TouchableOpacity, ActivityIndicator, useWindowDimensions } from "react-native";
 import { router, useFocusEffect } from "expo-router";
 import { format } from "date-fns";
 import { TabView, SceneMap, TabBar } from "react-native-tab-view";
@@ -110,8 +102,9 @@ export default function TalksScreen() {
                             <ThemedText style={styles.talkTitle}>{item.title}</ThemedText>
                         </View>
                         <ThemedText style={styles.talkDate}>
-                            {format(item.startTime, "MMM d, yyyy • HH:mm")}
-                            {item.duration && ` (${item.duration} min)`}
+                            {`${format(item.startTime, "MMM d, yyyy • HH:mm")}${
+                                item.duration ? ` (${item.duration} min)` : ""
+                            }`}
                         </ThemedText>
                     </View>
 
@@ -138,16 +131,16 @@ export default function TalksScreen() {
                             />
                         </TouchableOpacity>
 
-                        {item.rating && (
+                        {item.rating ? (
                             <View style={styles.ratingContainer}>
                                 <ThemedText style={styles.ratingText}>{item.rating}/5</ThemedText>
                                 <IconSymbol name="star.fill" size={12} color="#FFD700" />
                             </View>
+                        ) : (
+                            <></>
                         )}
                     </View>
                 </View>
-
-                {/* <IconSymbol size={20} name="chevron.right" color={textColor + "80"} style={styles.chevron} /> */}
             </TouchableOpacity>
         );
     };
@@ -221,7 +214,7 @@ export default function TalksScreen() {
                     activeOpacity={0.8}
                 >
                     <IconSymbol name="plus" size={22} color={backgroundColor} />
-                    <Text style={[styles.buttonText, { color: backgroundColor }]}>New Agenda</Text>
+                    <ThemedText style={[styles.buttonText, { color: backgroundColor }]}>New Agenda</ThemedText>
                 </TouchableOpacity>
             </View>
 
