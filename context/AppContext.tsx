@@ -62,6 +62,9 @@ interface AppContextType {
     toggleTalkSelection: (talkId: string) => Promise<void>;
     getUserSelectedTalks: () => Talk[];
     getAgendaTalks: () => Talk[];
+    saveEvaluation: (talkId: string, rating: number, summary: string, markAsEvaluated?: boolean) => Promise<void>;
+    shouldShowEvaluationModal: () => boolean;
+    refreshActiveTalk: () => Promise<void>;
 
     // Note Management
     notes: Note[];
@@ -171,50 +174,50 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         initialize();
     }, [loadConference]);
 
-    // Load active talk when the app starts, conference changes, or app comes into focus
-    useEffect(() => {
+    // Function to refresh active talk - can be called from anywhere
+    const refreshActiveTalk = useCallback(async () => {
         if (!currentConference) return;
 
-        const loadActiveTalk = async () => {
-            try {
-                // Fetch fresh talks data every time
-                const storedTalks = await getTalks();
-                const now = new Date();
+        try {
+            // Fetch fresh talks data every time
+            const storedTalks = await getTalks();
+            const now = new Date();
 
-                const conferenceTalks = storedTalks.filter((talk) => talk.conferenceId === currentConference.id);
+            const conferenceTalks = storedTalks.filter((talk) => talk.conferenceId === currentConference.id);
 
-                // Priority 1: Talks without duration (immediate talks) that are user selected
-                const immediateTalks = conferenceTalks.filter((talk) => !talk.duration && talk.isUserSelected);
+            // Priority 1: Talks without duration (immediate talks) that are user selected
+            const immediateTalks = conferenceTalks.filter((talk) => !talk.duration && talk.isUserSelected);
 
-                if (immediateTalks.length > 0) {
-                    // Sort by start time, most recent first
-                    immediateTalks.sort((a, b) => b.startTime.getTime() - a.startTime.getTime());
-                    setActiveTalk(immediateTalks[0]);
-                    return;
-                }
-
-                // Priority 2: Scheduled talks that are currently active and user selected
-                const activeTalks = conferenceTalks.filter((talk) => {
-                    if (!talk.duration || !talk.isUserSelected) return false;
-                    const endTime = new Date(talk.startTime.getTime() + talk.duration * 60 * 1000);
-                    return talk.startTime <= now && endTime > now;
-                });
-
-                if (activeTalks.length > 0) {
-                    // Sort by start time, most recent first
-                    activeTalks.sort((a, b) => b.startTime.getTime() - a.startTime.getTime());
-                    setActiveTalk(activeTalks[0]);
-                } else {
-                    setActiveTalk(null);
-                }
-            } catch (error) {
-                console.error("Error loading active talk:", error);
+            if (immediateTalks.length > 0) {
+                // Sort by start time, most recent first
+                immediateTalks.sort((a, b) => b.startTime.getTime() - a.startTime.getTime());
+                setActiveTalk(immediateTalks[0]);
+                return;
             }
-        };
 
-        // Load active talk immediately for app startup or conference change
-        loadActiveTalk();
+            // Priority 2: Scheduled talks that are currently active and user selected
+            const activeTalks = conferenceTalks.filter((talk) => {
+                if (!talk.duration || !talk.isUserSelected) return false;
+                const endTime = new Date(talk.startTime.getTime() + talk.duration * 60 * 1000);
+                return talk.startTime <= now && endTime > now;
+            });
+
+            if (activeTalks.length > 0) {
+                // Sort by start time, most recent first
+                activeTalks.sort((a, b) => b.startTime.getTime() - a.startTime.getTime());
+                setActiveTalk(activeTalks[0]);
+            } else {
+                setActiveTalk(null);
+            }
+        } catch (error) {
+            console.error("Error loading active talk:", error);
+        }
     }, [currentConference]);
+
+    // Load active talk when the app starts, conference changes, or app comes into focus
+    useEffect(() => {
+        refreshActiveTalk();
+    }, [currentConference, refreshActiveTalk]);
 
     // Conference Management
     const loadAllConferences = async () => {
@@ -450,18 +453,20 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     };
 
     const endTalk = async (talk: Talk): Promise<void> => {
-        const now = new Date();
-        const durationInMinutes = Math.round((now.getTime() - talk.startTime.getTime()) / (60 * 1000));
+        let updatedTalk = { ...talk };
 
-        const updatedTalk: Talk = {
-            ...talk,
-            duration: durationInMinutes,
-        };
+        // Set duration if not already set
+        if (!talk.duration) {
+            const now = new Date();
+            const durationInMinutes = Math.round((now.getTime() - talk.startTime.getTime()) / (60 * 1000));
+            updatedTalk.duration = Math.max(1, durationInMinutes);
+        }
+
+        // Mark as evaluated when ending the talk
+        updatedTalk.hasBeenEvaluated = true;
 
         await saveTalk(updatedTalk);
-
-        // Update state
-        setTalks((prevTalks) => prevTalks.map((talk) => (talk.id === updatedTalk.id ? updatedTalk : talk)));
+        setTalks((prevTalks) => prevTalks.map((t) => (t.id === updatedTalk.id ? updatedTalk : t)));
         setActiveTalk(null);
     };
 
@@ -814,6 +819,49 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         return talks.filter((talk) => talk.conferenceId === currentConference?.id);
     };
 
+    // Evaluation Functions
+    const saveEvaluation = async (
+        talkId: string,
+        rating: number,
+        summary: string,
+        markAsEvaluated: boolean = false
+    ): Promise<void> => {
+        const talk = talks.find((t) => t.id === talkId);
+        if (!talk) {
+            throw new Error("Talk not found");
+        }
+
+        const updatedTalk: Talk = {
+            ...talk,
+            rating,
+            summary,
+            hasBeenEvaluated: markAsEvaluated ? true : talk.hasBeenEvaluated,
+        };
+
+        await saveTalk(updatedTalk);
+
+        // Update state
+        setTalks((prevTalks) => prevTalks.map((t) => (t.id === talkId ? updatedTalk : t)));
+    };
+
+    const shouldShowEvaluationModal = (): boolean => {
+        if (!activeTalk) return false;
+
+        // Don't show if already evaluated
+        if (activeTalk.hasBeenEvaluated) return false;
+
+        // Show if talk is finished (has duration and time has passed)
+        if (activeTalk.duration) {
+            const now = new Date();
+            const endTime = new Date(activeTalk.startTime.getTime() + activeTalk.duration * 60 * 1000);
+            return endTime <= now;
+        }
+
+        // For immediate talks (no duration), don't auto-show - only when user presses "Done"
+        return false;
+    };
+
+
     const contextValue: AppContextType = {
         // Conference Management
         currentConference,
@@ -838,6 +886,9 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         toggleTalkSelection,
         getUserSelectedTalks,
         getAgendaTalks,
+        saveEvaluation,
+        shouldShowEvaluationModal,
+        refreshActiveTalk,
 
         // Note Management
         notes,

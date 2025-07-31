@@ -104,25 +104,48 @@ export default function TalksScreen() {
                 onPress={() => handleTalkPress(item.id)}
                 activeOpacity={0.7}
             >
-                <View style={styles.talkContent}>
-                    <ThemedText style={styles.talkTitle}>{item.title}</ThemedText>
-                    <ThemedText style={styles.talkDate}>
-                        {format(item.startTime, "MMM d, yyyy • HH:mm")}
-                        {item.duration && ` (${item.duration} min)`}
-                    </ThemedText>
-                </View>
-
-                {isActive && (
-                    <View style={[styles.activeIndicator, { backgroundColor: tintColor }]}>
-                        <ThemedText style={styles.activeText} lightColor="#fff" darkColor={backgroundColor}>
-                            Active
+                <View style={styles.talkItemContent}>
+                    <View style={styles.leftCol}>
+                        <View style={styles.titleRow}>
+                            <ThemedText style={styles.talkTitle}>{item.title}</ThemedText>
+                        </View>
+                        <ThemedText style={styles.talkDate}>
+                            {format(item.startTime, "MMM d, yyyy • HH:mm")}
+                            {item.duration && ` (${item.duration} min)`}
                         </ThemedText>
                     </View>
-                )}
 
-                <TouchableOpacity style={styles.bookmarkButton} onPress={handleBookmarkPress} activeOpacity={0.7}>
-                    <IconSymbol size={20} name={item.isUserSelected ? "bookmark.fill" : "bookmark"} color={tintColor} />
-                </TouchableOpacity>
+                    <View style={styles.middleCol}>
+                        {isActive && (
+                            <View style={[styles.activeIndicator, { backgroundColor: tintColor }]}>
+                                <ThemedText style={styles.activeText} lightColor="#fff" darkColor={backgroundColor}>
+                                    Active
+                                </ThemedText>
+                            </View>
+                        )}
+                    </View>
+
+                    <View style={styles.rightCol}>
+                        <TouchableOpacity
+                            style={styles.bookmarkButton}
+                            onPress={handleBookmarkPress}
+                            activeOpacity={0.7}
+                        >
+                            <IconSymbol
+                                size={20}
+                                name={item.isUserSelected ? "bookmark.fill" : "bookmark"}
+                                color={tintColor}
+                            />
+                        </TouchableOpacity>
+
+                        {item.rating && (
+                            <View style={styles.ratingContainer}>
+                                <ThemedText style={styles.ratingText}>{item.rating}/5</ThemedText>
+                                <IconSymbol name="star.fill" size={12} color="#FFD700" />
+                            </View>
+                        )}
+                    </View>
+                </View>
 
                 {/* <IconSymbol size={20} name="chevron.right" color={textColor + "80"} style={styles.chevron} /> */}
             </TouchableOpacity>
@@ -261,43 +284,65 @@ const styles = StyleSheet.create({
         alignItems: "center",
         marginHorizontal: 16,
         marginTop: 12,
-        padding: 16,
         borderRadius: 12,
         borderWidth: 1,
     },
-    talkContent: {
+    talkItemContent: {
         flex: 1,
+        display: "flex",
+        flexDirection: "row",
+    },
+    leftCol: {
+        padding: 16,
+        flex: 1,
+        flexDirection: "column",
+    },
+    middleCol: {
+        justifyContent: "center",
+    },
+    titleRow: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+    },
+    rightCol: {
+        flexDirection: "column",
+        justifyContent: "space-between",
+        alignItems: "flex-end",
     },
     talkTitle: {
         fontSize: 18,
         fontWeight: "600",
-        marginBottom: 4,
+        flex: 1,
+        marginRight: 8,
     },
     talkDate: {
         fontSize: 14,
         opacity: 0.7,
-        marginBottom: 2,
-    },
-    talkType: {
-        fontSize: 12,
-        opacity: 0.6,
-        fontWeight: "500",
+        flex: 1,
     },
     activeIndicator: {
         paddingHorizontal: 8,
         paddingVertical: 4,
         borderRadius: 12,
-        marginRight: 8,
+        marginLeft: 8,
     },
     activeText: {
         fontSize: 12,
         fontWeight: "600",
     },
-    chevron: {
-        marginLeft: 4,
-    },
     bookmarkButton: {
-        marginLeft: 4,
+        padding: 4,
+        paddingTop: 8,
+    },
+    ratingContainer: {
+        flexDirection: "row",
+        alignItems: "center",
+        marginRight: 7,
+    },
+    ratingText: {
+        fontSize: 12,
+        opacity: 0.7,
+        marginRight: 4,
     },
     emptyContainer: {
         flex: 1,

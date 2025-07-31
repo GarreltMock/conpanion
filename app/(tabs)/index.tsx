@@ -1,5 +1,6 @@
 import { router } from "expo-router";
-import React, { useEffect, useRef, useState } from "react";
+import { useFocusEffect } from "@react-navigation/native";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import { ActivityIndicator, FlatList, StyleSheet, View } from "react-native";
 
 import { MyKeyboardAvoidingView } from "@/components/MyKeyboardAvoidingView";
@@ -26,36 +27,34 @@ export default function NotesScreen() {
         endCurrentTalk,
         isLoading,
         isRecording,
+        shouldShowEvaluationModal,
+        refreshActiveTalk,
     } = useApp();
 
     const [talkNotes, setTalkNotes] = useState<Note[]>([]);
-    const [currentTime, setCurrentTime] = useState(new Date());
+    const [seenEvaluationModals, setSeenEvaluationModals] = useState<Set<string>>(new Set());
     const flatListRef = useRef<FlatList>(null);
 
     const borderLight = useThemeColor({}, "borderLight");
 
-    // Set timeout to update state when scheduled talk ends
-    useEffect(() => {
-        if (!activeTalk || !activeTalk.duration) {
-            return;
-        }
+    // Check for evaluation modal and active talk when screen comes into focus
+    useFocusEffect(
+        useCallback(() => {
+            if (isLoading) return;
 
-        const now = new Date();
-        const endTime = new Date(activeTalk.startTime.getTime() + activeTalk.duration * 60 * 1000);
-        const timeUntilEnd = endTime.getTime() - now.getTime();
+            // First, check if there should be an active talk when there isn't one
+            if (!activeTalk) {
+                refreshActiveTalk();
+                return; // Return early to let the refreshActiveTalk take effect
+            }
 
-        if (timeUntilEnd > 0) {
-            const timeout = setTimeout(() => {
-                setCurrentTime(new Date());
-            }, timeUntilEnd);
-
-            return () => clearTimeout(timeout);
-        }
-    }, [activeTalk]);
-
-    useEffect(() => {
-        setCurrentTime(new Date());
-    }, [activeTalk]);
+            // Then, check for evaluation modal
+            if (shouldShowEvaluationModal() && activeTalk && !seenEvaluationModals.has(activeTalk.id)) {
+                setSeenEvaluationModals(prev => new Set(prev).add(activeTalk.id));
+                router.push(`/modals/talk-evaluation?talkId=${activeTalk.id}`);
+            }
+        }, [activeTalk, shouldShowEvaluationModal, refreshActiveTalk, isLoading, seenEvaluationModals])
+    );
 
     useEffect(() => {
         if (activeTalk) {
@@ -65,6 +64,13 @@ export default function NotesScreen() {
             setTalkNotes([]);
         }
     }, [activeTalk, notes, getNotesForTalk]);
+
+    // Clear seen evaluation modals when no active talk (e.g., when switching conferences)
+    useEffect(() => {
+        if (!activeTalk) {
+            setSeenEvaluationModals(new Set());
+        }
+    }, [activeTalk]);
 
     // Scroll to bottom when new notes are added
     useEffect(() => {
@@ -83,17 +89,21 @@ export default function NotesScreen() {
 
         const isScheduledTalk = activeTalk.duration !== undefined;
         const isTalkActive = activeTalk.duration
-            ? new Date(activeTalk.startTime.getTime() + activeTalk.duration * 60 * 1000) > currentTime
+            ? new Date(activeTalk.startTime.getTime() + activeTalk.duration * 60 * 1000) > new Date()
             : true;
 
         if (isScheduledTalk && isTalkActive) {
             // For scheduled talks that are still active, create a new immediate talk
             router.push("/modals/new-talk");
         } else {
-            // For immediate talks or finished scheduled talks, end current talk
-            // and let the system recalculate the next active talk
-            await endCurrentTalk();
-            // Don't navigate - let the system determine the next state
+            // For immediate talks or finished scheduled talks, check if evaluation is needed
+            if (!activeTalk.hasBeenEvaluated) {
+                setSeenEvaluationModals(prev => new Set(prev).add(activeTalk.id));
+                router.push(`/modals/talk-evaluation?talkId=${activeTalk.id}`);
+            } else {
+                // Already evaluated, just end the talk
+                await endCurrentTalk();
+            }
         }
     };
 

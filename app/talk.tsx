@@ -114,6 +114,23 @@ export default function TalkDetailScreen() {
         }
     };
 
+    const isTalkInPast = (talk: Talk): boolean => {
+        const now = new Date();
+        if (talk.duration) {
+            // Scheduled talk: check if end time has passed
+            const endTime = new Date(talk.startTime.getTime() + talk.duration * 60 * 1000);
+            return endTime <= now;
+        } else {
+            // Immediate talk: check if it was evaluated (manually ended)
+            return talk.hasBeenEvaluated || false;
+        }
+    };
+
+    const handleEditEvaluation = () => {
+        if (!talk) return;
+        router.push(`/modals/talk-evaluation?talkId=${talk.id}&source=talk-detail`);
+    };
+
     if (isLoading || !talk) {
         return (
             <ThemedView style={styles.loadingContainer}>
@@ -147,11 +164,44 @@ export default function TalkDetailScreen() {
                             <IconSymbol name="timer" size={16} color={textColor + "80"} style={styles.detailIcon} />
                             <ThemedText style={styles.detailText}>{formatDuration(talk.duration)}</ThemedText>
                         </View>
+                        {talk.rating ? (
+                            <TouchableOpacity
+                                style={styles.detailItem}
+                                onPress={isTalkInPast(talk) ? handleEditEvaluation : undefined}
+                                disabled={!isTalkInPast(talk)}
+                                activeOpacity={isTalkInPast(talk) ? 0.6 : 1}
+                            >
+                                <IconSymbol
+                                    name="star.fill"
+                                    size={16}
+                                    color={textColor + "80"}
+                                    style={styles.detailIcon}
+                                />
+                                <ThemedText style={styles.detailText}>{talk.rating}/5</ThemedText>
+                                {isTalkInPast(talk) && (
+                                    <IconSymbol
+                                        name="pencil"
+                                        size={12}
+                                        color={textColor + "60"}
+                                        style={{ marginLeft: 4 }}
+                                    />
+                                )}
+                            </TouchableOpacity>
+                        ) : isTalkInPast(talk) ? (
+                            <TouchableOpacity
+                                style={styles.detailItem}
+                                onPress={handleEditEvaluation}
+                                activeOpacity={0.6}
+                            >
+                                <IconSymbol name="star" size={16} color={textColor + "80"} style={styles.detailIcon} />
+                                <ThemedText style={[styles.detailText, styles.rateButton]}>Rate Talk</ThemedText>
+                            </TouchableOpacity>
+                        ) : null}
                     </View>
                 </View>
 
                 {/* Talk Details Section - Collapsible only if user selected */}
-                {(talk.speakers?.length || talk.stage || talk.description) && (
+                {(talk.speakers?.length || talk.stage || talk.description || talk.summary) && (
                     <View
                         style={[
                             styles.detailsSection,
@@ -182,6 +232,53 @@ export default function TalkDetailScreen() {
                                 contentContainerStyle={styles.detailsContent}
                                 showsVerticalScrollIndicator={true}
                             >
+                                {/* Evaluation Summary */}
+                                {talk.summary ? (
+                                    <TouchableOpacity
+                                        style={[styles.talkDetailItem, isTalkInPast(talk) && styles.clickableSummary]}
+                                        onPress={isTalkInPast(talk) ? handleEditEvaluation : undefined}
+                                        disabled={!isTalkInPast(talk)}
+                                        activeOpacity={0.7}
+                                    >
+                                        <View style={styles.talkDetailHeader}>
+                                            <IconSymbol
+                                                name="message.fill"
+                                                size={16}
+                                                color={textColor + "80"}
+                                                style={styles.talkDetailIcon}
+                                            />
+                                            <ThemedText style={styles.talkDetailLabel}>User Summary</ThemedText>
+                                            {isTalkInPast(talk) && (
+                                                <IconSymbol
+                                                    name="pencil"
+                                                    size={12}
+                                                    color={textColor + "60"}
+                                                    style={styles.editIcon}
+                                                />
+                                            )}
+                                        </View>
+                                        <ThemedText style={styles.talkDetailValue}>{talk.summary}</ThemedText>
+                                    </TouchableOpacity>
+                                ) : isTalkInPast(talk) ? (
+                                    <TouchableOpacity
+                                        style={styles.talkDetailItem}
+                                        onPress={handleEditEvaluation}
+                                        activeOpacity={0.7}
+                                    >
+                                        <View style={styles.talkDetailHeader}>
+                                            <IconSymbol
+                                                name="message"
+                                                size={16}
+                                                color={textColor + "80"}
+                                                style={styles.talkDetailIcon}
+                                            />
+                                            <ThemedText style={[styles.talkDetailLabel, styles.addSummaryText]}>
+                                                Add Summary
+                                            </ThemedText>
+                                        </View>
+                                    </TouchableOpacity>
+                                ) : null}
+
                                 {/* Speakers */}
                                 {talk.speakers && talk.speakers.length > 0 && (
                                     <View style={styles.talkDetailItem}>
@@ -509,5 +606,21 @@ const styles = StyleSheet.create({
         fontSize: 17,
         fontWeight: "600",
         marginLeft: 8,
+    },
+    rateButton: {
+        textDecorationLine: "underline",
+    },
+    clickableSummary: {
+        backgroundColor: "rgba(255, 255, 255, 0.02)",
+        borderRadius: 8,
+        padding: 8,
+        margin: -8,
+    },
+    editIcon: {
+        marginLeft: "auto",
+    },
+    addSummaryText: {
+        fontStyle: "italic",
+        opacity: 0.6,
     },
 });

@@ -107,6 +107,14 @@ export default function RootLayout() {
                                     title: "Export Conference",
                                 }}
                             />
+                            <Stack.Screen
+                                name="modals/talk-evaluation"
+                                options={{
+                                    presentation: "transparentModal",
+                                    headerShown: false,
+                                    animation: "fade_from_bottom",
+                                }}
+                            />
                         </Stack>
                         <StatusBar style="auto" />
                     </ThemeProvider>

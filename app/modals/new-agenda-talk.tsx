@@ -249,7 +249,13 @@ export default function NewAgendaTalkModal() {
                         </View>
 
                         <View style={[styles.timePickerContainer, { borderColor: borderColor }]}>
-                            <View style={[styles.timePickerButton, styles.startTimeButton, { borderBottomColor: borderLightColor }]}>
+                            <View
+                                style={[
+                                    styles.timePickerButton,
+                                    styles.startTimeButton,
+                                    { borderBottomColor: borderLightColor },
+                                ]}
+                            >
                                 <IconSymbol name="clock" size={20} color={textColor + "80"} style={styles.dateIcon} />
                                 <ThemedText style={styles.dateLabel}>Start Time</ThemedText>
                                 <DateTimePicker
@@ -352,7 +358,10 @@ export default function NewAgendaTalkModal() {
                                         style={styles.speakerInputIcon}
                                     />
                                     <TextInput
-                                        style={[styles.speakerInput, { color: textColor, borderColor: borderLightColor }]}
+                                        style={[
+                                            styles.speakerInput,
+                                            { color: textColor, borderColor: borderLightColor },
+                                        ]}
                                         placeholder="Speaker name"
                                         placeholderTextColor={textColor + "60"}
                                         value={speaker.name}
@@ -369,7 +378,10 @@ export default function NewAgendaTalkModal() {
                                         style={styles.speakerInputIcon}
                                     />
                                     <TextInput
-                                        style={[styles.speakerInput, { color: textColor, borderColor: borderLightColor }]}
+                                        style={[
+                                            styles.speakerInput,
+                                            { color: textColor, borderColor: borderLightColor },
+                                        ]}
                                         placeholder="Photo URL (optional)"
                                         placeholderTextColor={textColor + "60"}
                                         value={speaker.photo || ""}
@@ -389,7 +401,11 @@ export default function NewAgendaTalkModal() {
                                         style={styles.speakerInputIcon}
                                     />
                                     <TextInput
-                                        style={[styles.speakerInput, styles.bioInput, { color: textColor, borderColor: borderLightColor }]}
+                                        style={[
+                                            styles.speakerInput,
+                                            styles.bioInput,
+                                            { color: textColor, borderColor: borderLightColor },
+                                        ]}
                                         placeholder="Bio (optional)"
                                         placeholderTextColor={textColor + "60"}
                                         value={speaker.bio || ""}

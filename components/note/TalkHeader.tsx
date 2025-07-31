@@ -12,7 +12,7 @@ import { Talk } from "@/types";
 interface TalkHeaderProps {
     conferenceName: string;
     talk: Talk | null;
-    onDone?: () => void;
+    onDone: () => void;
 }
 
 export const TalkHeader: React.FC<TalkHeaderProps> = ({ conferenceName, talk, onDone }) => {
@@ -20,8 +20,6 @@ export const TalkHeader: React.FC<TalkHeaderProps> = ({ conferenceName, talk, on
     const backgroundColor = useThemeColor({}, "background");
     const borderLightColor = useThemeColor({}, "borderLight");
     const [currentTime, setCurrentTime] = useState(new Date());
-
-    const { endTalk } = useApp();
 
     useEffect(() => {
         if (!talk || !talk.duration) {
@@ -46,12 +44,7 @@ export const TalkHeader: React.FC<TalkHeaderProps> = ({ conferenceName, talk, on
     }, [talk]);
 
     const handleDone = () => {
-        if (onDone) {
-            onDone();
-        } else {
-            if (!talk) return;
-            endTalk(talk);
-        }
+        onDone();
     };
 
     return (
