@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import {
     StyleSheet,
     FlatList,
@@ -7,9 +7,10 @@ import {
     ActivityIndicator,
     useWindowDimensions,
     Text,
+    ScrollView,
 } from "react-native";
 import { router, useFocusEffect } from "expo-router";
-import { format } from "date-fns";
+import { format, differenceInDays, addDays, isSameDay } from "date-fns";
 import { TabView, SceneMap, TabBar } from "react-native-tab-view";
 
 import { ThemedView } from "@/components/ThemedView";
@@ -32,9 +33,10 @@ export default function TalksScreen() {
 
     const [refreshing, setRefreshing] = useState(false);
     const [index, setIndex] = useState(0);
+    const [selectedDay, setSelectedDay] = useState(0); // Index of selected conference day
     const [routes] = useState([
         { key: "myTalks", title: "My Talks" },
-        { key: "agenda", title: "Agenda" },
+        { key: "agenda", title: "Full Agenda" },
     ]);
 
     const layout = useWindowDimensions();
@@ -42,6 +44,37 @@ export default function TalksScreen() {
     const textColor = useThemeColor({}, "text");
     const backgroundColor = useThemeColor({}, "background");
     const borderLight = useThemeColor({}, "borderLight");
+    const borderColor = useThemeColor({}, "border");
+
+    // Generate conference days and set current day as default
+    const conferenceDays = useMemo(() => {
+        if (!currentConference) return [];
+
+        const days = [];
+        const durationInDays = differenceInDays(currentConference.endDate, currentConference.startDate) + 1;
+
+        for (let i = 0; i < durationInDays; i++) {
+            const day = addDays(currentConference.startDate, i);
+            days.push({
+                index: i,
+                date: day,
+                label: format(day, "EEEE, MMMM d"),
+            });
+        }
+
+        return days;
+    }, [currentConference]);
+
+    // Set current day as default when conference days change
+    useMemo(() => {
+        if (conferenceDays.length > 0) {
+            const today = new Date();
+            const currentDayIndex = conferenceDays.findIndex((day) => isSameDay(day.date, today));
+            if (currentDayIndex !== -1) {
+                setSelectedDay(currentDayIndex);
+            }
+        }
+    }, [conferenceDays]);
 
     // Reload talks when the screen comes into focus
     useFocusEffect(
@@ -179,9 +212,66 @@ export default function TalksScreen() {
     };
 
     const AgendaRoute = () => {
-        const agendaTalks = getAgendaTalks().sort((a, b) => b.startTime.getTime() - a.startTime.getTime());
+        const allAgendaTalks = getAgendaTalks();
 
-        return renderTalksList(agendaTalks, "No talks scheduled yet", "Create a new talk to start taking notes");
+        // Filter talks by selected day
+        const filteredTalks = useMemo(() => {
+            if (conferenceDays.length === 0) return allAgendaTalks;
+
+            const selectedDate = conferenceDays[selectedDay]?.date;
+            if (!selectedDate) return allAgendaTalks;
+
+            return allAgendaTalks.filter((talk) => isSameDay(talk.startTime, selectedDate));
+        }, [allAgendaTalks, conferenceDays, selectedDay]);
+
+        const sortedTalks = filteredTalks.sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
+
+        return (
+            <View style={{ flex: 1 }}>
+                {/* Day Selection Header - Fixed at top */}
+                {conferenceDays.length > 0 && (
+                    <View style={[styles.daySelectionContainer, { borderBottomColor: borderLight }]}>
+                        <ScrollView
+                            horizontal
+                            style={styles.dayButtonsContainer}
+                            showsHorizontalScrollIndicator={false}
+                            contentContainerStyle={styles.dayButtonsContent}
+                        >
+                            {conferenceDays.map((day) => (
+                                <TouchableOpacity
+                                    key={day.index}
+                                    style={[
+                                        styles.dayButton,
+                                        { borderColor: borderColor },
+                                        selectedDay === day.index && { backgroundColor: tintColor },
+                                    ]}
+                                    onPress={() => setSelectedDay(day.index)}
+                                >
+                                    <Text
+                                        style={[
+                                            styles.dayButtonText,
+                                            { color: selectedDay === day.index ? backgroundColor : textColor },
+                                        ]}
+                                    >
+                                        {format(day.date, "EEE d")}
+                                    </Text>
+                                </TouchableOpacity>
+                            ))}
+                        </ScrollView>
+                        {conferenceDays[selectedDay] && (
+                            <ThemedText style={styles.selectedDayText}>{conferenceDays[selectedDay].label}</ThemedText>
+                        )}
+                    </View>
+                )}
+
+                {/* Talks List */}
+                {renderTalksList(
+                    sortedTalks,
+                    "No talks scheduled for this day",
+                    "Create a new talk to start taking notes"
+                )}
+            </View>
+        );
     };
 
     const renderScene = SceneMap({
@@ -232,6 +322,7 @@ export default function TalksScreen() {
                 renderTabBar={renderTabBar}
                 onIndexChange={setIndex}
                 initialLayout={{ width: layout.width }}
+                swipeEnabled={false}
             />
         </ThemedView>
     );
@@ -362,5 +453,35 @@ const styles = StyleSheet.create({
         fontSize: 16,
         textAlign: "center",
         opacity: 0.7,
+    },
+    daySelectionContainer: {
+        backgroundColor: "transparent",
+        paddingVertical: 12,
+        borderBottomWidth: 1,
+    },
+    dayButtonsContainer: {
+        flexDirection: "row",
+        marginBottom: 8,
+        paddingHorizontal: 16,
+    },
+    dayButtonsContent: {
+        paddingRight: 16,
+    },
+    dayButton: {
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        borderRadius: 6,
+        marginRight: 8,
+        borderWidth: 1,
+    },
+    dayButtonText: {
+        fontSize: 14,
+        fontWeight: "500",
+    },
+    selectedDayText: {
+        marginHorizontal: 16,
+        fontSize: 12,
+        opacity: 0.6,
+        fontStyle: "italic",
     },
 });
