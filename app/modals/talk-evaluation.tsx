@@ -17,13 +17,38 @@ export default function TalkEvaluationModal() {
     const [summary, setSummary] = useState<string>("");
     const [isLoading, setIsLoading] = useState(true);
 
-    const { talks, saveEvaluation, endTalk } = useApp();
+    const { talks, saveEvaluation, endTalk, currentConference } = useApp();
 
     const tintColor = useThemeColor({}, "tint");
     const backgroundColor = useThemeColor({}, "background");
     const textColor = useThemeColor({}, "text");
     const borderLightColor = useThemeColor({}, "borderLight");
     const backgroundOverlayLightColor = useThemeColor({}, "backgroundOverlayLight");
+
+    // Function to find the next upcoming talk
+    const getNextTalk = (): Talk | null => {
+        if (!currentConference || !talk) return null;
+
+        const now = new Date();
+        const currentTalkEndTime = talk.duration ? new Date(talk.startTime.getTime() + talk.duration * 60 * 1000) : now;
+
+        const conferenceTalks = talks.filter(
+            (t) => t.conferenceId === currentConference.id && t.isUserSelected && t.id !== talk.id
+        );
+
+        // Find talks that start after the current talk ends
+        const upcomingTalks = conferenceTalks.filter((t) =>
+            t.duration ? t.startTime > currentTalkEndTime : t.startTime > talk.startTime
+        );
+
+        if (upcomingTalks.length === 0) return null;
+
+        // Sort by start time and return the earliest one
+        upcomingTalks.sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
+        return upcomingTalks[0];
+    };
+
+    const nextTalk = getNextTalk();
 
     useEffect(() => {
         if (talkId) {
@@ -118,6 +143,13 @@ export default function TalkEvaluationModal() {
     return (
         <MyKeyboardAvoidingView style={styles.backdrop}>
             <View style={styles.spacer} />
+            {nextTalk && (
+                <View style={styles.nextTalkContainer}>
+                    <ThemedText style={[styles.nextTalkText, { color: textColor + "80" }]}>
+                        Next Talk: {nextTalk.title}
+                    </ThemedText>
+                </View>
+            )}
             <ThemedView style={styles.container}>
                 <View style={styles.content}>
                     <View style={styles.header}>
@@ -197,6 +229,15 @@ const styles = StyleSheet.create({
     },
     spacer: {
         flex: 1,
+    },
+    nextTalkContainer: {
+        paddingHorizontal: 20,
+        paddingVertical: 8,
+        alignItems: "center",
+    },
+    nextTalkText: {
+        fontSize: 13,
+        fontWeight: "500",
     },
     container: {
         borderTopLeftRadius: 16,
