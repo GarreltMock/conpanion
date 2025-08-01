@@ -64,7 +64,10 @@ export default function RootLayout() {
                                     headerBackTitle: "Back",
                                 }}
                             />
-                            <Stack.Screen name="modals/new-talk" options={{ presentation: "modal" }} />
+                            <Stack.Screen
+                                name="modals/new-talk"
+                                options={{ presentation: "modal", headerShown: false }}
+                            />
                             <Stack.Screen
                                 name="modals/new-agenda-talk"
                                 options={{ presentation: "modal", headerShown: false }}

@@ -45,8 +45,7 @@ export default function TalkEvaluationModal() {
         if (!talk) return;
 
         try {
-            // Save evaluation data but don't set hasBeenEvaluated
-            await saveEvaluation(talk.id, rating, summary, false);
+            await saveEvaluation(talk.id, rating, summary);
             router.back();
         } catch (error) {
             console.error("Error saving evaluation:", error);
@@ -58,10 +57,7 @@ export default function TalkEvaluationModal() {
         if (!talk) return;
 
         try {
-            // Ensure final evaluation is saved (will be marked as evaluated in endTalk)
-            await saveEvaluation(talk.id, rating, summary, false);
-
-            // End the talk
+            await saveEvaluation(talk.id, rating, summary);
             await endTalk(talk);
 
             router.back();
@@ -75,8 +71,7 @@ export default function TalkEvaluationModal() {
         if (!talk) return;
 
         try {
-            // Save evaluation data without ending the talk
-            await saveEvaluation(talk.id, rating, summary, false);
+            await saveEvaluation(talk.id, rating, summary);
             router.back();
         } catch (error) {
             console.error("Error saving evaluation:", error);

@@ -24,7 +24,6 @@ export default function NotesScreen() {
         addCombinedNote,
         deleteNote,
         getNotesForTalk,
-        endCurrentTalk,
         isLoading,
         isRecording,
         shouldShowEvaluationModal,
@@ -32,8 +31,10 @@ export default function NotesScreen() {
     } = useApp();
 
     const [talkNotes, setTalkNotes] = useState<Note[]>([]);
-    const [seenEvaluationModals, setSeenEvaluationModals] = useState<Set<string>>(new Set());
     const flatListRef = useRef<FlatList>(null);
+
+    const [seenEvaluationModals, setSeenEvaluationModals] = useState<Set<string>>(new Set());
+    const setTalkEvaluationAsSeen = (talkId: string) => setSeenEvaluationModals((prev) => new Set(prev).add(talkId));
 
     const borderLight = useThemeColor({}, "borderLight");
 
@@ -42,15 +43,13 @@ export default function NotesScreen() {
         useCallback(() => {
             if (isLoading) return;
 
-            // First, check if there should be an active talk when there isn't one
             if (!activeTalk) {
                 refreshActiveTalk();
-                return; // Return early to let the refreshActiveTalk take effect
+                return;
             }
 
-            // Then, check for evaluation modal
-            if (shouldShowEvaluationModal() && activeTalk && !seenEvaluationModals.has(activeTalk.id)) {
-                setSeenEvaluationModals(prev => new Set(prev).add(activeTalk.id));
+            if (shouldShowEvaluationModal() && !seenEvaluationModals.has(activeTalk.id)) {
+                setTalkEvaluationAsSeen(activeTalk.id);
                 router.push(`/modals/talk-evaluation?talkId=${activeTalk.id}`);
             }
         }, [activeTalk, shouldShowEvaluationModal, refreshActiveTalk, isLoading, seenEvaluationModals])
@@ -96,14 +95,8 @@ export default function NotesScreen() {
             // For scheduled talks that are still active, create a new immediate talk
             router.push("/modals/new-talk");
         } else {
-            // For immediate talks or finished scheduled talks, check if evaluation is needed
-            if (!activeTalk.hasBeenEvaluated) {
-                setSeenEvaluationModals(prev => new Set(prev).add(activeTalk.id));
-                router.push(`/modals/talk-evaluation?talkId=${activeTalk.id}`);
-            } else {
-                // Already evaluated, just end the talk
-                await endCurrentTalk();
-            }
+            setTalkEvaluationAsSeen(activeTalk.id);
+            router.push(`/modals/talk-evaluation?talkId=${activeTalk.id}`);
         }
     };
 

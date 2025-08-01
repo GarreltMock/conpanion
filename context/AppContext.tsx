@@ -453,17 +453,19 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     };
 
     const endTalk = async (talk: Talk): Promise<void> => {
-        let updatedTalk = { ...talk };
+        // Get the latest talk data from storage to ensure we don't overwrite any recent changes
+        const latestTalks = await getTalks();
+        const latestTalk = latestTalks.find((t) => t.id === talk.id) || talk;
+
+        let updatedTalk = { ...latestTalk };
 
         // Set duration if not already set
-        if (!talk.duration) {
+        if (!updatedTalk.duration) {
             const now = new Date();
             const durationInMinutes = Math.round((now.getTime() - talk.startTime.getTime()) / (60 * 1000));
-            updatedTalk.duration = Math.max(1, durationInMinutes);
+            // Subtract 1 minute to ensure the talk is considered "ended" and won't become active again
+            updatedTalk.duration = Math.max(1, durationInMinutes - 1);
         }
-
-        // Mark as evaluated when ending the talk
-        updatedTalk.hasBeenEvaluated = true;
 
         await saveTalk(updatedTalk);
         setTalks((prevTalks) => prevTalks.map((t) => (t.id === updatedTalk.id ? updatedTalk : t)));
@@ -820,12 +822,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     };
 
     // Evaluation Functions
-    const saveEvaluation = async (
-        talkId: string,
-        rating: number,
-        summary: string,
-        markAsEvaluated: boolean = false
-    ): Promise<void> => {
+    const saveEvaluation = async (talkId: string, rating: number, summary: string): Promise<void> => {
         const talk = talks.find((t) => t.id === talkId);
         if (!talk) {
             throw new Error("Talk not found");
@@ -835,7 +832,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
             ...talk,
             rating,
             summary,
-            hasBeenEvaluated: markAsEvaluated ? true : talk.hasBeenEvaluated,
         };
 
         await saveTalk(updatedTalk);
@@ -847,8 +843,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     const shouldShowEvaluationModal = (): boolean => {
         if (!activeTalk || !currentConference) return false;
 
-        // Don't show if already evaluated
-        if (activeTalk.hasBeenEvaluated) return false;
+        if (!!activeTalk.rating || !!activeTalk.summary) return false;
 
         const now = new Date();
 

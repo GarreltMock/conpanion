@@ -47,6 +47,13 @@ export const TalkHeader: React.FC<TalkHeaderProps> = ({ conferenceName, talk, on
         onDone();
     };
 
+    // Calculate talk state once
+    const isScheduledTalk = talk?.duration !== undefined;
+    const isTalkActive = talk?.duration
+        ? new Date(talk.startTime.getTime() + talk.duration * 60 * 1000) > currentTime
+        : true;
+    const isOutlinedButton = isScheduledTalk && isTalkActive;
+
     return (
         <ThemedView style={[styles.container, { borderBottomColor: borderLightColor }]}>
             <View style={styles.headerContent}>
@@ -70,7 +77,9 @@ export const TalkHeader: React.FC<TalkHeaderProps> = ({ conferenceName, talk, on
                     style={({ pressed }) => [
                         styles.newTalkButton,
                         {
-                            backgroundColor: tintColor,
+                            backgroundColor: isOutlinedButton ? "transparent" : tintColor,
+                            borderWidth: isOutlinedButton ? 1 : 0,
+                            borderColor: isOutlinedButton ? borderLightColor : "transparent",
                             opacity: pressed ? 0.8 : 1,
                         },
                     ]}
@@ -86,16 +95,11 @@ export const TalkHeader: React.FC<TalkHeaderProps> = ({ conferenceName, talk, on
                             );
                         }
 
-                        const isScheduledTalk = talk.duration !== undefined;
-                        const isTalkActive = talk.duration
-                            ? new Date(talk.startTime.getTime() + talk.duration * 60 * 1000) > currentTime
-                            : true;
-
                         if (isScheduledTalk && isTalkActive) {
                             return (
                                 <>
-                                    <IconSymbol name="plus" size={18} color={backgroundColor} />
-                                    <Text style={[styles.buttonText, { color: backgroundColor }]}>Switch Talk</Text>
+                                    <IconSymbol name="plus" size={18} color="white" />
+                                    <Text style={[styles.buttonText, { color: "white" }]}>Switch Talk</Text>
                                 </>
                             );
                         } else {

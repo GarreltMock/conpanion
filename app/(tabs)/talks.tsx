@@ -1,5 +1,13 @@
 import React, { useState, useCallback } from "react";
-import { StyleSheet, FlatList, View, TouchableOpacity, ActivityIndicator, useWindowDimensions } from "react-native";
+import {
+    StyleSheet,
+    FlatList,
+    View,
+    TouchableOpacity,
+    ActivityIndicator,
+    useWindowDimensions,
+    Text,
+} from "react-native";
 import { router, useFocusEffect } from "expo-router";
 import { format } from "date-fns";
 import { TabView, SceneMap, TabBar } from "react-native-tab-view";
@@ -213,8 +221,8 @@ export default function TalksScreen() {
                     onPress={handleNewTalk}
                     activeOpacity={0.8}
                 >
-                    <IconSymbol name="plus" size={22} color={backgroundColor} />
-                    <ThemedText style={[styles.buttonText, { color: backgroundColor }]}>New Agenda</ThemedText>
+                    <IconSymbol name="plus" size={18} color={backgroundColor} />
+                    <Text style={[styles.buttonText, { color: backgroundColor }]}>New Agenda</Text>
                 </TouchableOpacity>
             </View>
 

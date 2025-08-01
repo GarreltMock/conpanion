@@ -116,14 +116,9 @@ export default function TalkDetailScreen() {
 
     const isTalkInPast = (talk: Talk): boolean => {
         const now = new Date();
-        if (talk.duration) {
-            // Scheduled talk: check if end time has passed
-            const endTime = new Date(talk.startTime.getTime() + talk.duration * 60 * 1000);
-            return endTime <= now;
-        } else {
-            // Immediate talk: check if it was evaluated (manually ended)
-            return talk.hasBeenEvaluated || false;
-        }
+        if (!talk.duration) return false;
+        const endTime = new Date(talk.startTime.getTime() + talk.duration * 60 * 1000);
+        return endTime <= now;
     };
 
     const handleEditEvaluation = () => {

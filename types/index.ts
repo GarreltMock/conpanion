@@ -30,7 +30,6 @@ export interface Talk {
     description?: string;
     rating?: number; // 1-5 stars for talk evaluation
     summary?: string; // Evaluation summary/remaining thoughts
-    hasBeenEvaluated?: boolean; // Track if talk went through evaluation flow
 }
 
 export interface NoteImage {
