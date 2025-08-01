@@ -46,6 +46,7 @@ export interface Note {
     images: NoteImage[];
     audioRecordings: string[];
     timestamp: Date;
+    relativeTime?: number; // Time in seconds relative to talk start
 }
 
 export interface ExportOptions {

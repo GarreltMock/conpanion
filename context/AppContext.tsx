@@ -68,11 +68,10 @@ interface AppContextType {
 
     // Note Management
     notes: Note[];
-    addTextNote: (text: string) => Promise<Note>;
     addImageNote: (fromGallery: boolean) => Promise<string | null>; // Returns image URI instead of creating note
     addAudioNote: () => Promise<Note | null>;
     stopAudioRecording: () => Promise<string | null>; // Returns audio URI instead of creating note
-    addCombinedNote: (text: string, images: NoteImage[], audioRecordings: string[]) => Promise<Note>;
+    addNote: (text: string, images: NoteImage[], audioRecordings: string[]) => Promise<Note>;
     updateNote: (note: Note) => Promise<void>;
     deleteNote: (noteId: string) => Promise<void>;
     deleteImage: (imagePath: string) => Promise<void>;
@@ -478,33 +477,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         return storedTalks;
     }, []);
 
-    // Note Management
-    const addTextNote = async (text: string): Promise<Note> => {
-        if (!activeTalk) {
-            throw new Error("No active talk to add note to");
-        }
-
-        if (!text.trim()) {
-            throw new Error("Note text cannot be empty");
-        }
-
-        const newNote: Note = {
-            id: generateId(),
-            talkId: activeTalk.id,
-            textContent: text,
-            images: [],
-            audioRecordings: [],
-            timestamp: new Date(),
-        };
-
-        await saveNote(newNote);
-
-        // Update state
-        setNotes((prevNotes) => [...prevNotes, newNote]);
-
-        return newNote;
-    };
-
     const addImageNote = async (fromGallery: boolean): Promise<string | null> => {
         if (!activeTalk) {
             throw new Error("No active talk to add note to");
@@ -616,7 +588,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     };
 
     // Function to create a note with combined content (text, images, audio)
-    const addCombinedNote = async (text: string, images: NoteImage[], audioRecordings: string[]): Promise<Note> => {
+    const addNote = async (text: string, images: NoteImage[], audioRecordings: string[]): Promise<Note> => {
         if (!activeTalk) {
             throw new Error("No active talk to add note to");
         }
@@ -657,13 +629,20 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         );
 
         // Create the new note with all content
+        const currentTime = new Date();
+        const relativeTimeSeconds = Math.max(
+            0,
+            Math.floor((currentTime.getTime() - activeTalk.startTime.getTime()) / 1000)
+        );
+
         const newNote: Note = {
             id: generateId(),
             talkId: activeTalk.id,
             textContent: text,
             images: processedImages,
             audioRecordings: audioRecordings,
-            timestamp: new Date(),
+            timestamp: currentTime,
+            relativeTime: relativeTimeSeconds,
         };
 
         await saveNote(newNote);
@@ -914,11 +893,10 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
         // Note Management
         notes,
-        addTextNote,
         addImageNote,
         addAudioNote,
         stopAudioRecording,
-        addCombinedNote,
+        addNote,
         updateNote,
         deleteNote: deleteNoteById,
         deleteImage,

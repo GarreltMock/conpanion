@@ -42,6 +42,26 @@ export const NoteItem: React.FC<NoteItemProps> = ({ note, onDelete, readOnly = f
     const { updateNote } = useApp();
     const { lastTransformedImage, clearLastTransformed } = useImageTransformNotification();
 
+    // Format stored relative time for display
+    const formatRelativeTime = () => {
+        if (note.relativeTime === undefined) {
+            return format(note.timestamp, "HH:mm");
+        }
+
+        const totalSeconds = note.relativeTime;
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+
+        if (hours > 0) {
+            return `${hours}h ${minutes}m`;
+        } else if (minutes > 0) {
+            return `${minutes}m ${seconds}s`;
+        } else {
+            return `${seconds}s`;
+        }
+    };
+
     // Listen for image transformations and update this note if it contains the transformed image
     useEffect(() => {
         if (lastTransformedImage) {
@@ -294,7 +314,7 @@ export const NoteItem: React.FC<NoteItemProps> = ({ note, onDelete, readOnly = f
                         )}
                     </View>
                     <View style={styles.timestampContainer}>
-                        <ThemedText style={styles.timestamp}>{format(note.timestamp, "HH:mm")}</ThemedText>
+                        <ThemedText style={styles.timestamp}>{formatRelativeTime()}</ThemedText>
                     </View>
                 </View>
             </ThemedView>

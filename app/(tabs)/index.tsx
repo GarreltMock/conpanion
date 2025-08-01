@@ -1,7 +1,7 @@
 import { router } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
 import React, { useEffect, useRef, useState, useCallback } from "react";
-import { ActivityIndicator, FlatList, StyleSheet, View } from "react-native";
+import { ActivityIndicator, AppState, FlatList, StyleSheet, View } from "react-native";
 
 import { MyKeyboardAvoidingView } from "@/components/MyKeyboardAvoidingView";
 import { ThemedText } from "@/components/ThemedText";
@@ -21,7 +21,7 @@ export default function NotesScreen() {
         addImageNote,
         addAudioNote,
         stopAudioRecording,
-        addCombinedNote,
+        addNote,
         deleteNote,
         getNotesForTalk,
         isLoading,
@@ -39,21 +39,31 @@ export default function NotesScreen() {
     const borderLight = useThemeColor({}, "borderLight");
 
     // Check for evaluation modal and active talk when screen comes into focus
-    useFocusEffect(
-        useCallback(() => {
-            if (isLoading) return;
+    const checkEvaluationModal = useCallback(() => {
+        if (isLoading) return;
 
-            if (!activeTalk) {
-                refreshActiveTalk();
-                return;
-            }
+        if (!activeTalk) {
+            refreshActiveTalk();
+            return;
+        }
 
-            if (shouldShowEvaluationModal() && !seenEvaluationModals.has(activeTalk.id)) {
-                setTalkEvaluationAsSeen(activeTalk.id);
-                router.push(`/modals/talk-evaluation?talkId=${activeTalk.id}`);
+        if (shouldShowEvaluationModal() && !seenEvaluationModals.has(activeTalk.id)) {
+            setTalkEvaluationAsSeen(activeTalk.id);
+            router.push(`/modals/talk-evaluation?talkId=${activeTalk.id}`);
+        }
+    }, [activeTalk, shouldShowEvaluationModal, refreshActiveTalk, isLoading, seenEvaluationModals]);
+
+    useFocusEffect(checkEvaluationModal);
+    useEffect(() => {
+        const handleAppStateChange = (nextAppState: string) => {
+            if (nextAppState === "active") {
+                checkEvaluationModal();
             }
-        }, [activeTalk, shouldShowEvaluationModal, refreshActiveTalk, isLoading, seenEvaluationModals])
-    );
+        };
+
+        const subscription = AppState.addEventListener("change", handleAppStateChange);
+        return () => subscription?.remove();
+    }, [checkEvaluationModal]);
 
     useEffect(() => {
         if (activeTalk) {
@@ -103,7 +113,7 @@ export default function NotesScreen() {
     // Handle combined note submission (text, images, audio)
     const handleSubmitNote = async (text: string, images: NoteImage[], audioRecordings: string[]) => {
         if (!text.trim() && images.length === 0 && audioRecordings.length === 0) return;
-        await addCombinedNote(text, images, audioRecordings);
+        await addNote(text, images, audioRecordings);
     };
 
     // Handle taking a photo
