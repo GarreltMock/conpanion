@@ -1,0 +1,547 @@
+import { router, useLocalSearchParams } from "expo-router";
+import React, { useEffect, useState } from "react";
+import {
+    ActivityIndicator,
+    Alert,
+    Dimensions,
+    Image,
+    SafeAreaView,
+    StyleSheet,
+    TouchableOpacity,
+    View,
+    Platform,
+    StatusBar,
+    DeviceEventEmitter,
+} from "react-native";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import Animated, { runOnJS, useAnimatedRef, useAnimatedStyle, useSharedValue } from "react-native-reanimated";
+import Svg, { Polygon } from "react-native-svg";
+
+import { ThemedText } from "@/components/ThemedText";
+import { ThemedView } from "@/components/ThemedView";
+import { IconSymbol } from "@/components/ui/IconSymbol";
+import { useImageTransform } from "@/hooks/useImageTransform";
+import { useThemeColor } from "@/hooks/useThemeColor";
+import { Point, Polygon as PolygonType } from "@/types";
+
+type ImageLayout = { x: number; y: number; width: number; height: number };
+
+export default function ImageEditScreen() {
+    const { imageId, imageUri, existingCorners } = useLocalSearchParams<{
+        imageId: string;
+        imageUri: string;
+        existingCorners?: string;
+    }>();
+
+    const decodedUri = decodeURIComponent(imageUri as string);
+    const decodedExistingCorners = existingCorners ? JSON.parse(decodeURIComponent(existingCorners as string)) : null;
+
+    // State for edit mode
+    const [corners, setCorners] = useState<PolygonType | null>(null);
+    const [loading, setLoading] = useState(false);
+    const [savedImageLayout, setImageLayout] = useState<ImageLayout | null>(null);
+    const imageRef = useAnimatedRef<Animated.Image>();
+
+    // For image transformations
+    const { transformImageWithCorners } = useImageTransform();
+
+    // Theme colors
+    const tintColor = useThemeColor({}, "tint");
+    const whiteColor = useThemeColor({}, "white");
+    const backgroundOverlayColor = useThemeColor({}, "backgroundOverlay");
+    const backgroundColor = useThemeColor({}, "background");
+
+    // Get original image dimensions
+    const getImageDimensions = React.useCallback((uri: string): Promise<{ width: number; height: number }> => {
+        return new Promise((resolve, reject) => {
+            Image.getSize(
+                uri,
+                (width, height) => resolve({ width, height }),
+                (error) => reject(error)
+            );
+        });
+    }, []);
+
+    // Transform corners from image coordinates to screen coordinates
+    const transformCorners = React.useCallback(
+        (
+            corners: PolygonType,
+            originalImageWidth: number,
+            originalImageHeight: number,
+            imageLayout: ImageLayout,
+            direction: "toScreen" | "toImage"
+        ): PolygonType => {
+            if (!imageLayout.width || !imageLayout.height) {
+                return corners;
+            }
+
+            const displayAspectRatio = imageLayout.width / imageLayout.height;
+            const originalAspectRatio = originalImageWidth / originalImageHeight;
+
+            let scaleX, scaleY, offsetX, offsetY;
+
+            if (originalAspectRatio > displayAspectRatio) {
+                scaleX = scaleY = imageLayout.width / originalImageWidth;
+                offsetX = imageLayout.x;
+                offsetY = imageLayout.y + (imageLayout.height - originalImageHeight * scaleY) / 2;
+            } else {
+                scaleX = scaleY = imageLayout.height / originalImageHeight;
+                offsetX = imageLayout.x + (imageLayout.width - originalImageWidth * scaleX) / 2;
+                offsetY = imageLayout.y;
+            }
+
+            if (direction === "toScreen") {
+                // Transform from image to screen coordinates
+                return corners.map(([x, y]) => [x * scaleX + offsetX, y * scaleY + offsetY] as Point);
+            } else {
+                // Transform from screen to image coordinates
+                return corners.map(
+                    ([screenX, screenY]) => [(screenX - offsetX) / scaleX, (screenY - offsetY) / scaleY] as Point
+                );
+            }
+        },
+        []
+    );
+
+    // Wrappers for clarity
+    const transformCornersToScreen = React.useCallback(
+        (
+            imageCorners: PolygonType,
+            originalImageWidth: number,
+            originalImageHeight: number,
+            imageLayout: ImageLayout
+        ): PolygonType =>
+            transformCorners(imageCorners, originalImageWidth, originalImageHeight, imageLayout, "toScreen"),
+        [transformCorners]
+    );
+
+    const transformCornersToImage = React.useCallback(
+        (
+            screenCorners: PolygonType,
+            originalImageWidth: number,
+            originalImageHeight: number,
+            imageLayout: ImageLayout
+        ): PolygonType =>
+            transformCorners(screenCorners, originalImageWidth, originalImageHeight, imageLayout, "toImage"),
+        [transformCorners]
+    );
+
+    // Set default corners to the image bounds
+    const setDefaultCorners = React.useCallback((imageLayout: ImageLayout) => {
+        if (imageLayout.width === 0 || imageLayout.height === 0) {
+            return;
+        }
+
+        // Set corners to 10% inset from the image edges
+        const wInset = 0.1;
+        const hInset = 0.35;
+        const width = imageLayout.width;
+        const height = imageLayout.height;
+        const x = imageLayout.x;
+        const y = imageLayout.y;
+
+        const topLeft: Point = [x + width * wInset, y + height * hInset];
+        const topRight: Point = [x + width * (1 - wInset), y + height * hInset];
+        const bottomRight: Point = [x + width * (1 - wInset), y + height * (1 - hInset)];
+        const bottomLeft: Point = [x + width * wInset, y + height * (1 - hInset)];
+
+        const newCorners = [topLeft, topRight, bottomRight, bottomLeft];
+        setCorners(newCorners);
+    }, []);
+
+    // Load corners from existing data or set defaults
+    const initCorners = React.useCallback(
+        async (imageLayout: ImageLayout) => {
+            if (!decodedExistingCorners) {
+                setDefaultCorners(imageLayout);
+                return;
+            }
+
+            const { width: origWidth, height: origHeight } = await getImageDimensions(decodedUri);
+            const transformedCorners = transformCornersToScreen(
+                decodedExistingCorners,
+                origWidth,
+                origHeight,
+                imageLayout
+            );
+            setCorners(transformedCorners);
+        },
+        [decodedExistingCorners, decodedUri, transformCornersToScreen, setDefaultCorners, getImageDimensions]
+    );
+
+    const handleCancel = () => {
+        router.back();
+    };
+
+    const handleSaveCorners = async () => {
+        if (!corners || corners.length !== 4 || !savedImageLayout) return;
+
+        setLoading(true);
+        try {
+            const { width: originalWidth, height: originalHeight } = await getImageDimensions(decodedUri);
+            const imageCorners = transformCornersToImage(corners, originalWidth, originalHeight, savedImageLayout);
+            const result = await transformImageWithCorners(decodedUri, imageCorners);
+
+            // Emit event with transformation result
+            const transformationResult = {
+                editedImageId: imageId,
+                transformedUri: result.uri,
+                corners: imageCorners,
+                detectedUrls: result.detectedUrls,
+            };
+
+            DeviceEventEmitter.emit("imageEditComplete", transformationResult);
+
+            console.log("Transformation complete, emitted event:", transformationResult);
+
+            router.back();
+        } catch (error) {
+            console.error("Error transforming image:", error);
+            Alert.alert("Transformation Error", "Failed to transform the image with the selected corners.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const updateCorner = React.useCallback((index: number, x: number, y: number) => {
+        setCorners((prevCorners) => {
+            if (!prevCorners || prevCorners.length !== 4) {
+                return prevCorners;
+            }
+
+            const newCorners = [...prevCorners];
+            newCorners[index] = [x, y];
+            return newCorners;
+        });
+    }, []);
+
+    // Shared values to store current corner positions
+    const corner0X = useSharedValue(50);
+    const corner0Y = useSharedValue(50);
+    const corner1X = useSharedValue(350);
+    const corner1Y = useSharedValue(50);
+    const corner2X = useSharedValue(350);
+    const corner2Y = useSharedValue(450);
+    const corner3X = useSharedValue(50);
+    const corner3Y = useSharedValue(450);
+
+    // Shared values to track start positions for each gesture
+    const corner0StartX = useSharedValue(0);
+    const corner0StartY = useSharedValue(0);
+    const corner1StartX = useSharedValue(0);
+    const corner1StartY = useSharedValue(0);
+    const corner2StartX = useSharedValue(0);
+    const corner2StartY = useSharedValue(0);
+    const corner3StartX = useSharedValue(0);
+    const corner3StartY = useSharedValue(0);
+
+    // Update shared values when corners state changes
+    useEffect(() => {
+        if (corners && corners.length === 4) {
+            corner0X.value = corners[0][0];
+            corner0Y.value = corners[0][1];
+            corner1X.value = corners[1][0];
+            corner1Y.value = corners[1][1];
+            corner2X.value = corners[2][0];
+            corner2Y.value = corners[2][1];
+            corner3X.value = corners[3][0];
+            corner3Y.value = corners[3][1];
+        }
+    }, [corners, corner0X, corner0Y, corner1X, corner1Y, corner2X, corner2Y, corner3X, corner3Y]);
+
+    // Create pan gestures for each corner
+    const corner0Gesture = Gesture.Pan()
+        .onStart(() => {
+            corner0StartX.value = corner0X.value;
+            corner0StartY.value = corner0Y.value;
+        })
+        .onUpdate((event) => {
+            corner0X.value = corner0StartX.value + event.translationX;
+            corner0Y.value = corner0StartY.value + event.translationY;
+        })
+        .onEnd(() => {
+            runOnJS(updateCorner)(0, corner0X.value, corner0Y.value);
+        });
+
+    const corner1Gesture = Gesture.Pan()
+        .onStart(() => {
+            corner1StartX.value = corner1X.value;
+            corner1StartY.value = corner1Y.value;
+        })
+        .onUpdate((event) => {
+            corner1X.value = corner1StartX.value + event.translationX;
+            corner1Y.value = corner1StartY.value + event.translationY;
+        })
+        .onEnd(() => {
+            runOnJS(updateCorner)(1, corner1X.value, corner1Y.value);
+        });
+
+    const corner2Gesture = Gesture.Pan()
+        .onStart(() => {
+            corner2StartX.value = corner2X.value;
+            corner2StartY.value = corner2Y.value;
+        })
+        .onUpdate((event) => {
+            corner2X.value = corner2StartX.value + event.translationX;
+            corner2Y.value = corner2StartY.value + event.translationY;
+        })
+        .onEnd(() => {
+            runOnJS(updateCorner)(2, corner2X.value, corner2Y.value);
+        });
+
+    const corner3Gesture = Gesture.Pan()
+        .onStart(() => {
+            corner3StartX.value = corner3X.value;
+            corner3StartY.value = corner3Y.value;
+        })
+        .onUpdate((event) => {
+            corner3X.value = corner3StartX.value + event.translationX;
+            corner3Y.value = corner3StartY.value + event.translationY;
+        })
+        .onEnd(() => {
+            runOnJS(updateCorner)(3, corner3X.value, corner3Y.value);
+        });
+
+    // Array of gestures for easy access
+    const cornerGestures = [corner0Gesture, corner1Gesture, corner2Gesture, corner3Gesture];
+
+    // Create animated styles for each corner
+    const corner0Style = useAnimatedStyle(() => ({
+        left: corner0X.value - 30,
+        top: corner0Y.value - 30,
+    }));
+
+    const corner1Style = useAnimatedStyle(() => ({
+        left: corner1X.value - 30,
+        top: corner1Y.value - 30,
+    }));
+
+    const corner2Style = useAnimatedStyle(() => ({
+        left: corner2X.value - 30,
+        top: corner2Y.value - 30,
+    }));
+
+    const corner3Style = useAnimatedStyle(() => ({
+        left: corner3X.value - 30,
+        top: corner3Y.value - 30,
+    }));
+
+    const cornerStyles = [corner0Style, corner1Style, corner2Style, corner3Style];
+
+    // Render the corner editor interface
+    const renderCornerEditor = () => {
+        if (!corners || corners.length !== 4) {
+            return null;
+        }
+        // Create SVG polygon points string from corners
+        const polygonPoints = corners.map((point) => `${point[0]},${point[1]}`).join(" ");
+
+        return (
+            <View style={styles.editorContainer}>
+                <Svg style={StyleSheet.absoluteFill}>
+                    <Polygon points={polygonPoints} fill="none" stroke="rgba(0, 122, 255, 0.8)" strokeWidth="3" />
+                </Svg>
+
+                {corners.map((_, index) => {
+                    return (
+                        <GestureDetector key={`corner-${index}`} gesture={cornerGestures[index]}>
+                            <Animated.View style={[styles.cornerHandle, cornerStyles[index]]}>
+                                <View style={[styles.cornerHandleInner, { backgroundColor: tintColor + "99" }]} />
+                            </Animated.View>
+                        </GestureDetector>
+                    );
+                })}
+
+                <View style={styles.cornerLabels}>
+                    <ThemedText style={styles.cornerLabel}>
+                        Drag the corners to adjust the document boundaries
+                    </ThemedText>
+                </View>
+            </View>
+        );
+    };
+
+    return (
+        <ThemedView style={[styles.container, { backgroundColor }]}>
+            <SafeAreaView style={styles.safeArea}>
+                <View style={styles.header}>
+                    <TouchableOpacity style={styles.cancelButton} onPress={handleCancel} disabled={loading}>
+                        <IconSymbol name="xmark" size={24} color={whiteColor} />
+                    </TouchableOpacity>
+
+                    <ThemedText style={styles.headerTitle}>Edit Image</ThemedText>
+
+                    <View style={{ width: 40 }} />
+                </View>
+
+                {loading ? (
+                    <View style={styles.loadingContainer}>
+                        <ActivityIndicator size="large" color={tintColor} />
+                        <ThemedText style={[styles.loadingText, { color: whiteColor }]}>Processing image...</ThemedText>
+                    </View>
+                ) : (
+                    <View style={styles.imageContainer}>
+                        <Animated.Image
+                            ref={imageRef}
+                            source={{ uri: decodedUri }}
+                            style={styles.image}
+                            resizeMode="contain"
+                            onLayout={(event) => {
+                                let layout = event.nativeEvent.layout;
+
+                                if (Platform.OS === "android") {
+                                    const statusBarOffset =
+                                        Platform.OS === "android" ? StatusBar.currentHeight || 0 : 0;
+                                    const headerHeight = 60; // header height
+                                    layout = {
+                                        ...layout,
+                                        width: layout.width * 0.5,
+                                        height: layout.height * 0.5,
+                                        y: layout.y + statusBarOffset + headerHeight,
+                                    };
+                                }
+
+                                setImageLayout(layout);
+                                initCorners(layout);
+                            }}
+                        />
+                        {renderCornerEditor()}
+
+                        <View style={styles.editActions}>
+                            <TouchableOpacity
+                                style={[styles.actionButton, { backgroundColor: backgroundOverlayColor }]}
+                                onPress={handleCancel}
+                                disabled={loading}
+                            >
+                                <ThemedText style={[styles.actionButtonText, { color: whiteColor }]}>Cancel</ThemedText>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                style={[styles.actionButton, styles.saveButton, { backgroundColor: tintColor + "CC" }]}
+                                onPress={handleSaveCorners}
+                                disabled={!corners || loading}
+                            >
+                                <ThemedText style={[styles.actionButtonText, { color: whiteColor }]}>
+                                    Transform
+                                </ThemedText>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                )}
+            </SafeAreaView>
+        </ThemedView>
+    );
+}
+
+const { width, height } = Dimensions.get("window");
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+    },
+    safeArea: {
+        flex: 1,
+        paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
+    },
+    header: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        padding: 16,
+        height: 60,
+    },
+    headerTitle: {
+        fontSize: 18,
+        fontWeight: "600",
+        color: "white",
+    },
+    cancelButton: {
+        padding: 8,
+        width: 40,
+        alignItems: "center",
+    },
+    imageContainer: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        position: "relative",
+    },
+    image: {
+        width: width,
+        height: height * 0.8,
+    },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+    },
+    loadingText: {
+        marginTop: 16,
+        fontSize: 16,
+        color: "white",
+    },
+    editorContainer: {
+        position: "absolute",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        zIndex: 10,
+    },
+    cornerHandle: {
+        position: "absolute",
+        width: 60,
+        height: 60,
+        borderRadius: 30,
+        justifyContent: "center",
+        alignItems: "center",
+        zIndex: 20,
+    },
+    cornerHandleInner: {
+        width: 60,
+        height: 60,
+        borderRadius: 60,
+        borderWidth: 20,
+        borderColor: "rgba(255, 255, 255, 0.8)",
+    },
+    cornerLabels: {
+        position: "absolute",
+        top: 20,
+        left: 0,
+        right: 0,
+        alignItems: "center",
+    },
+    cornerLabel: {
+        backgroundColor: "rgba(0,0,0,0.7)",
+        color: "white",
+        paddingVertical: 6,
+        paddingHorizontal: 12,
+        borderRadius: 16,
+        fontSize: 14,
+    },
+    editActions: {
+        position: "absolute",
+        bottom: 40,
+        left: 0,
+        right: 0,
+        flexDirection: "row",
+        justifyContent: "center",
+        paddingHorizontal: 20,
+        zIndex: 20,
+    },
+    actionButton: {
+        paddingVertical: 12,
+        paddingHorizontal: 24,
+        borderRadius: 8,
+        marginHorizontal: 8,
+        minWidth: 120,
+        alignItems: "center",
+    },
+    actionButtonText: {
+        fontSize: 16,
+        fontWeight: "600",
+    },
+    saveButton: {
+        // backgroundColor applied inline with theme color
+    },
+});

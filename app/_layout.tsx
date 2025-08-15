@@ -9,7 +9,6 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { AppProvider } from "@/context/AppContext";
-import { ImageTransformProvider } from "@/context/ImageTransformContext";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -43,85 +42,90 @@ export default function RootLayout() {
     return (
         <GestureHandlerRootView style={{ flex: 1 }}>
             <AppProvider>
-                <ImageTransformProvider>
-                    <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-                        <Stack>
-                            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                            <Stack.Screen name="+not-found" />
-                            <Stack.Screen
-                                name="talk"
-                                options={{
-                                    headerShown: false,
-                                    headerTitle: "Talk Details",
-                                    headerBackTitle: "Back",
-                                }}
-                            />
-                            <Stack.Screen
-                                name="conference"
-                                options={{
-                                    headerShown: true,
-                                    headerTitle: "Conference Details",
-                                    headerBackTitle: "Back",
-                                }}
-                            />
-                            <Stack.Screen
-                                name="modals/new-talk"
-                                options={{ presentation: "modal", headerShown: false }}
-                            />
-                            <Stack.Screen
-                                name="modals/new-agenda-talk"
-                                options={{ presentation: "modal", headerShown: false }}
-                            />
-                            <Stack.Screen
-                                name="modals/edit-note"
-                                options={{
-                                    presentation: "transparentModal",
-                                    headerShown: false,
-                                    animation: "fade_from_bottom",
-                                }}
-                            />
-                            <Stack.Screen
-                                name="modals/image-view"
-                                options={{
-                                    presentation: "modal",
-                                    headerShown: false,
-                                    animation: "fade",
-                                }}
-                            />
-                            <Stack.Screen
-                                name="modals/new-conference"
-                                options={{
-                                    headerShown: false,
-                                    presentation: "modal",
-                                    title: "New Conference",
-                                }}
-                            />
-                            <Stack.Screen
-                                name="modals/edit-conference"
-                                options={{
-                                    presentation: "modal",
-                                    title: "Edit Conference",
-                                }}
-                            />
-                            <Stack.Screen
-                                name="modals/export-options"
-                                options={{
-                                    presentation: "modal",
-                                    title: "Export Conference",
-                                }}
-                            />
-                            <Stack.Screen
-                                name="modals/talk-evaluation"
-                                options={{
-                                    presentation: "transparentModal",
-                                    headerShown: false,
-                                    animation: "fade_from_bottom",
-                                }}
-                            />
-                        </Stack>
-                        <StatusBar style="auto" />
-                    </ThemeProvider>
-                </ImageTransformProvider>
+                <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+                    <Stack>
+                        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                        <Stack.Screen name="+not-found" />
+                        <Stack.Screen
+                            name="talk"
+                            options={{
+                                headerShown: false,
+                                headerTitle: "Talk Details",
+                                headerBackTitle: "Back",
+                            }}
+                        />
+                        <Stack.Screen
+                            name="conference"
+                            options={{
+                                headerShown: true,
+                                headerTitle: "Conference Details",
+                                headerBackTitle: "Back",
+                            }}
+                        />
+                        <Stack.Screen
+                            name="image-edit"
+                            options={{
+                                headerShown: false,
+                                title: "Edit Image",
+                            }}
+                        />
+                        <Stack.Screen
+                            name="modals/new-talk"
+                            options={{ presentation: "modal", headerShown: false }}
+                        />
+                        <Stack.Screen
+                            name="modals/new-agenda-talk"
+                            options={{ presentation: "modal", headerShown: false }}
+                        />
+                        <Stack.Screen
+                            name="modals/edit-note"
+                            options={{
+                                presentation: "transparentModal",
+                                headerShown: false,
+                                animation: "fade_from_bottom",
+                            }}
+                        />
+                        <Stack.Screen
+                            name="modals/image-view"
+                            options={{
+                                presentation: "modal",
+                                headerShown: false,
+                                animation: "fade",
+                            }}
+                        />
+                        <Stack.Screen
+                            name="modals/new-conference"
+                            options={{
+                                headerShown: false,
+                                presentation: "modal",
+                                title: "New Conference",
+                            }}
+                        />
+                        <Stack.Screen
+                            name="modals/edit-conference"
+                            options={{
+                                presentation: "modal",
+                                title: "Edit Conference",
+                            }}
+                        />
+                        <Stack.Screen
+                            name="modals/export-options"
+                            options={{
+                                presentation: "modal",
+                                title: "Export Conference",
+                            }}
+                        />
+                        <Stack.Screen
+                            name="modals/talk-evaluation"
+                            options={{
+                                presentation: "transparentModal",
+                                headerShown: false,
+                                animation: "fade_from_bottom",
+                            }}
+                        />
+                    </Stack>
+                    <StatusBar style="auto" />
+                </ThemeProvider>
             </AppProvider>
         </GestureHandlerRootView>
     );

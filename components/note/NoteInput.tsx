@@ -10,6 +10,8 @@ import {
     ScrollView,
     TouchableOpacity,
 } from "react-native";
+import { router } from "expo-router";
+import { DeviceEventEmitter } from "react-native";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { Audio } from "expo-av";
@@ -93,6 +95,32 @@ export const NoteInput: React.FC<NoteInputProps> = ({
             return () => clearTimeout(timer);
         }
     }, [autoFocus, text]);
+
+    // Handle image edit results via event emitter
+    useEffect(() => {
+        const subscription = DeviceEventEmitter.addListener(
+            "imageEditComplete",
+            (result: { editedImageId: string; transformedUri: string; corners: any; detectedUrls?: string[] }) => {
+                console.log("Received image edit result:", result);
+
+                // Update the cached images
+                setCachedImages((prev) =>
+                    prev.map((img) =>
+                        img.id === result.editedImageId
+                            ? {
+                                  ...img,
+                                  transformedUri: result.transformedUri,
+                                  corners: result.corners,
+                                  links: result.detectedUrls,
+                              }
+                            : img
+                    )
+                );
+            }
+        );
+
+        return () => subscription.remove();
+    }, []);
 
     // Initialize cached assets from props - use a ref to track if already initialized
     const [hasInitializedProps, setHasInitializedProps] = useState(false);
@@ -253,6 +281,17 @@ export const NoteInput: React.FC<NoteInputProps> = ({
         }
     };
 
+    const handleEditImage = (image: CachedImage) => {
+        router.push({
+            pathname: "/image-edit",
+            params: {
+                imageId: image.id,
+                imageUri: encodeURIComponent(getAbsolutePath(image.uri)),
+                existingCorners: image.corners ? encodeURIComponent(JSON.stringify(image.corners)) : undefined,
+            },
+        });
+    };
+
     const handleDeleteImage = (id: string) => {
         setCachedImages((prev) => prev.filter((img) => img.id !== id));
     };
@@ -358,15 +397,21 @@ export const NoteInput: React.FC<NoteInputProps> = ({
                     {/* Image previews */}
                     {cachedImages.map((image) => (
                         <View key={image.id} style={styles.imagePreviewContainer}>
-                            <Image
-                                source={{ uri: getAbsolutePath(image.transformedUri || image.uri) }}
-                                style={styles.imagePreview}
-                            />
-                            {image.isProcessing && (
-                                <View style={styles.loadingOverlay}>
-                                    <ActivityIndicator size="small" color={whiteColor} />
-                                </View>
-                            )}
+                            <TouchableOpacity
+                                activeOpacity={0.8}
+                                onPress={() => handleEditImage(image)}
+                                disabled={image.isProcessing}
+                            >
+                                <Image
+                                    source={{ uri: getAbsolutePath(image.transformedUri || image.uri) }}
+                                    style={styles.imagePreview}
+                                />
+                                {image.isProcessing && (
+                                    <View style={styles.loadingOverlay}>
+                                        <ActivityIndicator size="small" color={whiteColor} />
+                                    </View>
+                                )}
+                            </TouchableOpacity>
                             <TouchableOpacity style={styles.deleteButton} onPress={() => handleDeleteImage(image.id)}>
                                 <IconSymbol
                                     name="xmark.circle.fill"

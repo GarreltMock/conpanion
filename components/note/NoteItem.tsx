@@ -18,7 +18,6 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { useApp } from "@/context/AppContext";
-import { useImageTransformNotification } from "@/context/ImageTransformContext";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { Note } from "@/types";
 import { getAbsolutePath } from "@/storage/helper";
@@ -40,7 +39,6 @@ export const NoteItem: React.FC<NoteItemProps> = ({ note, onDelete, readOnly = f
     const backgroundOverlayColor = useThemeColor({}, "backgroundOverlay");
 
     const { updateNote } = useApp();
-    const { lastTransformedImage, clearLastTransformed } = useImageTransformNotification();
 
     // Format stored relative time for display
     const formatRelativeTime = () => {
@@ -62,37 +60,6 @@ export const NoteItem: React.FC<NoteItemProps> = ({ note, onDelete, readOnly = f
         }
     };
 
-    // Listen for image transformations and update this note if it contains the transformed image
-    useEffect(() => {
-        if (lastTransformedImage) {
-            // Check if this note contains the image that was transformed
-            const hasTransformedImage = note.images.some((img) => img.uri === lastTransformedImage.originalImageUri);
-
-            if (hasTransformedImage) {
-                const updatedImages = note.images.map((img) => {
-                    if (img.uri === lastTransformedImage.originalImageUri) {
-                        return {
-                            ...img,
-                            uri: lastTransformedImage.newImageUri,
-                            originalUri: lastTransformedImage.originalUri,
-                            corners: lastTransformedImage.corners,
-                            links: lastTransformedImage.detectedUrls,
-                        };
-                    }
-                    return img;
-                });
-
-                const updatedNote: Note = {
-                    ...note,
-                    images: updatedImages,
-                };
-
-                updateNote(updatedNote).catch((error) => console.error("NoteItem: Note update failed:", error));
-
-                clearLastTransformed();
-            }
-        }
-    }, [lastTransformedImage, note, updateNote, clearLastTransformed]);
 
     const handlePlayPauseAudio = async (uri: string, index: number) => {
         // If a sound is already playing, stop it
@@ -222,13 +189,6 @@ export const NoteItem: React.FC<NoteItemProps> = ({ note, onDelete, readOnly = f
                                         imageUri: encodeURIComponent(imageAbsoluteUri),
                                     };
 
-                                    // If this is a transformed image with original and corners
-                                    if (image.originalUri && image.corners) {
-                                        const originalAbsoluteUri = getAbsolutePath(image.originalUri);
-                                        params.originalUri = encodeURIComponent(originalAbsoluteUri);
-                                        // Pass the saved corners as JSON string
-                                        params.savedCorners = encodeURIComponent(JSON.stringify(image.corners));
-                                    }
 
                                     router.push({
                                         pathname: "/modals/image-view",
