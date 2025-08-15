@@ -6,7 +6,6 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { useThemeColor } from "@/hooks/useThemeColor";
-import { useApp } from "@/context/AppContext";
 import { Talk } from "@/types";
 
 interface TalkHeaderProps {
@@ -19,6 +18,7 @@ export const TalkHeader: React.FC<TalkHeaderProps> = ({ conferenceName, talk, on
     const tintColor = useThemeColor({}, "tint");
     const backgroundColor = useThemeColor({}, "background");
     const borderLightColor = useThemeColor({}, "borderLight");
+    const textColor = useThemeColor({}, "text");
     const [currentTime, setCurrentTime] = useState(new Date());
 
     useEffect(() => {
@@ -98,8 +98,8 @@ export const TalkHeader: React.FC<TalkHeaderProps> = ({ conferenceName, talk, on
                         if (isScheduledTalk && isTalkActive) {
                             return (
                                 <>
-                                    <IconSymbol name="plus" size={18} color="white" />
-                                    <Text style={[styles.buttonText, { color: "white" }]}>Switch Talk</Text>
+                                    <IconSymbol name="plus" size={18} color={textColor} />
+                                    <Text style={[styles.buttonText, { color: textColor }]}>Switch Talk</Text>
                                 </>
                             );
                         } else {

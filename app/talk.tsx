@@ -37,6 +37,7 @@ export default function TalkDetailScreen() {
     const backgroundColor = useThemeColor({}, "background");
     const borderLightColor = useThemeColor({}, "borderLight");
     const backgroundOverlayLightColor = useThemeColor({}, "backgroundOverlayLight");
+    const iconColor = useThemeColor({}, "tabIconDefault");
 
     useEffect(() => {
         if (id) {
@@ -148,15 +149,15 @@ export default function TalkDetailScreen() {
                     <ThemedText style={styles.talkTitle}>{talk.title}</ThemedText>
                     <View style={styles.talkDetails}>
                         <View style={styles.detailItem}>
-                            <IconSymbol name="calendar" size={16} color={textColor + "80"} style={styles.detailIcon} />
+                            <IconSymbol name="calendar" size={16} color={iconColor} style={styles.detailIcon} />
                             <ThemedText style={styles.detailText}>{format(talk.startTime, "MMM d, yyyy")}</ThemedText>
                         </View>
                         <View style={styles.detailItem}>
-                            <IconSymbol name="clock" size={16} color={textColor + "80"} style={styles.detailIcon} />
+                            <IconSymbol name="clock" size={16} color={iconColor} style={styles.detailIcon} />
                             <ThemedText style={styles.detailText}>{format(talk.startTime, "HH:mm")}</ThemedText>
                         </View>
                         <View style={styles.detailItem}>
-                            <IconSymbol name="timer" size={16} color={textColor + "80"} style={styles.detailIcon} />
+                            <IconSymbol name="timer" size={16} color={iconColor} style={styles.detailIcon} />
                             <ThemedText style={styles.detailText}>{formatDuration(talk.duration)}</ThemedText>
                         </View>
                         {talk.rating ? (
@@ -169,7 +170,7 @@ export default function TalkDetailScreen() {
                                 <IconSymbol
                                     name="star.fill"
                                     size={16}
-                                    color={textColor + "80"}
+                                    color={iconColor}
                                     style={styles.detailIcon}
                                 />
                                 <ThemedText style={styles.detailText}>{talk.rating}/5</ThemedText>
@@ -188,7 +189,7 @@ export default function TalkDetailScreen() {
                                 onPress={handleEditEvaluation}
                                 activeOpacity={0.6}
                             >
-                                <IconSymbol name="star" size={16} color={textColor + "80"} style={styles.detailIcon} />
+                                <IconSymbol name="star" size={16} color={iconColor} style={styles.detailIcon} />
                                 <ThemedText style={[styles.detailText, styles.rateButton]}>Rate Talk</ThemedText>
                             </TouchableOpacity>
                         ) : null}
@@ -213,7 +214,7 @@ export default function TalkDetailScreen() {
                                 <IconSymbol
                                     name={detailsExpanded ? "chevron.up" : "chevron.down"}
                                     size={16}
-                                    color={textColor + "80"}
+                                    color={iconColor}
                                 />
                             </TouchableOpacity>
                         ) : (
@@ -239,7 +240,7 @@ export default function TalkDetailScreen() {
                                             <IconSymbol
                                                 name="message.fill"
                                                 size={16}
-                                                color={textColor + "80"}
+                                                color={iconColor}
                                                 style={styles.talkDetailIcon}
                                             />
                                             <ThemedText style={styles.talkDetailLabel}>User Summary</ThemedText>
@@ -264,7 +265,7 @@ export default function TalkDetailScreen() {
                                             <IconSymbol
                                                 name="message"
                                                 size={16}
-                                                color={textColor + "80"}
+                                                color={iconColor}
                                                 style={styles.talkDetailIcon}
                                             />
                                             <ThemedText style={[styles.talkDetailLabel, styles.addSummaryText]}>
@@ -281,7 +282,7 @@ export default function TalkDetailScreen() {
                                             <IconSymbol
                                                 name="person.2"
                                                 size={16}
-                                                color={textColor + "80"}
+                                                color={iconColor}
                                                 style={styles.talkDetailIcon}
                                             />
                                             <ThemedText style={styles.talkDetailLabel}>
@@ -326,7 +327,7 @@ export default function TalkDetailScreen() {
                                             <IconSymbol
                                                 name="location"
                                                 size={16}
-                                                color={textColor + "80"}
+                                                color={iconColor}
                                                 style={styles.talkDetailIcon}
                                             />
                                             <ThemedText style={styles.talkDetailLabel}>Location</ThemedText>
@@ -342,7 +343,7 @@ export default function TalkDetailScreen() {
                                             <IconSymbol
                                                 name="doc.text"
                                                 size={16}
-                                                color={textColor + "80"}
+                                                color={iconColor}
                                                 style={styles.talkDetailIcon}
                                             />
                                             <ThemedText style={styles.talkDetailLabel}>Description</ThemedText>
