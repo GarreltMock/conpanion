@@ -53,6 +53,7 @@ export default function NewAgendaTalkModal() {
     const [stage, setStage] = useState("");
     const [description, setDescription] = useState("");
     const [isCreating, setIsCreating] = useState(false);
+    const [showTimePicker, setShowTimePicker] = useState(false);
 
     const { createAgendaTalk, currentConference } = useApp();
     const textColor = useThemeColor({}, "text");
@@ -134,6 +135,7 @@ export default function NewAgendaTalkModal() {
     };
 
     const handleStartTimeChange = (_event: any, selectedTime?: Date) => {
+        setShowTimePicker(false);
         if (selectedTime) {
             setStartTime(selectedTime);
         }
@@ -249,23 +251,49 @@ export default function NewAgendaTalkModal() {
                         </View>
 
                         <View style={[styles.timePickerContainer, { borderColor: borderColor }]}>
-                            <View
-                                style={[
-                                    styles.timePickerButton,
-                                    styles.startTimeButton,
-                                    { borderBottomColor: borderLightColor },
-                                ]}
-                            >
-                                <IconSymbol name="clock" size={20} color={textColor + "80"} style={styles.dateIcon} />
-                                <ThemedText style={styles.dateLabel}>Start Time</ThemedText>
+                            {Platform.OS === "ios" ? (
+                                <View
+                                    style={[
+                                        styles.timePickerButton,
+                                        styles.startTimeButton,
+                                        { borderBottomColor: borderLightColor },
+                                    ]}
+                                >
+                                    <IconSymbol name="clock" size={20} color={textColor + "80"} style={styles.dateIcon} />
+                                    <ThemedText style={styles.dateLabel}>Start Time</ThemedText>
+                                    <DateTimePicker
+                                        value={startTime}
+                                        mode="time"
+                                        display="compact"
+                                        onChange={handleStartTimeChange}
+                                        style={styles.timePicker}
+                                    />
+                                </View>
+                            ) : (
+                                <TouchableOpacity
+                                    style={[
+                                        styles.timePickerButton,
+                                        styles.startTimeButton,
+                                        { borderBottomColor: borderLightColor },
+                                    ]}
+                                    onPress={() => setShowTimePicker(true)}
+                                >
+                                    <IconSymbol name="clock" size={20} color={textColor + "80"} style={styles.dateIcon} />
+                                    <ThemedText style={styles.dateLabel}>Start Time</ThemedText>
+                                    <ThemedText style={styles.dateValue}>
+                                        {format(startTime, "h:mm a")}
+                                    </ThemedText>
+                                </TouchableOpacity>
+                            )}
+
+                            {Platform.OS === "android" && showTimePicker && (
                                 <DateTimePicker
                                     value={startTime}
                                     mode="time"
-                                    display={Platform.OS === "ios" ? "compact" : "default"}
+                                    display="default"
                                     onChange={handleStartTimeChange}
-                                    style={styles.timePicker}
                                 />
-                            </View>
+                            )}
 
                             <RNPickerSelect
                                 onValueChange={(value) => setDuration(value)}
