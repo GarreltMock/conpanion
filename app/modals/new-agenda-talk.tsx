@@ -17,7 +17,7 @@ import { format, differenceInDays, addDays } from "date-fns";
 import RNPickerSelect from "react-native-picker-select";
 
 import { ThemedText } from "@/components/ThemedText";
-import { ThemedView } from "@/components/ThemedView";
+import { ModalView } from "@/components/ModalView";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { MyKeyboardAvoidingView } from "@/components/MyKeyboardAvoidingView";
 import { useApp } from "@/context/AppContext";
@@ -165,7 +165,7 @@ export default function NewAgendaTalkModal() {
 
     return (
         <MyKeyboardAvoidingView>
-            <ThemedView style={styles.container}>
+            <ModalView style={styles.container}>
                 <View style={[styles.header, { borderBottomColor: borderLightColor }]}>
                     <TouchableOpacity style={styles.cancelButton} onPress={handleCancel} disabled={isCreating}>
                         <ThemedText style={styles.cancelText}>Cancel</ThemedText>
@@ -448,7 +448,7 @@ export default function NewAgendaTalkModal() {
                         ))}
                     </View>
                 </ScrollView>
-            </ThemedView>
+            </ModalView>
         </MyKeyboardAvoidingView>
     );
 }

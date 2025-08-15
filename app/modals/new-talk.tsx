@@ -3,7 +3,7 @@ import { StyleSheet, View, TextInput, TouchableOpacity, Keyboard, ActivityIndica
 import { router } from "expo-router";
 
 import { ThemedText } from "@/components/ThemedText";
-import { ThemedView } from "@/components/ThemedView";
+import { ModalView } from "@/components/ModalView";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { useApp } from "@/context/AppContext";
 import { useThemeColor } from "@/hooks/useThemeColor";
@@ -48,7 +48,7 @@ export default function NewTalkModal() {
     };
 
     return (
-        <ThemedView style={styles.container}>
+        <ModalView style={styles.container}>
             <View style={[styles.header, { borderBottomColor: borderLight }]}>
                 <TouchableOpacity style={styles.cancelButton} onPress={handleCancel} disabled={isCreating}>
                     <ThemedText style={styles.cancelText}>Cancel</ThemedText>
@@ -94,7 +94,7 @@ export default function NewTalkModal() {
                     This will create a new talk and set it as the active talk for taking notes.
                 </ThemedText>
             </View>
-        </ThemedView>
+        </ModalView>
     );
 }
 
