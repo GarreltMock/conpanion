@@ -312,7 +312,7 @@ export default function TalksScreen() {
                     activeOpacity={0.8}
                 >
                     <IconSymbol name="plus" size={18} color={backgroundColor} />
-                    <Text style={[styles.buttonText, { color: backgroundColor }]}>New Agenda</Text>
+                    <Text style={[styles.buttonText, { color: backgroundColor }]}>Add Talk</Text>
                 </TouchableOpacity>
             </View>
 
