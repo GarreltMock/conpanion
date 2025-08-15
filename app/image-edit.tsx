@@ -388,19 +388,6 @@ export default function ImageEditScreen() {
                             resizeMode="contain"
                             onLayout={(event) => {
                                 let layout = event.nativeEvent.layout;
-
-                                if (Platform.OS === "android") {
-                                    const statusBarOffset =
-                                        Platform.OS === "android" ? StatusBar.currentHeight || 0 : 0;
-                                    const headerHeight = 60; // header height
-                                    layout = {
-                                        ...layout,
-                                        width: layout.width * 0.5,
-                                        height: layout.height * 0.5,
-                                        y: layout.y + statusBarOffset + headerHeight,
-                                    };
-                                }
-
                                 setImageLayout(layout);
                                 initCorners(layout);
                             }}
