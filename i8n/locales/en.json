@@ -1,0 +1,29 @@
+{
+  "common": {
+    "ok": "OK",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "back": "Back",
+    "next": "Next",
+    "done": "Done",
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "retry": "Retry"
+  },
+  "navigation": {
+    "home": "Home",
+    "profile": "Profile",
+    "settings": "Settings"
+  },
+  "errors": {
+    "networkError": "Network error. Please check your connection.",
+    "unknownError": "Something went wrong. Please try again."
+  },
+  "notes": {
+    "noActiveTalk": "No Active Talk",
+    "createTalkPrompt": "Create a new talk to start taking notes",
+    "noNotesYet": "No notes yet. Start taking notes for this talk."
+  }
+}

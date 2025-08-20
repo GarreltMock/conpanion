@@ -12,6 +12,7 @@ import { TalkHeader } from "@/components/note/TalkHeader";
 import { useApp } from "@/context/AppContext";
 import { Note, NoteImage } from "@/types";
 import { useThemeColor } from "@/hooks/useThemeColor";
+import { useI18n } from "@/hooks/useI18n";
 
 export default function NotesScreen() {
     const {
@@ -30,6 +31,7 @@ export default function NotesScreen() {
         refreshActiveTalk,
     } = useApp();
 
+    const { t } = useI18n();
     const [talkNotes, setTalkNotes] = useState<Note[]>([]);
     const flatListRef = useRef<FlatList>(null);
 
@@ -151,8 +153,8 @@ export default function NotesScreen() {
 
     const renderEmptyState = () => (
         <View style={styles.emptyStateContainer}>
-            <ThemedText style={styles.emptyStateTitle}>No Active Talk</ThemedText>
-            <ThemedText style={styles.emptyStateDescription}>Create a new talk to start taking notes</ThemedText>
+            <ThemedText style={styles.emptyStateTitle}>{t('notes.noActiveTalk')}</ThemedText>
+            <ThemedText style={styles.emptyStateDescription}>{t('notes.createTalkPrompt')}</ThemedText>
         </View>
     );
 
@@ -184,7 +186,7 @@ export default function NotesScreen() {
                         ListEmptyComponent={() => (
                             <View style={styles.emptyNotesContainer}>
                                 <ThemedText style={styles.emptyNotesText}>
-                                    No notes yet. Start taking notes for this talk.
+                                    {t('notes.noNotesYet')}
                                 </ThemedText>
                             </View>
                         )}

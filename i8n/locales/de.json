@@ -1,0 +1,29 @@
+{
+  "common": {
+    "ok": "OK",
+    "cancel": "Abbrechen",
+    "save": "Speichern",
+    "delete": "Löschen",
+    "edit": "Bearbeiten",
+    "back": "Zurück",
+    "next": "Weiter",
+    "done": "Fertig",
+    "loading": "Lädt...",
+    "error": "Ein Fehler ist aufgetreten",
+    "retry": "Wiederholen"
+  },
+  "navigation": {
+    "home": "Startseite",
+    "profile": "Profil",
+    "settings": "Einstellungen"
+  },
+  "errors": {
+    "networkError": "Netzwerkfehler. Bitte überprüfen Sie Ihre Verbindung.",
+    "unknownError": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut."
+  },
+  "notes": {
+    "noActiveTalk": "Kein aktiver Vortrag",
+    "createTalkPrompt": "Erstellen Sie einen neuen Vortrag, um Notizen zu machen",
+    "noNotesYet": "Noch keine Notizen. Beginnen Sie mit der Notizen für diesen Vortrag."
+  }
+}
