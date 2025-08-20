@@ -2,7 +2,6 @@ import { router, useLocalSearchParams } from "expo-router";
 import React from "react";
 import {
     Dimensions,
-    Image,
     SafeAreaView,
     StyleSheet,
     TouchableOpacity,
@@ -176,9 +175,12 @@ const styles = StyleSheet.create({
         alignItems: "center",
         justifyContent: "flex-end",
         padding: 16,
+        zIndex: 100,
+        position: "relative",
     },
     closeButton: {
         padding: 8,
+        zIndex: 101,
     },
     imageContainer: {
         flex: 1,
