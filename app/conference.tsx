@@ -4,6 +4,7 @@ import { useApp } from "../context/AppContext";
 import { ThemedText } from "../components/ThemedText";
 import { ThemedView } from "../components/ThemedView";
 import { useThemeColor } from "../hooks/useThemeColor";
+import { useI18n } from "../hooks/useI18n";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { Talk, Conference } from "../types";
@@ -17,10 +18,12 @@ export default function ConferenceDetailScreen() {
     const [isActive, setIsActive] = useState(false);
 
     const router = useRouter();
+    const { t } = useI18n();
     const tintColor = useThemeColor({}, "tint");
     const backgroundColor = useThemeColor({}, "background");
     const whiteColor = useThemeColor({}, "white");
     const borderLight = useThemeColor({}, "borderLight");
+    const textColor = useThemeColor({}, "text");
 
     useEffect(() => {
         // Log when accessed without ID, but don't try to redirect
@@ -76,9 +79,9 @@ export default function ConferenceDetailScreen() {
             try {
                 await switchActiveConference(conference.id);
                 setIsActive(true);
-                Alert.alert("Success", `${conference.name} is now your active conference`);
+                Alert.alert(t("common.ok"), t("conferences.activeConference", { name: conference.name }));
             } catch (error) {
-                Alert.alert("Error", "Failed to switch conference");
+                Alert.alert(t("common.errors.title"), t("errors.switchConferenceFailed"));
             }
         }
     };
@@ -119,7 +122,7 @@ export default function ConferenceDetailScreen() {
             return (
                 <View style={styles.centered}>
                     <ActivityIndicator size="large" color={tintColor} />
-                    <ThemedText style={{ marginTop: 16 }}>Redirecting...</ThemedText>
+                    <ThemedText style={{ marginTop: 16 }}>{t("common.loading")}</ThemedText>
                 </View>
             );
         }
@@ -127,12 +130,12 @@ export default function ConferenceDetailScreen() {
         // Otherwise show conference not found error
         return (
             <View style={styles.centered}>
-                <ThemedText style={styles.errorText}>Conference not found</ThemedText>
+                <ThemedText style={styles.errorText}>{t("errors.conferenceNotFound")}</ThemedText>
                 <TouchableOpacity
                     style={[styles.backButton, { backgroundColor: tintColor }]}
                     onPress={() => router.push("/(tabs)")}
                 >
-                    <ThemedText style={styles.backButtonText}>Go to Conferences</ThemedText>
+                    <ThemedText style={styles.backButtonText}>{t("conferences.goToConferences")}</ThemedText>
                 </TouchableOpacity>
             </View>
         );
@@ -149,11 +152,13 @@ export default function ConferenceDetailScreen() {
                         <ThemedText style={styles.dates}>
                             {formatDate(conference.startDate)} - {formatDate(conference.endDate)}
                         </ThemedText>
-                        {conference.location && (
-                            <ThemedText style={styles.location}>
-                                <Ionicons name="location-outline" size={16} style={{ textAlignVertical: "center" }} />{" "}
-                                {conference.location}
-                            </ThemedText>
+                        {conference.location ? (
+                            <View style={styles.locationContainer}>
+                                <Ionicons name="location-outline" size={16} color={textColor} />
+                                <ThemedText style={styles.location}>{conference.location}</ThemedText>
+                            </View>
+                        ) : (
+                            <></>
                         )}
                         <View style={styles.statusContainer}>
                             <View style={[styles.statusBadge, { backgroundColor: tintColor }]}>
@@ -161,7 +166,7 @@ export default function ConferenceDetailScreen() {
                             </View>
                             {isActive && (
                                 <View style={[styles.activeBadge, { backgroundColor: tintColor }]}>
-                                    <ThemedText style={styles.statusText}>Active</ThemedText>
+                                    <ThemedText style={styles.statusText}>{t("status.active")}</ThemedText>
                                 </View>
                             )}
                         </View>
@@ -170,39 +175,41 @@ export default function ConferenceDetailScreen() {
 
                 {conference.description && (
                     <ThemedView style={[styles.section, { borderBottomColor: borderLight }]}>
-                        <ThemedText style={styles.sectionTitle}>Description</ThemedText>
+                        <ThemedText style={styles.sectionTitle}>{t("talks.description")}</ThemedText>
                         <ThemedText style={styles.description}>{conference.description}</ThemedText>
                     </ThemedView>
                 )}
 
                 <ThemedView style={[styles.section, { borderBottomColor: borderLight }]}>
-                    <ThemedText style={styles.sectionTitle}>Statistics</ThemedText>
+                    <ThemedText style={styles.sectionTitle}>{t("conferences.statistics")}</ThemedText>
                     <View style={styles.statsContainer}>
                         <View style={styles.statItem}>
                             <ThemedText style={styles.statValue}>{conferenceTalks.length}</ThemedText>
-                            <ThemedText style={styles.statLabel}>Talks</ThemedText>
+                            <ThemedText style={styles.statLabel}>{t("navigation.tabs.talks")}</ThemedText>
                         </View>
                         <View style={styles.statItem}>
                             <ThemedText style={styles.statValue}>{getTotalNotesCount()}</ThemedText>
-                            <ThemedText style={styles.statLabel}>Notes</ThemedText>
+                            <ThemedText style={styles.statLabel}>{t("navigation.tabs.notes")}</ThemedText>
                         </View>
                         <View style={styles.statItem}>
                             <ThemedText style={styles.statValue}>
                                 {conference.createdAt ? format(conference.createdAt, "MMM d") : "N/A"}
                             </ThemedText>
-                            <ThemedText style={styles.statLabel}>Created</ThemedText>
+                            <ThemedText style={styles.statLabel}>{t("conferences.created")}</ThemedText>
                         </View>
                     </View>
                 </ThemedView>
 
                 <ThemedView style={[styles.section]}>
                     <View style={[styles.sectionHeader]}>
-                        <ThemedText style={[styles.sectionTitle, { marginBottom: 0 }]}>Talks Timeline</ThemedText>
+                        <ThemedText style={[styles.sectionTitle, { marginBottom: 0 }]}>
+                            {t("conferences.timeline")}
+                        </ThemedText>
                     </View>
 
                     {conferenceTalks.length > 0 ? (
                         <View style={styles.timelineContainer}>
-                            {conferenceTalks.map((talk, index) => (
+                            {conferenceTalks.map((talk) => (
                                 <TouchableOpacity
                                     key={talk.id}
                                     style={styles.timelineItem}
@@ -210,8 +217,10 @@ export default function ConferenceDetailScreen() {
                                 >
                                     <View style={styles.timeContainer}>
                                         <ThemedText style={styles.timeText}>{formatTime(talk.startTime)}</ThemedText>
-                                        {talk.duration && (
-                                            <ThemedText style={styles.endTimeText}>({talk.duration} min)</ThemedText>
+                                        {!!talk.duration && (
+                                            <ThemedText style={styles.endTimeText}>
+                                                {`(${t("forms.talk.durationMinutes", { duration: talk.duration })})`}
+                                            </ThemedText>
                                         )}
                                     </View>
                                     <View style={[styles.timelineLine, { backgroundColor: tintColor }]} />
@@ -219,7 +228,9 @@ export default function ConferenceDetailScreen() {
                                     <View style={styles.talkContainer}>
                                         <ThemedText style={styles.talkTitle}>{talk.title}</ThemedText>
                                         <ThemedText style={styles.notesCount}>
-                                            {getNotesCount(talk.id)} notes
+                                            {`${getNotesCount(talk.id)} ${
+                                                getNotesCount(talk.id) === 1 ? t("notes.note") : t("notes.notes")
+                                            }`}
                                         </ThemedText>
                                     </View>
                                 </TouchableOpacity>
@@ -246,7 +257,7 @@ export default function ConferenceDetailScreen() {
                         onPress={handleMakeActive}
                     >
                         <Ionicons name="checkmark-circle-outline" size={20} color={whiteColor} />
-                        <ThemedText style={styles.actionButtonText}>Make Active</ThemedText>
+                        <ThemedText style={styles.actionButtonText}>{t("conferences.makeActive")}</ThemedText>
                     </TouchableOpacity>
                 )}
                 <TouchableOpacity
@@ -254,14 +265,16 @@ export default function ConferenceDetailScreen() {
                     onPress={handleEditConference}
                 >
                     <Ionicons name="pencil-outline" size={20} color={tintColor} />
-                    <ThemedText style={[styles.actionButtonText, { color: tintColor }]}>Edit</ThemedText>
+                    <ThemedText style={[styles.actionButtonText, { color: tintColor }]}>{t("common.edit")}</ThemedText>
                 </TouchableOpacity>
                 <TouchableOpacity
                     style={[styles.actionButton, { backgroundColor: backgroundColor }]}
                     onPress={handleExportConference}
                 >
                     <Ionicons name="share-outline" size={20} color={tintColor} />
-                    <ThemedText style={[styles.actionButtonText, { color: tintColor }]}>Export</ThemedText>
+                    <ThemedText style={[styles.actionButtonText, { color: tintColor }]}>
+                        {t("common.actions.export")}
+                    </ThemedText>
                 </TouchableOpacity>
             </View>
         </ThemedView>
@@ -312,9 +325,14 @@ const styles = StyleSheet.create({
         fontSize: 16,
         marginBottom: 8,
     },
+    locationContainer: {
+        flexDirection: "row",
+        alignItems: "center",
+        marginBottom: 12,
+    },
     location: {
         fontSize: 16,
-        marginBottom: 12,
+        marginLeft: 4,
         lineHeight: 22,
     },
     statusContainer: {

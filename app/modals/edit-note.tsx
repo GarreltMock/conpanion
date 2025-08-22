@@ -6,6 +6,7 @@ import { MyKeyboardAvoidingView } from "@/components/MyKeyboardAvoidingView";
 import { ThemedView } from "@/components/ThemedView";
 import { NoteInput } from "@/components/note/NoteInput";
 import { useApp } from "@/context/AppContext";
+import { useI18n } from "@/hooks/useI18n";
 import { Note, NoteImage } from "@/types";
 
 export default function EditNoteModal() {
@@ -14,6 +15,7 @@ export default function EditNoteModal() {
     const [isSaving, setIsSaving] = useState(false);
 
     const { notes, isRecording, updateNote, addImageNote, addAudioNote, stopAudioRecording, deleteImage } = useApp();
+    const { t } = useI18n();
 
     useEffect(() => {
         if (noteId) {
@@ -21,7 +23,7 @@ export default function EditNoteModal() {
             if (foundNote) {
                 setNote(foundNote);
             } else {
-                Alert.alert("Error", "Note not found");
+                Alert.alert(t("common.errors.title"), t("errors.noteNotFound"));
                 router.back();
             }
         }
@@ -64,7 +66,7 @@ export default function EditNoteModal() {
             router.back();
         } catch (error) {
             console.error("Error updating note:", error);
-            Alert.alert("Error", "Failed to update note. Please try again.");
+            Alert.alert(t("common.errors.title"), t("errors.updateNoteFailed"));
         } finally {
             setIsSaving(false);
         }

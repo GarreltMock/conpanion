@@ -1,12 +1,14 @@
 import React from "react";
 import { View, StyleSheet, TouchableOpacity } from "react-native";
 import { format } from "date-fns";
+import { enUS, de } from "date-fns/locale";
 import { Conference } from "../../types";
 import { useApp } from "../../context/AppContext";
 import { Ionicons } from "@expo/vector-icons";
 import { ThemedText } from "../ThemedText";
 import { ThemedView } from "../ThemedView";
 import { useThemeColor } from "../../hooks/useThemeColor";
+import { useI18n } from "../../hooks/useI18n";
 
 interface ConferenceItemProps {
     conference: Conference;
@@ -26,6 +28,18 @@ export const ConferenceItem: React.FC<ConferenceItemProps> = ({
     onDelete,
 }) => {
     const { talks } = useApp();
+    const { t, locale } = useI18n();
+    
+    // Get appropriate date-fns locale based on current i18n locale
+    const dateFnsLocale = React.useMemo(() => {
+        switch (locale) {
+            case 'de':
+                return de;
+            case 'en':
+            default:
+                return enUS;
+        }
+    }, [locale]);
     const conferenceTalks = talks.filter((talk) => talk.conferenceId === conference.id);
     const dateFormat = "MMM d, yyyy";
     const tintColor = useThemeColor({}, "tint");
@@ -70,16 +84,20 @@ export const ConferenceItem: React.FC<ConferenceItemProps> = ({
                     <View style={styles.mainContent}>
                         <ThemedText style={styles.title}>{conference.name}</ThemedText>
                         <ThemedText style={styles.date}>
-                            {format(conference.startDate, dateFormat)} - {format(conference.endDate, dateFormat)}
+                            {format(conference.startDate, dateFormat, { locale: dateFnsLocale })} - {format(conference.endDate, dateFormat, { locale: dateFnsLocale })}
                         </ThemedText>
-                        {conference.location && (
-                            <ThemedText style={styles.location}>
-                                <Ionicons name="location-outline" size={14} /> {conference.location}
+                        {conference.location ? (
+                            <View style={styles.locationContainer}>
+                                <Ionicons name="location-outline" size={14} color={mutedColor} />
+                                <ThemedText style={styles.location}>{conference.location}</ThemedText>
+                            </View>
+                        ) : null}
+                        <View style={styles.talksCountContainer}>
+                            <Ionicons name="calendar-outline" size={14} color={mutedColor} />
+                            <ThemedText style={styles.talksCount}>
+                                {`${conferenceTalks.length} ${conferenceTalks.length === 1 ? t("talks.talk") : t("common.talks")}`}
                             </ThemedText>
-                        )}
-                        <ThemedText style={styles.talksCount}>
-                            <Ionicons name="calendar-outline" size={14} /> {conferenceTalks.length} talks
-                        </ThemedText>
+                        </View>
                     </View>
                     <View style={styles.statusContainer}>{getStatusBadge(conference.status)}</View>
                 </View>
@@ -88,19 +106,19 @@ export const ConferenceItem: React.FC<ConferenceItemProps> = ({
                     {onExport && (
                         <TouchableOpacity style={styles.actionButton} onPress={onExport}>
                             <Ionicons name="share-outline" size={20} color={tintColor} />
-                            <ThemedText style={styles.actionText}>Export</ThemedText>
+                            <ThemedText style={styles.actionText}>{t("common.actions.export")}</ThemedText>
                         </TouchableOpacity>
                     )}
                     {onEdit && (
                         <TouchableOpacity style={styles.actionButton} onPress={onEdit}>
                             <Ionicons name="pencil-outline" size={20} color={tintColor} />
-                            <ThemedText style={styles.actionText}>Edit</ThemedText>
+                            <ThemedText style={styles.actionText}>{t("common.edit")}</ThemedText>
                         </TouchableOpacity>
                     )}
                     {onDelete && (
                         <TouchableOpacity style={styles.actionButton} onPress={onDelete}>
                             <Ionicons name="trash-outline" size={20} color={errorColor} />
-                            <ThemedText style={styles.actionText}>Delete</ThemedText>
+                            <ThemedText style={styles.actionText}>{t("common.delete")}</ThemedText>
                         </TouchableOpacity>
                     )}
                 </View>
@@ -140,12 +158,22 @@ const styles = StyleSheet.create({
         fontSize: 14,
         marginBottom: 4,
     },
+    locationContainer: {
+        flexDirection: "row",
+        alignItems: "center",
+        marginBottom: 4,
+    },
     location: {
         fontSize: 14,
-        marginBottom: 4,
+        marginLeft: 4,
+    },
+    talksCountContainer: {
+        flexDirection: "row",
+        alignItems: "center",
     },
     talksCount: {
         fontSize: 14,
+        marginLeft: 4,
     },
     statusContainer: {
         alignItems: "flex-end",

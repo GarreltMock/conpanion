@@ -14,6 +14,7 @@ import {
 import { router } from "expo-router";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { format, differenceInDays, addDays } from "date-fns";
+import { enUS, de } from "date-fns/locale";
 import RNPickerSelect from "react-native-picker-select";
 
 import { ThemedText } from "@/components/ThemedText";
@@ -22,6 +23,7 @@ import { IconSymbol } from "@/components/ui/IconSymbol";
 import { MyKeyboardAvoidingView } from "@/components/MyKeyboardAvoidingView";
 import { useApp } from "@/context/AppContext";
 import { useThemeColor } from "@/hooks/useThemeColor";
+import { useI18n } from "@/hooks/useI18n";
 import { Speaker } from "@/types";
 
 const roundToNearestFiveMinutes = (date: Date): Date => {
@@ -56,6 +58,18 @@ export default function NewAgendaTalkModal() {
     const [showTimePicker, setShowTimePicker] = useState(false);
 
     const { createAgendaTalk, currentConference } = useApp();
+    const { t, locale } = useI18n();
+
+    // Get appropriate date-fns locale based on current i18n locale
+    const dateFnsLocale = useMemo(() => {
+        switch (locale) {
+            case 'de':
+                return de;
+            case 'en':
+            default:
+                return enUS;
+        }
+    }, [locale]);
     const textColor = useThemeColor({}, "text");
     const tintColor = useThemeColor({}, "tint");
     const backgroundColor = useThemeColor({}, "background");
@@ -74,26 +88,26 @@ export default function NewAgendaTalkModal() {
             days.push({
                 index: i,
                 date: day,
-                label: format(day, "EEEE, MMMM d"),
+                label: format(day, "EEEE, MMMM d", { locale: dateFnsLocale }),
             });
         }
 
         return days;
-    }, [currentConference]);
+    }, [currentConference, dateFnsLocale]);
 
     const handleCreate = async () => {
         if (!title.trim()) {
-            Alert.alert("Error", "Please enter a talk title");
+            Alert.alert(t("common.errors.title"), t("forms.talk.titleRequired"));
             return;
         }
 
         if (!currentConference) {
-            Alert.alert("Error", "No active conference found");
+            Alert.alert(t("common.errors.title"), t("errors.conferenceNotFound"));
             return;
         }
 
         if (duration <= 0) {
-            Alert.alert("Error", "Duration must be greater than 0 minutes");
+            Alert.alert(t("common.errors.title"), t("forms.talk.durationRequired"));
             return;
         }
 
@@ -124,7 +138,7 @@ export default function NewAgendaTalkModal() {
             console.error("Error creating agenda talk:", error);
             const errorMessage =
                 error instanceof Error ? error.message : "Failed to create agenda talk. Please try again.";
-            Alert.alert("Error", errorMessage);
+            Alert.alert(t("common.errors.title"), errorMessage);
         } finally {
             setIsCreating(false);
         }
@@ -168,10 +182,10 @@ export default function NewAgendaTalkModal() {
             <ModalView style={styles.container}>
                 <View style={[styles.header, { borderBottomColor: borderLightColor }]}>
                     <TouchableOpacity style={styles.cancelButton} onPress={handleCancel} disabled={isCreating}>
-                        <ThemedText style={styles.cancelText}>Cancel</ThemedText>
+                        <ThemedText style={styles.cancelText}>{t("common.cancel")}</ThemedText>
                     </TouchableOpacity>
 
-                    <ThemedText style={styles.title}>New Agenda Talk</ThemedText>
+                    <ThemedText style={styles.title}>{t("modals.newAgendaTalk")}</ThemedText>
 
                     <TouchableOpacity
                         style={[
@@ -185,7 +199,7 @@ export default function NewAgendaTalkModal() {
                         {isCreating ? (
                             <ActivityIndicator size="small" color={backgroundColor} />
                         ) : (
-                            <Text style={[styles.createText, { color: backgroundColor }]}>Create</Text>
+                            <Text style={[styles.createText, { color: backgroundColor }]}>{t("common.actions.create")}</Text>
                         )}
                     </TouchableOpacity>
                 </View>
@@ -197,15 +211,14 @@ export default function NewAgendaTalkModal() {
                     showsVerticalScrollIndicator={false}
                 >
                     <ThemedText style={styles.helpText}>
-                        Create a scheduled talk for your agenda. The talk will become active when its start time
-                        arrives.
+                        {t("help.createScheduledTalk")}
                     </ThemedText>
 
                     <View style={[styles.inputContainer, { borderColor: borderColor }]}>
                         <IconSymbol name="mic.fill" size={22} color={textColor + "80"} style={styles.inputIcon} />
                         <TextInput
                             style={[styles.input, { color: textColor }]}
-                            placeholder="Enter talk title"
+                            placeholder={t("forms.talk.titlePlaceholder")}
                             placeholderTextColor={textColor + "60"}
                             value={title}
                             onChangeText={setTitle}
@@ -238,7 +251,7 @@ export default function NewAgendaTalkModal() {
                                                 { color: selectedDay === day.index ? backgroundColor : textColor },
                                             ]}
                                         >
-                                            {format(day.date, "EEE d")}
+                                            {format(day.date, "EEE d", { locale: dateFnsLocale })}
                                         </Text>
                                     </TouchableOpacity>
                                 ))}
@@ -260,7 +273,7 @@ export default function NewAgendaTalkModal() {
                                     ]}
                                 >
                                     <IconSymbol name="clock" size={20} color={textColor + "80"} style={styles.dateIcon} />
-                                    <ThemedText style={styles.dateLabel}>Start Time</ThemedText>
+                                    <ThemedText style={styles.dateLabel}>{t("forms.talk.startTime")}</ThemedText>
                                     <DateTimePicker
                                         value={startTime}
                                         mode="time"
@@ -279,9 +292,9 @@ export default function NewAgendaTalkModal() {
                                     onPress={() => setShowTimePicker(true)}
                                 >
                                     <IconSymbol name="clock" size={20} color={textColor + "80"} style={styles.dateIcon} />
-                                    <ThemedText style={styles.dateLabel}>Start Time</ThemedText>
+                                    <ThemedText style={styles.dateLabel}>{t("forms.talk.startTime")}</ThemedText>
                                     <ThemedText style={styles.dateValue}>
-                                        {format(startTime, "h:mm a")}
+                                        {format(startTime, "h:mm a", { locale: dateFnsLocale })}
                                     </ThemedText>
                                 </TouchableOpacity>
                             )}
@@ -323,7 +336,7 @@ export default function NewAgendaTalkModal() {
                                         color={textColor + "80"}
                                         style={styles.dateIcon}
                                     />
-                                    <ThemedText style={styles.dateLabel}>Duration</ThemedText>
+                                    <ThemedText style={styles.dateLabel}>{t("forms.talk.duration")}</ThemedText>
                                     <ThemedText style={styles.dateValue}>{duration} minutes</ThemedText>
                                 </View>
                             </RNPickerSelect>
@@ -335,7 +348,7 @@ export default function NewAgendaTalkModal() {
                         <IconSymbol name="location" size={22} color={textColor + "80"} style={styles.inputIcon} />
                         <TextInput
                             style={[styles.input, { color: textColor }]}
-                            placeholder="Stage (optional)"
+                            placeholder={t("forms.talk.stageOptional")}
                             placeholderTextColor={textColor + "60"}
                             value={stage}
                             onChangeText={setStage}
@@ -349,7 +362,7 @@ export default function NewAgendaTalkModal() {
                         <IconSymbol name="doc.text" size={22} color={textColor + "80"} style={styles.inputIcon} />
                         <TextInput
                             style={[styles.input, styles.multilineInput, { color: textColor }]}
-                            placeholder="Description (optional)"
+                            placeholder={t("forms.talk.descriptionOptional")}
                             placeholderTextColor={textColor + "60"}
                             value={description}
                             onChangeText={setDescription}
@@ -363,7 +376,7 @@ export default function NewAgendaTalkModal() {
                     {/* Speakers Section */}
                     <View style={styles.speakersSection}>
                         <View style={styles.speakersHeader}>
-                            <ThemedText style={styles.sectionTitle}>Speakers (optional)</ThemedText>
+                            <ThemedText style={styles.sectionTitle}>{t("forms.speakers.title")}</ThemedText>
                             <TouchableOpacity style={styles.addButton} onPress={addSpeaker}>
                                 <IconSymbol name="plus.circle.fill" size={24} color={tintColor} />
                             </TouchableOpacity>
@@ -372,7 +385,7 @@ export default function NewAgendaTalkModal() {
                         {speakers.map((speaker, index) => (
                             <View key={index} style={[styles.speakerContainer, { borderColor: borderColor }]}>
                                 <View style={styles.speakerHeader}>
-                                    <ThemedText style={styles.speakerLabel}>Speaker {index + 1}</ThemedText>
+                                    <ThemedText style={styles.speakerLabel}>{t("talks.speaker")} {index + 1}</ThemedText>
                                     <TouchableOpacity onPress={() => removeSpeaker(index)}>
                                         <IconSymbol name="minus.circle.fill" size={20} color={errorColor} />
                                     </TouchableOpacity>
@@ -390,7 +403,7 @@ export default function NewAgendaTalkModal() {
                                             styles.speakerInput,
                                             { color: textColor, borderColor: borderLightColor },
                                         ]}
-                                        placeholder="Speaker name"
+                                        placeholder={t("forms.speakers.namePlaceholder")}
                                         placeholderTextColor={textColor + "60"}
                                         value={speaker.name}
                                         onChangeText={(text) => updateSpeaker(index, "name", text)}
@@ -410,7 +423,7 @@ export default function NewAgendaTalkModal() {
                                             styles.speakerInput,
                                             { color: textColor, borderColor: borderLightColor },
                                         ]}
-                                        placeholder="Photo URL (optional)"
+                                        placeholder={t("forms.speakers.photoUrlOptional")}
                                         placeholderTextColor={textColor + "60"}
                                         value={speaker.photo || ""}
                                         onChangeText={(text) => updateSpeaker(index, "photo", text)}
@@ -434,7 +447,7 @@ export default function NewAgendaTalkModal() {
                                             styles.bioInput,
                                             { color: textColor, borderColor: borderLightColor },
                                         ]}
-                                        placeholder="Bio (optional)"
+                                        placeholder={t("forms.speakers.bioOptional")}
                                         placeholderTextColor={textColor + "60"}
                                         value={speaker.bio || ""}
                                         onChangeText={(text) => updateSpeaker(index, "bio", text)}

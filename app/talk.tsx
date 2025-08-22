@@ -11,6 +11,7 @@ import { ThemedView } from "@/components/ThemedView";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { useApp } from "@/context/AppContext";
 import { useThemeColor } from "@/hooks/useThemeColor";
+import { useI18n } from "@/hooks/useI18n";
 import { Note, NoteImage, Talk } from "@/types";
 
 export default function TalkDetailScreen() {
@@ -32,6 +33,7 @@ export default function TalkDetailScreen() {
         toggleTalkSelection,
     } = useApp();
 
+    const { t } = useI18n();
     const textColor = useThemeColor({}, "text");
     const tintColor = useThemeColor({}, "tint");
     const backgroundColor = useThemeColor({}, "background");
@@ -141,7 +143,7 @@ export default function TalkDetailScreen() {
                 <View style={styles.header}>
                     <TouchableOpacity style={styles.backButton} onPress={handleBack}>
                         <IconSymbol name="chevron.left" size={24} color={textColor} />
-                        <ThemedText style={styles.backText}>Talks</ThemedText>
+                        <ThemedText style={styles.backText}>{t("navigation.tabs.talks")}</ThemedText>
                     </TouchableOpacity>
                 </View>
 
@@ -190,7 +192,7 @@ export default function TalkDetailScreen() {
                                 activeOpacity={0.6}
                             >
                                 <IconSymbol name="star" size={16} color={iconColor} style={styles.detailIcon} />
-                                <ThemedText style={[styles.detailText, styles.rateButton]}>Rate Talk</ThemedText>
+                                <ThemedText style={[styles.detailText, styles.rateButton]}>{t("talks.actions.rateTalk")}</ThemedText>
                             </TouchableOpacity>
                         ) : null}
                     </View>
@@ -210,7 +212,7 @@ export default function TalkDetailScreen() {
                                 style={[styles.detailsToggle, { backgroundColor: backgroundOverlayLightColor }]}
                                 onPress={() => setDetailsExpanded(!detailsExpanded)}
                             >
-                                <ThemedText style={styles.detailsToggleText}>Talk Details</ThemedText>
+                                <ThemedText style={styles.detailsToggleText}>{t("talks.talkDetails")}</ThemedText>
                                 <IconSymbol
                                     name={detailsExpanded ? "chevron.up" : "chevron.down"}
                                     size={16}
@@ -219,7 +221,7 @@ export default function TalkDetailScreen() {
                             </TouchableOpacity>
                         ) : (
                             <View style={[styles.detailsToggle, { backgroundColor: backgroundOverlayLightColor }]}>
-                                <ThemedText style={styles.detailsToggleText}>Talk Details</ThemedText>
+                                <ThemedText style={styles.detailsToggleText}>{t("talks.talkDetails")}</ThemedText>
                             </View>
                         )}
 
@@ -243,7 +245,7 @@ export default function TalkDetailScreen() {
                                                 color={iconColor}
                                                 style={styles.talkDetailIcon}
                                             />
-                                            <ThemedText style={styles.talkDetailLabel}>User Summary</ThemedText>
+                                            <ThemedText style={styles.talkDetailLabel}>{t("talks.userSummary")}</ThemedText>
                                             {isTalkInPast(talk) && (
                                                 <IconSymbol
                                                     name="pencil"
@@ -269,7 +271,7 @@ export default function TalkDetailScreen() {
                                                 style={styles.talkDetailIcon}
                                             />
                                             <ThemedText style={[styles.talkDetailLabel, styles.addSummaryText]}>
-                                                Add Summary
+                                                {t("talks.addSummary")}
                                             </ThemedText>
                                         </View>
                                     </TouchableOpacity>
@@ -286,7 +288,7 @@ export default function TalkDetailScreen() {
                                                 style={styles.talkDetailIcon}
                                             />
                                             <ThemedText style={styles.talkDetailLabel}>
-                                                {talk.speakers.length === 1 ? "Speaker" : "Speakers"}
+                                                {talk.speakers.length === 1 ? t("talks.speaker") : t("talks.speakers")}
                                             </ThemedText>
                                         </View>
                                         <View style={styles.speakersContainer}>
@@ -330,7 +332,7 @@ export default function TalkDetailScreen() {
                                                 color={iconColor}
                                                 style={styles.talkDetailIcon}
                                             />
-                                            <ThemedText style={styles.talkDetailLabel}>Location</ThemedText>
+                                            <ThemedText style={styles.talkDetailLabel}>{t("talks.location")}</ThemedText>
                                         </View>
                                         <ThemedText style={styles.talkDetailValue}>{talk.stage}</ThemedText>
                                     </View>
@@ -346,7 +348,7 @@ export default function TalkDetailScreen() {
                                                 color={iconColor}
                                                 style={styles.talkDetailIcon}
                                             />
-                                            <ThemedText style={styles.talkDetailLabel}>Description</ThemedText>
+                                            <ThemedText style={styles.talkDetailLabel}>{t("talks.description")}</ThemedText>
                                         </View>
                                         <ThemedText style={styles.talkDetailValue}>{talk.description}</ThemedText>
                                     </View>
@@ -359,9 +361,9 @@ export default function TalkDetailScreen() {
                 {talk.isUserSelected && !detailsExpanded ? (
                     <>
                         <View style={[styles.notesSectionHeader, { borderBottomColor: backgroundOverlayLightColor }]}>
-                            <ThemedText style={styles.notesTitle}>Notes</ThemedText>
+                            <ThemedText style={styles.notesTitle}>{t("navigation.tabs.notes")}</ThemedText>
                             <ThemedText style={styles.notesCount}>
-                                {talkNotes.length} {talkNotes.length === 1 ? "note" : "notes"}
+                                {talkNotes.length} {talkNotes.length === 1 ? t("notes.note") : t("notes.notes")}
                             </ThemedText>
                         </View>
 
@@ -373,7 +375,7 @@ export default function TalkDetailScreen() {
                             keyboardShouldPersistTaps="handled"
                             ListEmptyComponent={() => (
                                 <View style={styles.emptyContainer}>
-                                    <ThemedText style={styles.emptyText}>No notes available for this talk</ThemedText>
+                                    <ThemedText style={styles.emptyText}>{t("notes.noNotesAvailable")}</ThemedText>
                                 </View>
                             )}
                         />
@@ -397,7 +399,7 @@ export default function TalkDetailScreen() {
                             >
                                 <IconSymbol name="bookmark.fill" size={20} color={backgroundColor} />
                                 <Text style={[styles.addToUserTalksText, { color: backgroundColor }]}>
-                                    Add to My Talks
+                                    {t("talks.actions.addToMyTalks")}
                                 </Text>
                             </TouchableOpacity>
                         </View>

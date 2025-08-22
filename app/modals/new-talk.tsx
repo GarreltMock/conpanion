@@ -7,12 +7,14 @@ import { ModalView } from "@/components/ModalView";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { useApp } from "@/context/AppContext";
 import { useThemeColor } from "@/hooks/useThemeColor";
+import { useI18n } from "@/hooks/useI18n";
 
 export default function NewTalkModal() {
     const [title, setTitle] = useState("");
     const [isCreating, setIsCreating] = useState(false);
 
     const { createTalk } = useApp();
+    const { t } = useI18n();
     const textColor = useThemeColor({}, "text");
     const tintColor = useThemeColor({}, "tint");
     const backgroundColor = useThemeColor({}, "background");
@@ -21,7 +23,7 @@ export default function NewTalkModal() {
 
     const handleCreate = async () => {
         if (!title.trim()) {
-            Alert.alert("Error", "Please enter a talk title");
+            Alert.alert(t("common.errors.title"), t("forms.talk.titleRequired"));
             return;
         }
 
@@ -37,7 +39,7 @@ export default function NewTalkModal() {
         } catch (error) {
             console.error("Error creating talk:", error);
             const errorMessage = error instanceof Error ? error.message : "Failed to create talk. Please try again.";
-            Alert.alert("Error", errorMessage);
+            Alert.alert(t("common.errors.title"), errorMessage);
         } finally {
             setIsCreating(false);
         }
@@ -51,10 +53,10 @@ export default function NewTalkModal() {
         <ModalView style={styles.container}>
             <View style={[styles.header, { borderBottomColor: borderLight }]}>
                 <TouchableOpacity style={styles.cancelButton} onPress={handleCancel} disabled={isCreating}>
-                    <ThemedText style={styles.cancelText}>Cancel</ThemedText>
+                    <ThemedText style={styles.cancelText}>{t("common.cancel")}</ThemedText>
                 </TouchableOpacity>
 
-                <ThemedText style={styles.title}>New Talk</ThemedText>
+                <ThemedText style={styles.title}>{t("modals.newTalk")}</ThemedText>
 
                 <TouchableOpacity
                     style={[
@@ -68,7 +70,7 @@ export default function NewTalkModal() {
                     {isCreating ? (
                         <ActivityIndicator size="small" color={backgroundColor} />
                     ) : (
-                        <Text style={[styles.createText, { color: backgroundColor }]}>Create</Text>
+                        <Text style={[styles.createText, { color: backgroundColor }]}>{t("common.actions.create")}</Text>
                     )}
                 </TouchableOpacity>
             </View>
@@ -79,7 +81,7 @@ export default function NewTalkModal() {
 
                     <TextInput
                         style={[styles.input, { color: textColor }]}
-                        placeholder="Enter talk title"
+                        placeholder={t("forms.talk.titlePlaceholder")}
                         placeholderTextColor={textColor + "60"}
                         value={title}
                         onChangeText={setTitle}
@@ -91,7 +93,7 @@ export default function NewTalkModal() {
                 </View>
 
                 <ThemedText style={styles.helpText}>
-                    This will create a new talk and set it as the active talk for taking notes.
+                    {t("help.keepTakingNotes")}
                 </ThemedText>
             </View>
         </ModalView>

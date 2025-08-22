@@ -7,6 +7,7 @@ import { ThemedView } from "@/components/ThemedView";
 import { ThemedText } from "@/components/ThemedText";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { useApp } from "@/context/AppContext";
+import { useI18n } from "@/hooks/useI18n";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { Talk } from "@/types";
 
@@ -18,6 +19,7 @@ export default function TalkEvaluationModal() {
     const [isLoading, setIsLoading] = useState(true);
 
     const { talks, saveEvaluation, endTalk, currentConference } = useApp();
+    const { t } = useI18n();
 
     const tintColor = useThemeColor({}, "tint");
     const backgroundColor = useThemeColor({}, "background");
@@ -174,7 +176,7 @@ export default function TalkEvaluationModal() {
                                     color: textColor,
                                 },
                             ]}
-                            placeholder="Summary"
+                            placeholder={t("talks.summary")}
                             placeholderTextColor={textColor + "60"}
                             multiline
                             value={summary}
@@ -203,14 +205,18 @@ export default function TalkEvaluationModal() {
                                     style={[styles.button, styles.keepNotesButton, { borderColor: borderLightColor }]}
                                     onPress={handleKeepTakingNotes}
                                 >
-                                    <Text style={[styles.buttonText, { color: textColor }]}>Keep taking notes</Text>
+                                    <Text style={[styles.buttonText, { color: textColor }]}>
+                                        {t("talks.keepTakingNotes")}
+                                    </Text>
                                 </TouchableOpacity>
 
                                 <TouchableOpacity
                                     style={[styles.button, styles.doneButton, { backgroundColor: tintColor }]}
                                     onPress={handleDone}
                                 >
-                                    <Text style={[styles.buttonText, { color: backgroundColor }]}>Done</Text>
+                                    <Text style={[styles.buttonText, { color: backgroundColor }]}>
+                                        {t("common.done")}
+                                    </Text>
                                 </TouchableOpacity>
                             </>
                         )}

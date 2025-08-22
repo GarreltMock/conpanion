@@ -13,8 +13,7 @@ import { IconSymbol } from "@/components/ui/IconSymbol";
 import { useI18n } from "@/hooks/useI18n";
 
 export default function ConferencesScreen() {
-    const { conferences, currentConference, getConferences, switchActiveConference, deleteConference, hasConferences } =
-        useApp();
+    const { conferences, currentConference, getConferences, deleteConference, hasConferences } = useApp();
 
     const [loading, setLoading] = useState(true);
     const [hasAnyConferences, setHasAnyConferences] = useState(true);
@@ -84,7 +83,7 @@ export default function ConferencesScreen() {
     const handleDeleteConference = (conference: Conference) => {
         Alert.alert(
             t("common.delete") + " " + t("conferences.title").slice(0, -1),
-            `Are you sure you want to delete "${conference.name}"? This will delete all talks and notes associated with this conference and cannot be undone.`,
+            `${t("common.delete")} "${conference.name}"? ${t("conferences.deleteWarning")}`,
             [
                 { text: t("common.cancel"), style: "cancel" },
                 {
@@ -97,7 +96,7 @@ export default function ConferencesScreen() {
                             const hasConfs = await hasConferences();
                             setHasAnyConferences(hasConfs);
                         } catch {
-                            Alert.alert(t("common.errors.title"), "Failed to delete conference");
+                            Alert.alert(t("common.errors.title"), t("conferences.deleteFailed"));
                         }
                     },
                 },
@@ -167,9 +166,7 @@ export default function ConferencesScreen() {
                     <ThemedView style={styles.emptyContainer}>
                         <Ionicons name="calendar-outline" size={64} color={tintColor} />
                         <ThemedText style={styles.emptyText}>{t("conferences.noConferences")}</ThemedText>
-                        <ThemedText style={styles.emptySubtext}>
-                            {t("conferences.getStarted")}
-                        </ThemedText>
+                        <ThemedText style={styles.emptySubtext}>{t("conferences.getStarted")}</ThemedText>
                     </ThemedView>
                 }
                 contentContainerStyle={conferences.length === 0 ? { flex: 1 } : undefined}

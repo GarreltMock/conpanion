@@ -11,12 +11,14 @@ import {
 } from "react-native";
 import { router, useFocusEffect } from "expo-router";
 import { format, differenceInDays, addDays, isSameDay } from "date-fns";
+import { enUS, de } from "date-fns/locale";
 import { TabView, SceneMap, TabBar } from "react-native-tab-view";
 
 import { ThemedView } from "@/components/ThemedView";
 import { ThemedText } from "@/components/ThemedText";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { useApp } from "@/context/AppContext";
+import { useI18n } from "@/hooks/useI18n";
 import { Talk } from "@/types";
 import { useThemeColor } from "@/hooks/useThemeColor";
 
@@ -31,12 +33,24 @@ export default function TalksScreen() {
         toggleTalkSelection,
     } = useApp();
 
+    const { t, locale } = useI18n();
+
+    // Get appropriate date-fns locale based on current i18n locale
+    const dateFnsLocale = useMemo(() => {
+        switch (locale) {
+            case 'de':
+                return de;
+            case 'en':
+            default:
+                return enUS;
+        }
+    }, [locale]);
     const [refreshing, setRefreshing] = useState(false);
     const [index, setIndex] = useState(0);
     const [selectedDay, setSelectedDay] = useState(0); // Index of selected conference day
     const [routes] = useState([
-        { key: "myTalks", title: "My Talks" },
-        { key: "agenda", title: "Full Agenda" },
+        { key: "myTalks", title: t("talks.myTalks") },
+        { key: "agenda", title: t("talks.fullAgenda") },
     ]);
 
     const layout = useWindowDimensions();
@@ -58,12 +72,12 @@ export default function TalksScreen() {
             days.push({
                 index: i,
                 date: day,
-                label: format(day, "EEEE, MMMM d"),
+                label: format(day, "EEEE, MMMM d", { locale: dateFnsLocale }),
             });
         }
 
         return days;
-    }, [currentConference]);
+    }, [currentConference, dateFnsLocale]);
 
     // Set current day as default when conference days change
     useMemo(() => {
@@ -143,7 +157,7 @@ export default function TalksScreen() {
                             <ThemedText style={styles.talkTitle}>{item.title}</ThemedText>
                         </View>
                         <ThemedText style={styles.talkDate}>
-                            {`${format(item.startTime, "MMM d, yyyy • HH:mm")}${
+                            {`${format(item.startTime, "MMM d, yyyy • HH:mm", { locale: dateFnsLocale })}${
                                 item.duration ? ` (${item.duration} min)` : ""
                             }`}
                         </ThemedText>
@@ -153,7 +167,7 @@ export default function TalksScreen() {
                         {isActive && (
                             <View style={[styles.activeIndicator, { backgroundColor: tintColor }]}>
                                 <ThemedText style={styles.activeText} lightColor="#fff" darkColor={backgroundColor}>
-                                    Active
+                                    {t("status.active")}
                                 </ThemedText>
                             </View>
                         )}
@@ -208,7 +222,7 @@ export default function TalksScreen() {
             .filter((talk) => talk.conferenceId === currentConference?.id)
             .sort((a, b) => b.startTime.getTime() - a.startTime.getTime());
 
-        return renderTalksList(userSelectedTalks, "No talks selected", "Browse the agenda to bookmark talks");
+        return renderTalksList(userSelectedTalks, t("talks.noTalksSelected"), t("talks.browseTalks"));
     };
 
     const AgendaRoute = () => {
@@ -253,7 +267,7 @@ export default function TalksScreen() {
                                             { color: selectedDay === day.index ? backgroundColor : textColor },
                                         ]}
                                     >
-                                        {format(day.date, "EEE d")}
+                                        {format(day.date, "EEE d", { locale: dateFnsLocale })}
                                     </Text>
                                 </TouchableOpacity>
                             ))}
@@ -265,11 +279,7 @@ export default function TalksScreen() {
                 )}
 
                 {/* Talks List */}
-                {renderTalksList(
-                    sortedTalks,
-                    "No talks scheduled for this day",
-                    "Create a new talk to start taking notes"
-                )}
+                {renderTalksList(sortedTalks, t("talks.noTalksScheduled"), t("talks.createTalkToStart"))}
             </View>
         );
     };
@@ -302,8 +312,10 @@ export default function TalksScreen() {
         <ThemedView style={styles.container}>
             <View style={[styles.header, { borderBottomColor: borderLight }]}>
                 <View>
-                    <ThemedText style={styles.conferenceLabel}>CONFERENCE</ThemedText>
-                    <ThemedText style={styles.conferenceName}>{currentConference?.name || "My Conference"}</ThemedText>
+                    <ThemedText style={styles.conferenceLabel}>{t("talks.title").toUpperCase()}</ThemedText>
+                    <ThemedText style={styles.conferenceName}>
+                        {currentConference?.name || t("conferences.myConference")}
+                    </ThemedText>
                 </View>
 
                 <TouchableOpacity
@@ -312,7 +324,7 @@ export default function TalksScreen() {
                     activeOpacity={0.8}
                 >
                     <IconSymbol name="plus" size={18} color={backgroundColor} />
-                    <Text style={[styles.buttonText, { color: backgroundColor }]}>Add Talk</Text>
+                    <Text style={[styles.buttonText, { color: backgroundColor }]}>{t("talks.addTalk")}</Text>
                 </TouchableOpacity>
             </View>
 
