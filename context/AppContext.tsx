@@ -71,7 +71,7 @@ interface AppContextType {
     addImageNote: (fromGallery: boolean) => Promise<string | null>; // Returns image URI instead of creating note
     addAudioNote: () => Promise<Note | null>;
     stopAudioRecording: () => Promise<string | null>; // Returns audio URI instead of creating note
-    addNote: (text: string, images: NoteImage[], audioRecordings: string[]) => Promise<Note>;
+    addNote: (text: string, images: NoteImage[], audioRecordings: string[], talkId?: string) => Promise<Note>;
     updateNote: (note: Note) => Promise<void>;
     deleteNote: (noteId: string) => Promise<void>;
     deleteImage: (imagePath: string) => Promise<void>;
@@ -588,9 +588,15 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     };
 
     // Function to create a note with combined content (text, images, audio)
-    const addNote = async (text: string, images: NoteImage[], audioRecordings: string[]): Promise<Note> => {
-        if (!activeTalk) {
-            throw new Error("No active talk to add note to");
+    const addNote = async (
+        text: string,
+        images: NoteImage[],
+        audioRecordings: string[],
+        talkId?: string
+    ): Promise<Note> => {
+        const targetTalkId = talkId || activeTalk?.id;
+        if (!targetTalkId) {
+            throw new Error("No talk to add note to");
         }
 
         // Process images to ensure they're saved to document directory (not cache)
@@ -630,14 +636,14 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
         // Create the new note with all content
         const currentTime = new Date();
-        const relativeTimeSeconds = Math.max(
-            0,
-            Math.floor((currentTime.getTime() - activeTalk.startTime.getTime()) / 1000)
-        );
+        const targetTalk = activeTalk?.id === targetTalkId ? activeTalk : talks.find((t) => t.id === targetTalkId);
+        const relativeTimeSeconds = targetTalk
+            ? Math.max(0, Math.floor((currentTime.getTime() - targetTalk.startTime.getTime()) / 1000))
+            : 0;
 
         const newNote: Note = {
             id: generateId(),
-            talkId: activeTalk.id,
+            talkId: targetTalkId,
             textContent: text,
             images: processedImages,
             audioRecordings: audioRecordings,

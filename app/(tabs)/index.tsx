@@ -153,8 +153,8 @@ export default function NotesScreen() {
 
     const renderEmptyState = () => (
         <View style={styles.emptyStateContainer}>
-            <ThemedText style={styles.emptyStateTitle}>{t('notes.noActiveTalk')}</ThemedText>
-            <ThemedText style={styles.emptyStateDescription}>{t('notes.createTalkPrompt')}</ThemedText>
+            <ThemedText style={styles.emptyStateTitle}>{t("notes.noActiveTalk")}</ThemedText>
+            <ThemedText style={styles.emptyStateDescription}>{t("notes.createTalkPrompt")}</ThemedText>
         </View>
     );
 
@@ -185,9 +185,7 @@ export default function NotesScreen() {
                         keyboardShouldPersistTaps="handled"
                         ListEmptyComponent={() => (
                             <View style={styles.emptyNotesContainer}>
-                                <ThemedText style={styles.emptyNotesText}>
-                                    {t('notes.noNotesYet')}
-                                </ThemedText>
+                                <ThemedText style={styles.emptyNotesText}>{t("notes.noNotesYet")}</ThemedText>
                             </View>
                         )}
                     />

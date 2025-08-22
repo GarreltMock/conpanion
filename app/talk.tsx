@@ -72,7 +72,8 @@ export default function TalkDetailScreen() {
 
     const handleSubmitNote = async (text: string, images: NoteImage[], audioRecordings: string[]) => {
         if (!text.trim() && images.length === 0 && audioRecordings.length === 0) return;
-        await addNote(text, images, audioRecordings);
+        if (!talk?.id) return;
+        await addNote(text, images, audioRecordings, talk.id);
     };
 
     // Handle taking a photo
