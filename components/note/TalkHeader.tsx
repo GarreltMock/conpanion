@@ -6,6 +6,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { useThemeColor } from "@/hooks/useThemeColor";
+import { useI18n } from "@/hooks/useI18n";
 import { Talk } from "@/types";
 
 interface TalkHeaderProps {
@@ -15,6 +16,7 @@ interface TalkHeaderProps {
 }
 
 export const TalkHeader: React.FC<TalkHeaderProps> = ({ conferenceName, talk, onDone }) => {
+    const { t } = useI18n();
     const tintColor = useThemeColor({}, "tint");
     const backgroundColor = useThemeColor({}, "background");
     const borderLightColor = useThemeColor({}, "borderLight");
@@ -65,11 +67,11 @@ export const TalkHeader: React.FC<TalkHeaderProps> = ({ conferenceName, talk, on
                                 {talk.title}
                             </ThemedText>
                             <ThemedText style={styles.startTime}>
-                                Started {format(talk.startTime, "HH:mm, MMM d")}
+                                {t("talks.started")} {format(talk.startTime, "HH:mm, MMM d")}
                             </ThemedText>
                         </>
                     ) : (
-                        <ThemedText style={styles.noTalk}>No active talk</ThemedText>
+                        <ThemedText style={styles.noTalk}>{t("talks.noActiveTalk")}</ThemedText>
                     )}
                 </View>
 
@@ -90,7 +92,7 @@ export const TalkHeader: React.FC<TalkHeaderProps> = ({ conferenceName, talk, on
                             return (
                                 <>
                                     <IconSymbol name="plus" size={18} color={backgroundColor} />
-                                    <Text style={[styles.buttonText, { color: backgroundColor }]}>New Talk</Text>
+                                    <Text style={[styles.buttonText, { color: backgroundColor }]}>{t("talks.actions.new")}</Text>
                                 </>
                             );
                         }
@@ -99,14 +101,14 @@ export const TalkHeader: React.FC<TalkHeaderProps> = ({ conferenceName, talk, on
                             return (
                                 <>
                                     <IconSymbol name="plus" size={18} color={textColor} />
-                                    <Text style={[styles.buttonText, { color: textColor }]}>Switch Talk</Text>
+                                    <Text style={[styles.buttonText, { color: textColor }]}>{t("talks.actions.switch")}</Text>
                                 </>
                             );
                         } else {
                             return (
                                 <>
                                     <IconSymbol name="checkmark" size={18} color={backgroundColor} />
-                                    <Text style={[styles.buttonText, { color: backgroundColor }]}>Done</Text>
+                                    <Text style={[styles.buttonText, { color: backgroundColor }]}>{t("common.done")}</Text>
                                 </>
                             );
                         }

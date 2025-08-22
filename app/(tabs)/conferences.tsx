@@ -10,6 +10,7 @@ import { useThemeColor } from "@/hooks/useThemeColor";
 import { useRouter } from "expo-router";
 import { Conference } from "@/types";
 import { IconSymbol } from "@/components/ui/IconSymbol";
+import { useI18n } from "@/hooks/useI18n";
 
 export default function ConferencesScreen() {
     const { conferences, currentConference, getConferences, switchActiveConference, deleteConference, hasConferences } =
@@ -20,6 +21,7 @@ export default function ConferencesScreen() {
     const [refreshing, setRefreshing] = useState(false);
 
     const router = useRouter();
+    const { t } = useI18n();
     const tintColor = useThemeColor({}, "tint");
     const backgroundColor = useThemeColor({}, "background");
     const borderLight = useThemeColor({}, "borderLight");
@@ -81,12 +83,12 @@ export default function ConferencesScreen() {
 
     const handleDeleteConference = (conference: Conference) => {
         Alert.alert(
-            "Delete Conference",
+            t("common.delete") + " " + t("conferences.title").slice(0, -1),
             `Are you sure you want to delete "${conference.name}"? This will delete all talks and notes associated with this conference and cannot be undone.`,
             [
-                { text: "Cancel", style: "cancel" },
+                { text: t("common.cancel"), style: "cancel" },
                 {
-                    text: "Delete",
+                    text: t("common.delete"),
                     style: "destructive",
                     onPress: async () => {
                         try {
@@ -95,7 +97,7 @@ export default function ConferencesScreen() {
                             const hasConfs = await hasConferences();
                             setHasAnyConferences(hasConfs);
                         } catch {
-                            Alert.alert("Error", "Failed to delete conference");
+                            Alert.alert(t("common.errors.title"), "Failed to delete conference");
                         }
                     },
                 },
@@ -119,7 +121,7 @@ export default function ConferencesScreen() {
     if (loading) {
         return (
             <View style={styles.centered}>
-                <ThemedText>Loading conferences...</ThemedText>
+                <ThemedText>{t("conferences.loading")}</ThemedText>
             </View>
         );
     }
@@ -131,7 +133,7 @@ export default function ConferencesScreen() {
     return (
         <ThemedView style={styles.container}>
             <View style={[styles.header, { borderBottomColor: borderLight }]}>
-                <ThemedText style={styles.headerTitle}>Conferences</ThemedText>
+                <ThemedText style={styles.headerTitle}>{t("conferences.title")}</ThemedText>
                 <Pressable
                     style={({ pressed }) => [
                         styles.addButton,
@@ -143,7 +145,7 @@ export default function ConferencesScreen() {
                     onPress={handleCreateNewConference}
                 >
                     <IconSymbol name="plus" size={18} color={backgroundColor} />
-                    <Text style={[styles.buttonText, { color: backgroundColor }]}>Add</Text>
+                    <Text style={[styles.buttonText, { color: backgroundColor }]}>{t("common.actions.add")}</Text>
                 </Pressable>
             </View>
             <FlatList
@@ -164,9 +166,9 @@ export default function ConferencesScreen() {
                 ListEmptyComponent={
                     <ThemedView style={styles.emptyContainer}>
                         <Ionicons name="calendar-outline" size={64} color={tintColor} />
-                        <ThemedText style={styles.emptyText}>No conferences found</ThemedText>
+                        <ThemedText style={styles.emptyText}>{t("conferences.noConferences")}</ThemedText>
                         <ThemedText style={styles.emptySubtext}>
-                            Tap the "New Conference" button to get started
+                            {t("conferences.getStarted")}
                         </ThemedText>
                     </ThemedView>
                 }

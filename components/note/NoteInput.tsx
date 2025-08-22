@@ -14,6 +14,7 @@ import { router } from "expo-router";
 import { DeviceEventEmitter } from "react-native";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { useThemeColor } from "@/hooks/useThemeColor";
+import { useI18n } from "@/hooks/useI18n";
 import { Audio } from "expo-av";
 import { ThemedText } from "@/components/ThemedText";
 import { useImageTransform } from "@/hooks/useImageTransform";
@@ -58,6 +59,7 @@ export const NoteInput: React.FC<NoteInputProps> = ({
     initialAudio = [],
     autoFocus = false,
 }) => {
+    const { t } = useI18n();
     const [text, setText] = useState(initialText);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [cachedImages, setCachedImages] = useState<CachedImage[]>([]);
@@ -457,7 +459,7 @@ export const NoteInput: React.FC<NoteInputProps> = ({
                 <TextInput
                     ref={inputRef}
                     style={[styles.textInput, { color: textColor }]}
-                    placeholder="Type a note..."
+                    placeholder={t("notes.input.placeholder")}
                     placeholderTextColor={textColor + "80"}
                     value={text}
                     onChangeText={setText}

@@ -10,20 +10,195 @@
     "done": "Fertig",
     "loading": "Lädt...",
     "error": "Ein Fehler ist aufgetreten",
-    "retry": "Wiederholen"
+    "retry": "Wiederholen",
+    "talks": "Vorträge",
+    "actions": {
+      "add": "Hinzufügen",
+      "create": "Erstellen",
+      "export": "Exportieren",
+      "selectAll": "Alle auswählen",
+      "selectNone": "Keine auswählen"
+    },
+    "dateRange": {
+      "start": "Start:",
+      "end": "Ende:"
+    },
+    "states": {
+      "creating": "Erstelle...",
+      "exporting": "Exportiere...",
+      "saving": "Speichere...",
+      "processing": "Verarbeite..."
+    },
+    "formats": {
+      "pdf": "PDF",
+      "markdown": "Markdown"
+    },
+    "errors": {
+      "title": "Fehler",
+      "generic": "Etwas ist schiefgelaufen"
+    }
   },
   "navigation": {
     "home": "Startseite",
     "profile": "Profil",
-    "settings": "Einstellungen"
+    "settings": "Einstellungen",
+    "tabs": {
+      "notes": "Notizen",
+      "talks": "Vorträge",
+      "conferences": "Konferenzen"
+    }
   },
   "errors": {
+    "oops": "Ups!",
+    "screenNotExist": "Diese Seite existiert nicht.",
+    "goToHome": "Zur Startseite gehen!",
+    "exportFileNotFound": "Export-Datei nicht gefunden",
+    "shareExportFailed": "Fehler beim Teilen der Export-Datei",
+    "noteNotFound": "Notiz nicht gefunden",
+    "updateNoteFailed": "Notiz konnte nicht aktualisiert werden. Bitte versuchen Sie es erneut.",
+    "conferenceCreationFailed": "Konferenz konnte nicht erstellt werden",
+    "switchConferenceFailed": "Konferenz konnte nicht gewechselt werden",
+    "conferenceNotFound": "Konferenz nicht gefunden",
+    "exportFailed": "Export fehlgeschlagen",
+    "audioPlaybackFailed": "Audioaufnahme konnte nicht abgespielt werden.",
+    "urlCannotOpen": "Diese URL kann nicht geöffnet werden",
+    "urlOpenFailed": "URL konnte nicht geöffnet werden",
+    "transformationFailed": "Bild konnte nicht mit den gewählten Ecken transformiert werden.",
     "networkError": "Netzwerkfehler. Bitte überprüfen Sie Ihre Verbindung.",
     "unknownError": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut."
   },
   "notes": {
     "noActiveTalk": "Kein aktiver Vortrag",
     "createTalkPrompt": "Erstellen Sie einen neuen Vortrag, um Notizen zu machen",
-    "noNotesYet": "Noch keine Notizen. Beginnen Sie mit der Notizen für diesen Vortrag."
+    "noNotesYet": "Noch keine Notizen. Beginnen Sie mit Notizen für diesen Vortrag.",
+    "input": {
+      "placeholder": "Notiz eingeben..."
+    },
+    "audioRecording": "Audioaufnahme",
+    "audioRecordingWithIndex": "Audioaufnahme {{index}}",
+    "playing": "Wird abgespielt",
+    "delete": {
+      "title": "Notiz löschen",
+      "confirmation": "Sind Sie sicher, dass Sie diese Notiz löschen möchten?"
+    },
+    "noNotesAvailable": "Keine Notizen für diesen Vortrag verfügbar"
+  },
+  "talks": {
+    "noActiveTalk": "Kein aktiver Vortrag",
+    "started": "Gestartet",
+    "actions": {
+      "new": "Neuer Vortrag",
+      "switch": "Vortrag wechseln",
+      "addToMyTalks": "Zu meinen Vorträgen hinzufügen",
+      "rateTalk": "Vortrag bewerten"
+    },
+    "myTalks": "Meine Vorträge",
+    "fullAgenda": "Vollständige Agenda",
+    "noTalksSelected": "Keine Vorträge ausgewählt",
+    "browseTalks": "Durchsuchen Sie die Agenda, um Vorträge zu markieren",
+    "noTalksScheduled": "Keine Vorträge für diesen Tag geplant",
+    "createTalkToStart": "Erstellen Sie einen neuen Vortrag, um Notizen zu machen",
+    "talkDetails": "Vortrag Details",
+    "addSummary": "Zusammenfassung hinzufügen",
+    "userSummary": "Benutzer-Zusammenfassung",
+    "speaker": "Sprecher",
+    "speakers": "Sprecher",
+    "location": "Ort",
+    "description": "Beschreibung",
+    "evaluation": "Bewertung",
+    "nextTalk": "Nächster Vortrag: {{title}}",
+    "summary": "Zusammenfassung",
+    "keepTakingNotes": "Weiter Notizen machen",
+    "addFirstTalk": "Ersten Vortrag hinzufügen"
+  },
+  "conferences": {
+    "title": "Konferenzen",
+    "loading": "Lade Konferenzen...",
+    "noConferences": "Keine Konferenzen gefunden",
+    "getStarted": "Tippen Sie auf \"Neue Konferenz\", um zu beginnen",
+    "makeActive": "Aktivieren",
+    "activeConference": "{{name}} ist jetzt Ihre aktive Konferenz",
+    "goToConferences": "Zu Konferenzen gehen",
+    "statistics": "Statistiken",
+    "timeline": "Vorträge-Zeitplan",
+    "created": "Erstellt",
+    "myConference": "Meine Konferenz"
+  },
+  "forms": {
+    "conference": {
+      "nameRequired": "Konferenz Name *",
+      "namePlaceholder": "Konferenz Name eingeben",
+      "locationOptional": "Ort (Optional)",
+      "locationPlaceholder": "Konferenz Ort eingeben",
+      "descriptionOptional": "Beschreibung (Optional)",
+      "descriptionPlaceholder": "Konferenz Beschreibung eingeben",
+      "dateRangeRequired": "Zeitraum *",
+      "status": "Status"
+    },
+    "talk": {
+      "titlePlaceholder": "Vortrag Titel eingeben",
+      "stageOptional": "Bühne (optional)",
+      "descriptionOptional": "Beschreibung (optional)",
+      "startTime": "Startzeit",
+      "duration": "Dauer",
+      "durationMinutes": "{{duration}} Minuten"
+    },
+    "speakers": {
+      "title": "Sprecher (optional)",
+      "namePlaceholder": "Sprecher Name",
+      "photoUrlOptional": "Foto URL (optional)",
+      "bioOptional": "Biografie (optional)"
+    },
+    "export": {
+      "title": "{{conference}} exportieren",
+      "formatTitle": "Export Format",
+      "includeImages": "Bilder einschließen",
+      "filenameLabel": "Dateiname",
+      "filenamePlaceholder": "Export Dateiname eingeben",
+      "filenameHelper": "Export wird gespeichert als {{filename}}.{{format}}",
+      "selectTalks": "Vorträge zum Einschließen auswählen",
+      "noTalks": "Keine Vorträge in dieser Konferenz gefunden"
+    },
+    "validation": {
+      "nameRequired": "Konferenz Name ist erforderlich",
+      "filenameRequired": "Dateiname ist erforderlich"
+    }
+  },
+  "modals": {
+    "newConference": "Neue Konferenz",
+    "newTalk": "Neuer Vortrag",
+    "newAgendaTalk": "Neuer Agenda-Vortrag",
+    "editImage": "Bild bearbeiten"
+  },
+  "onboarding": {
+    "welcome": {
+      "title": "Willkommen bei Conpanion!",
+      "description": "Lassen Sie uns Ihre erste Konferenz einrichten, um zu beginnen. Später können Sie weitere Konferenzen erstellen und zwischen ihnen wechseln."
+    },
+    "createFirstConference": "Meine erste Konferenz erstellen",
+    "whatsNext": {
+      "title": "Was kommt als Nächstes?",
+      "createTalks": "Erstellen Sie Vorträge für Ihre Sitzungen",
+      "takeNotes": "Machen Sie Notizen während jedes Vortrags",
+      "addMedia": "Fügen Sie Bilder und Audioaufnahmen hinzu",
+      "exportNotes": "Exportieren Sie Ihre Konferenz-Notizen"
+    }
+  },
+  "help": {
+    "createScheduledTalk": "Erstellen Sie einen geplanten Vortrag für Ihre Agenda. Der Vortrag wird aktiv, wenn seine Startzeit erreicht ist.",
+    "dragCorners": "Ziehen Sie die Ecken, um die Dokumentgrenzen anzupassen",
+    "keepTakingNotes": "Dies erstellt einen neuen Vortrag und setzt ihn als aktiven Vortrag für Notizen."
+  },
+  "status": {
+    "active": "Aktiv",
+    "evaluation": "Bewertung",
+    "processing": "Verarbeite Bild..."
+  },
+  "actions": {
+    "transform": "Transformieren"
+  },
+  "share": {
+    "conferenceExport": "Konferenz Export",
+    "shareMessage": "Hier ist Ihr Konferenz-Export von Conpanion"
   }
 }

@@ -10,20 +10,195 @@
     "done": "Done",
     "loading": "Loading...",
     "error": "An error occurred",
-    "retry": "Retry"
+    "retry": "Retry",
+    "talks": "talks",
+    "actions": {
+      "add": "Add",
+      "create": "Create",
+      "export": "Export",
+      "selectAll": "Select All",
+      "selectNone": "Select None"
+    },
+    "dateRange": {
+      "start": "Start:",
+      "end": "End:"
+    },
+    "states": {
+      "creating": "Creating...",
+      "exporting": "Exporting...",
+      "saving": "Saving...",
+      "processing": "Processing..."
+    },
+    "formats": {
+      "pdf": "PDF",
+      "markdown": "Markdown"
+    },
+    "errors": {
+      "title": "Error",
+      "generic": "Something went wrong"
+    }
   },
   "navigation": {
     "home": "Home",
-    "profile": "Profile",
-    "settings": "Settings"
+    "profile": "Profile", 
+    "settings": "Settings",
+    "tabs": {
+      "notes": "Notes",
+      "talks": "Talks",
+      "conferences": "Conferences"
+    }
   },
   "errors": {
+    "oops": "Oops!",
+    "screenNotExist": "This screen doesn't exist.",
+    "goToHome": "Go to home screen!",
+    "exportFileNotFound": "Export file not found",
+    "shareExportFailed": "Failed to share the export file",
+    "noteNotFound": "Note not found",
+    "updateNoteFailed": "Failed to update note. Please try again.",
+    "conferenceCreationFailed": "Failed to create conference",
+    "switchConferenceFailed": "Failed to switch conference",
+    "conferenceNotFound": "Conference not found",
+    "exportFailed": "Export failed",
+    "audioPlaybackFailed": "Failed to play audio recording.",
+    "urlCannotOpen": "Cannot open this URL",
+    "urlOpenFailed": "Failed to open URL",
+    "transformationFailed": "Failed to transform the image with the selected corners.",
     "networkError": "Network error. Please check your connection.",
     "unknownError": "Something went wrong. Please try again."
   },
   "notes": {
     "noActiveTalk": "No Active Talk",
     "createTalkPrompt": "Create a new talk to start taking notes",
-    "noNotesYet": "No notes yet. Start taking notes for this talk."
+    "noNotesYet": "No notes yet. Start taking notes for this talk.",
+    "input": {
+      "placeholder": "Type a note..."
+    },
+    "audioRecording": "Audio Recording",
+    "audioRecordingWithIndex": "Audio Recording {{index}}",
+    "playing": "Playing",
+    "delete": {
+      "title": "Delete Note",
+      "confirmation": "Are you sure you want to delete this note?"
+    },
+    "noNotesAvailable": "No notes available for this talk"
+  },
+  "talks": {
+    "noActiveTalk": "No active talk",
+    "started": "Started",
+    "actions": {
+      "new": "New Talk",
+      "switch": "Switch Talk",
+      "addToMyTalks": "Add to My Talks",
+      "rateTalk": "Rate Talk"
+    },
+    "myTalks": "My Talks",
+    "fullAgenda": "Full Agenda",
+    "noTalksSelected": "No talks selected",
+    "browseTalks": "Browse the agenda to bookmark talks",
+    "noTalksScheduled": "No talks scheduled for this day",
+    "createTalkToStart": "Create a new talk to start taking notes",
+    "talkDetails": "Talk Details",
+    "addSummary": "Add Summary",
+    "userSummary": "User Summary",
+    "speaker": "Speaker",
+    "speakers": "Speakers",
+    "location": "Location",
+    "description": "Description",
+    "evaluation": "Evaluation",
+    "nextTalk": "Next Talk: {{title}}",
+    "summary": "Summary",
+    "keepTakingNotes": "Keep taking notes",
+    "addFirstTalk": "Add First Talk"
+  },
+  "conferences": {
+    "title": "Conferences",
+    "loading": "Loading conferences...",
+    "noConferences": "No conferences found",
+    "getStarted": "Tap the \"New Conference\" button to get started",
+    "makeActive": "Make Active",
+    "activeConference": "{{name}} is now your active conference",
+    "goToConferences": "Go to Conferences",
+    "statistics": "Statistics",
+    "timeline": "Talks Timeline",
+    "created": "Created",
+    "myConference": "My Conference"
+  },
+  "forms": {
+    "conference": {
+      "nameRequired": "Conference Name *",
+      "namePlaceholder": "Enter conference name",
+      "locationOptional": "Location (Optional)",
+      "locationPlaceholder": "Enter conference location",
+      "descriptionOptional": "Description (Optional)",
+      "descriptionPlaceholder": "Enter conference description",
+      "dateRangeRequired": "Date Range *",
+      "status": "Status"
+    },
+    "talk": {
+      "titlePlaceholder": "Enter talk title",
+      "stageOptional": "Stage (optional)",
+      "descriptionOptional": "Description (optional)",
+      "startTime": "Start Time",
+      "duration": "Duration",
+      "durationMinutes": "{{duration}} minutes"
+    },
+    "speakers": {
+      "title": "Speakers (optional)",
+      "namePlaceholder": "Speaker name",
+      "photoUrlOptional": "Photo URL (optional)",
+      "bioOptional": "Bio (optional)"
+    },
+    "export": {
+      "title": "Export {{conference}}",
+      "formatTitle": "Export Format",
+      "includeImages": "Include Images",
+      "filenameLabel": "Filename",
+      "filenamePlaceholder": "Enter export filename",
+      "filenameHelper": "Export will be saved as {{filename}}.{{format}}",
+      "selectTalks": "Select Talks to Include",
+      "noTalks": "No talks found in this conference"
+    },
+    "validation": {
+      "nameRequired": "Conference name is required",
+      "filenameRequired": "Filename is required"
+    }
+  },
+  "modals": {
+    "newConference": "New Conference",
+    "newTalk": "New Talk", 
+    "newAgendaTalk": "New Agenda Talk",
+    "editImage": "Edit Image"
+  },
+  "onboarding": {
+    "welcome": {
+      "title": "Welcome to Conpanion!",
+      "description": "Let's set up your first conference to get started. Later, you can create more conferences and switch between them."
+    },
+    "createFirstConference": "Create My First Conference",
+    "whatsNext": {
+      "title": "What's Next?",
+      "createTalks": "Create talks for your sessions",
+      "takeNotes": "Take notes during each talk",
+      "addMedia": "Add images and audio recordings",
+      "exportNotes": "Export your conference notes"
+    }
+  },
+  "help": {
+    "createScheduledTalk": "Create a scheduled talk for your agenda. The talk will become active when its start time arrives.",
+    "dragCorners": "Drag the corners to adjust the document boundaries",
+    "keepTakingNotes": "This will create a new talk and set it as the active talk for taking notes."
+  },
+  "status": {
+    "active": "Active",
+    "evaluation": "Evaluation",
+    "processing": "Processing image..."
+  },
+  "actions": {
+    "transform": "Transform"
+  },
+  "share": {
+    "conferenceExport": "Conference Export",
+    "shareMessage": "Here is your conference export from Conpanion"
   }
 }

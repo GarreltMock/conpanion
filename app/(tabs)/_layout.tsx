@@ -6,9 +6,11 @@ import { HapticTab } from "@/components/HapticTab";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
+import { useI18n } from "@/hooks/useI18n";
 
 export default function TabLayout() {
     const colorScheme = useColorScheme();
+    const { t } = useI18n();
     const [isKeyboardVisible, setKeyboardVisible] = useState(false);
 
     useEffect(() => {
@@ -41,21 +43,21 @@ export default function TabLayout() {
             <Tabs.Screen
                 name="index"
                 options={{
-                    title: "Notes",
+                    title: t("navigation.tabs.notes"),
                     tabBarIcon: ({ color }) => <IconSymbol size={28} name="note.text" color={color} />,
                 }}
             />
             <Tabs.Screen
                 name="talks"
                 options={{
-                    title: "Talks",
+                    title: t("navigation.tabs.talks"),
                     tabBarIcon: ({ color }) => <IconSymbol size={28} name="list.bullet" color={color} />,
                 }}
             />
             <Tabs.Screen
                 name="conferences"
                 options={{
-                    title: "Conferences",
+                    title: t("navigation.tabs.conferences"),
                     tabBarIcon: ({ color }) => <IconSymbol size={28} name="calendar" color={color} />,
                 }}
             />
