@@ -17,7 +17,6 @@ function isValidUrl(text: string): boolean {
     }
 }
 
-
 export function useImageTransform() {
     const [isInitialized, setIsInitialized] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
