@@ -508,9 +508,9 @@ export const NoteInput: React.FC<NoteInputProps> = ({
                         disabled={(!text.trim() && !hasAttachments) || disabled}
                     >
                         {isSubmitting ? (
-                            <ActivityIndicator color={whiteColor} size="small" />
+                            <ActivityIndicator color={backgroundColor} size="small" />
                         ) : (
-                            <IconSymbol name="arrow.up" size={20} color={whiteColor} />
+                            <IconSymbol name="arrow.up" size={20} color={backgroundColor} />
                         )}
                     </Pressable>
                 </View>

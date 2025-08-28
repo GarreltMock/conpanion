@@ -38,9 +38,9 @@ export default function TalksScreen() {
     // Get appropriate date-fns locale based on current i18n locale
     const dateFnsLocale = useMemo(() => {
         switch (locale) {
-            case 'de':
+            case "de":
                 return de;
-            case 'en':
+            case "en":
             default:
                 return enUS;
         }
@@ -220,7 +220,7 @@ export default function TalksScreen() {
     const MyTalksRoute = () => {
         const userSelectedTalks = getUserSelectedTalks()
             .filter((talk) => talk.conferenceId === currentConference?.id)
-            .sort((a, b) => b.startTime.getTime() - a.startTime.getTime());
+            .sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
 
         return renderTalksList(userSelectedTalks, t("talks.noTalksSelected"), t("talks.browseTalks"));
     };
@@ -236,7 +236,7 @@ export default function TalksScreen() {
             if (!selectedDate) return allAgendaTalks;
 
             return allAgendaTalks.filter((talk) => isSameDay(talk.startTime, selectedDate));
-        }, [allAgendaTalks, conferenceDays, selectedDay]);
+        }, [allAgendaTalks]);
 
         const sortedTalks = filteredTalks.sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
 
@@ -244,7 +244,7 @@ export default function TalksScreen() {
             <View style={{ flex: 1 }}>
                 {/* Day Selection Header - Fixed at top */}
                 {conferenceDays.length > 0 && (
-                    <View style={[styles.daySelectionContainer, { borderBottomColor: borderLight }]}>
+                    <View style={[styles.daySelectionContainer]}>
                         <ScrollView
                             horizontal
                             style={styles.dayButtonsContainer}
@@ -272,9 +272,6 @@ export default function TalksScreen() {
                                 </TouchableOpacity>
                             ))}
                         </ScrollView>
-                        {conferenceDays[selectedDay] && (
-                            <ThemedText style={styles.selectedDayText}>{conferenceDays[selectedDay].label}</ThemedText>
-                        )}
                     </View>
                 )}
 
@@ -312,7 +309,7 @@ export default function TalksScreen() {
         <ThemedView style={styles.container}>
             <View style={[styles.header, { borderBottomColor: borderLight }]}>
                 <View>
-                    <ThemedText style={styles.conferenceLabel}>{t("talks.title").toUpperCase()}</ThemedText>
+                    <ThemedText style={styles.conferenceLabel}>{t("talks.title")}</ThemedText>
                     <ThemedText style={styles.conferenceName}>
                         {currentConference?.name || t("conferences.myConference")}
                     </ThemedText>
@@ -355,14 +352,12 @@ const styles = StyleSheet.create({
         alignItems: "center",
         paddingHorizontal: 16,
         paddingTop: 60,
-        paddingBottom: 16,
+        paddingBottom: 8,
         borderBottomWidth: 1,
     },
     conferenceLabel: {
         fontSize: 12,
         opacity: 0.7,
-        marginBottom: 4,
-        letterSpacing: 0.5,
     },
     conferenceName: {
         fontSize: 22,
@@ -469,11 +464,10 @@ const styles = StyleSheet.create({
     daySelectionContainer: {
         backgroundColor: "transparent",
         paddingVertical: 12,
-        borderBottomWidth: 1,
     },
     dayButtonsContainer: {
         flexDirection: "row",
-        marginBottom: 8,
+        marginBottom: 4,
         paddingHorizontal: 16,
     },
     dayButtonsContent: {

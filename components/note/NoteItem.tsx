@@ -1,7 +1,7 @@
 import { format } from "date-fns";
 import { Audio } from "expo-av";
 import { router } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
     Alert,
     Image,
@@ -17,7 +17,6 @@ import {
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { IconSymbol } from "@/components/ui/IconSymbol";
-import { useApp } from "@/context/AppContext";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { Note } from "@/types";
 import { getAbsolutePath } from "@/storage/helper";
@@ -37,8 +36,7 @@ export const NoteItem: React.FC<NoteItemProps> = ({ note, onDelete, readOnly = f
     const whiteColor = useThemeColor({}, "white");
     const borderLightColor = useThemeColor({}, "borderLight");
     const backgroundOverlayColor = useThemeColor({}, "backgroundOverlay");
-
-    const { updateNote } = useApp();
+    const backgroundColor = useThemeColor({}, "background");
 
     // Format stored relative time for display
     const formatRelativeTime = () => {
@@ -59,7 +57,6 @@ export const NoteItem: React.FC<NoteItemProps> = ({ note, onDelete, readOnly = f
             return `${seconds}s`;
         }
     };
-
 
     const handlePlayPauseAudio = async (uri: string, index: number) => {
         // If a sound is already playing, stop it
@@ -189,7 +186,6 @@ export const NoteItem: React.FC<NoteItemProps> = ({ note, onDelete, readOnly = f
                                         imageUri: encodeURIComponent(imageAbsoluteUri),
                                     };
 
-
                                     router.push({
                                         pathname: "/modals/image-view",
                                         params,
@@ -203,7 +199,7 @@ export const NoteItem: React.FC<NoteItemProps> = ({ note, onDelete, readOnly = f
                                 />
                                 {image.originalUri && (
                                     <View style={[styles.transformedIndicator, { backgroundColor: `${tintColor}CC` }]}>
-                                        <IconSymbol name="wand.and.stars" size={12} color={whiteColor} />
+                                        <IconSymbol name="wand.and.stars" size={12} color={backgroundColor} />
                                     </View>
                                 )}
                                 {image.links && image.links.length > 0 && (

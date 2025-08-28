@@ -60,7 +60,6 @@ export const TalkHeader: React.FC<TalkHeaderProps> = ({ conferenceName, talk, on
         <ThemedView style={[styles.container, { borderBottomColor: borderLightColor }]}>
             <View style={styles.headerContent}>
                 <View style={styles.titleContainer}>
-                    <ThemedText style={styles.conferenceName}>{conferenceName}</ThemedText>
                     {talk ? (
                         <>
                             <ThemedText style={styles.talkTitle} numberOfLines={1} ellipsizeMode="tail">
@@ -92,7 +91,9 @@ export const TalkHeader: React.FC<TalkHeaderProps> = ({ conferenceName, talk, on
                             return (
                                 <>
                                     <IconSymbol name="plus" size={18} color={backgroundColor} />
-                                    <Text style={[styles.buttonText, { color: backgroundColor }]}>{t("talks.actions.new")}</Text>
+                                    <Text style={[styles.buttonText, { color: backgroundColor }]}>
+                                        {t("talks.actions.new")}
+                                    </Text>
                                 </>
                             );
                         }
@@ -101,14 +102,18 @@ export const TalkHeader: React.FC<TalkHeaderProps> = ({ conferenceName, talk, on
                             return (
                                 <>
                                     <IconSymbol name="plus" size={18} color={textColor} />
-                                    <Text style={[styles.buttonText, { color: textColor }]}>{t("talks.actions.switch")}</Text>
+                                    <Text style={[styles.buttonText, { color: textColor }]}>
+                                        {t("talks.actions.switch")}
+                                    </Text>
                                 </>
                             );
                         } else {
                             return (
                                 <>
                                     <IconSymbol name="checkmark" size={18} color={backgroundColor} />
-                                    <Text style={[styles.buttonText, { color: backgroundColor }]}>{t("common.done")}</Text>
+                                    <Text style={[styles.buttonText, { color: backgroundColor }]}>
+                                        {t("common.done")}
+                                    </Text>
                                 </>
                             );
                         }
@@ -123,7 +128,7 @@ const styles = StyleSheet.create({
     container: {
         paddingHorizontal: 16,
         paddingTop: 60,
-        paddingBottom: 16,
+        paddingBottom: 8,
         borderBottomWidth: 1,
     },
     headerContent: {
@@ -136,17 +141,16 @@ const styles = StyleSheet.create({
         marginRight: 16,
     },
     conferenceName: {
-        fontSize: 14,
+        fontSize: 12,
         opacity: 0.7,
-        marginBottom: 4,
+        marginBottom: 0,
     },
     talkTitle: {
-        fontSize: 24,
+        fontSize: 22,
         fontWeight: "bold",
-        marginBottom: 4,
     },
     startTime: {
-        fontSize: 14,
+        fontSize: 12,
         opacity: 0.7,
     },
     noTalk: {
