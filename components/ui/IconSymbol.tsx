@@ -49,6 +49,7 @@ const MAPPING = {
     eye: "visibility",
     "wand.and.stars": "auto-fix-high",
     link: "link",
+    "arrow.right.circle": "arrow-circle-right",
 } as Partial<
     Record<import("expo-symbols").SymbolViewProps["name"], React.ComponentProps<typeof MaterialIcons>["name"]>
 >;

@@ -147,9 +147,17 @@ export default function TalkEvaluationModal() {
             <View style={styles.spacer} />
             {nextTalk && (
                 <View style={styles.nextTalkContainer}>
-                    <ThemedText style={[styles.nextTalkText, { color: textColor + "80" }]}>
-                        Next Talk: {nextTalk.title}
-                    </ThemedText>
+                    <View style={styles.nextTalkRow}>
+                        <IconSymbol 
+                            name="arrow.right.circle" 
+                            size={16} 
+                            color={textColor + "80"} 
+                            style={styles.nextTalkIcon} 
+                        />
+                        <ThemedText style={[styles.nextTalkText, { color: textColor + "80" }]}>
+                            Next Talk: {nextTalk.title}
+                        </ThemedText>
+                    </View>
                 </View>
             )}
             <ThemedView style={styles.container}>
@@ -240,6 +248,13 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
         paddingVertical: 8,
         alignItems: "center",
+    },
+    nextTalkRow: {
+        flexDirection: "row",
+        alignItems: "center",
+    },
+    nextTalkIcon: {
+        marginRight: 6,
     },
     nextTalkText: {
         fontSize: 13,
