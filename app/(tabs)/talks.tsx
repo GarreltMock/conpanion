@@ -218,11 +218,60 @@ export default function TalksScreen() {
     );
 
     const MyTalksRoute = () => {
-        const userSelectedTalks = getUserSelectedTalks()
-            .filter((talk) => talk.conferenceId === currentConference?.id)
-            .sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
+        const allUserSelectedTalks = getUserSelectedTalks()
+            .filter((talk) => talk.conferenceId === currentConference?.id);
 
-        return renderTalksList(userSelectedTalks, t("talks.noTalksSelected"), t("talks.browseTalks"));
+        // Filter talks by selected day
+        const filteredTalks = useMemo(() => {
+            if (conferenceDays.length === 0) return allUserSelectedTalks;
+
+            const selectedDate = conferenceDays[selectedDay]?.date;
+            if (!selectedDate) return allUserSelectedTalks;
+
+            return allUserSelectedTalks.filter((talk) => isSameDay(talk.startTime, selectedDate));
+        }, [allUserSelectedTalks]);
+
+        const sortedTalks = filteredTalks.sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
+
+        return (
+            <View style={{ flex: 1 }}>
+                {/* Day Selection Header - Fixed at top */}
+                {conferenceDays.length > 0 && (
+                    <View style={[styles.daySelectionContainer]}>
+                        <ScrollView
+                            horizontal
+                            style={styles.dayButtonsContainer}
+                            showsHorizontalScrollIndicator={false}
+                            contentContainerStyle={styles.dayButtonsContent}
+                        >
+                            {conferenceDays.map((day) => (
+                                <TouchableOpacity
+                                    key={day.index}
+                                    style={[
+                                        styles.dayButton,
+                                        { borderColor: borderColor },
+                                        selectedDay === day.index && { backgroundColor: tintColor },
+                                    ]}
+                                    onPress={() => setSelectedDay(day.index)}
+                                >
+                                    <Text
+                                        style={[
+                                            styles.dayButtonText,
+                                            { color: selectedDay === day.index ? backgroundColor : textColor },
+                                        ]}
+                                    >
+                                        {format(day.date, "EEE d", { locale: dateFnsLocale })}
+                                    </Text>
+                                </TouchableOpacity>
+                            ))}
+                        </ScrollView>
+                    </View>
+                )}
+
+                {/* Talks List */}
+                {renderTalksList(sortedTalks, t("talks.noTalksSelected"), t("talks.browseTalks"))}
+            </View>
+        );
     };
 
     const AgendaRoute = () => {
