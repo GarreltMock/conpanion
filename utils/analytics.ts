@@ -111,5 +111,36 @@ export const trackAppStart = async (): Promise<void> => {
     await trackEvent("app_start");
 };
 
+// Track talk agenda actions
+export const trackTalkAddedToAgenda = async (talkId: string): Promise<void> => {
+    await trackEvent("talk_added_to_agenda", { talkId });
+};
+
+export const trackTalkRemovedFromAgenda = async (talkId: string): Promise<void> => {
+    await trackEvent("talk_removed_from_agenda", { talkId });
+};
+
+// Track talk rating and summary
+export const trackTalkRated = async (talkId: string, rating: number, hasSummary: boolean = false): Promise<void> => {
+    await trackEvent("talk_rated", {
+        talkId,
+        rating,
+        hasSummary,
+    });
+};
+
+// Track note item creation
+export const trackNoteAdded = async (contentParameter: Record<string, any>): Promise<void> => {
+    await trackEvent("note_added", contentParameter);
+};
+
+// Track image transformation result
+export const trackImageTransformation = async (success: boolean, errorType?: string): Promise<void> => {
+    await trackEvent("image_transformation", {
+        success,
+        ...(errorType && { errorType }),
+    });
+};
+
 // Export for easy access
 export { Octolytics };

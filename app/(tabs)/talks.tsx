@@ -21,6 +21,7 @@ import { useApp } from "@/context/AppContext";
 import { useI18n } from "@/hooks/useI18n";
 import { Talk } from "@/types";
 import { useThemeColor } from "@/hooks/useThemeColor";
+import { trackTalkAddedToAgenda, trackTalkRemovedFromAgenda } from "@/utils/analytics";
 
 export default function TalksScreen() {
     const {
@@ -136,7 +137,15 @@ export default function TalksScreen() {
         const handleBookmarkPress = async (e: any) => {
             e.stopPropagation();
             try {
+                const wasSelected = item.isUserSelected;
                 await toggleTalkSelection(item.id);
+                
+                // Track the agenda action
+                if (wasSelected) {
+                    await trackTalkRemovedFromAgenda(item.id);
+                } else {
+                    await trackTalkAddedToAgenda(item.id);
+                }
             } catch (error) {
                 console.error("Error toggling talk selection:", error);
             }

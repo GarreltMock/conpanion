@@ -20,6 +20,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { useImageTransform } from "@/hooks/useImageTransform";
 import { Polygon, NoteImage } from "@/types";
 import { getAbsolutePath, generateId } from "@/storage/helper";
+import { trackNoteAdded } from "@/utils/analytics";
 
 interface CachedImage {
     id: string;
@@ -175,6 +176,15 @@ export const NoteInput: React.FC<NoteInputProps> = ({
             });
 
             const audioUris = cachedAudio.map((audio) => audio.uri);
+
+            // Track note creation with combined content types
+            await trackNoteAdded({
+                hasText: text.trim().length > 0,
+                hasImages: noteImages.length > 0,
+                hasAudio: audioUris.length > 0,
+                imageCount: noteImages.length,
+                audioCount: audioUris.length,
+            });
 
             // Submit note with all content
             await onSubmitNote(text, noteImages, audioUris);

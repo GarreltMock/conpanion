@@ -10,6 +10,7 @@ import { useApp } from "@/context/AppContext";
 import { useI18n } from "@/hooks/useI18n";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { Talk } from "@/types";
+import { trackTalkRated } from "@/utils/analytics";
 
 export default function TalkEvaluationModal() {
     const { talkId, source } = useLocalSearchParams<{ talkId: string; source?: string }>();
@@ -73,6 +74,10 @@ export default function TalkEvaluationModal() {
 
         try {
             await saveEvaluation(talk.id, rating, summary);
+            // Track talk rating if a rating was provided
+            if (rating > 0) {
+                await trackTalkRated(talk.id, rating, summary.trim().length > 0);
+            }
             router.back();
         } catch (error) {
             console.error("Error saving evaluation:", error);
@@ -85,6 +90,10 @@ export default function TalkEvaluationModal() {
 
         try {
             await saveEvaluation(talk.id, rating, summary);
+            // Track talk rating if a rating was provided
+            if (rating > 0) {
+                await trackTalkRated(talk.id, rating, summary.trim().length > 0);
+            }
             await endTalk(talk);
 
             router.back();
@@ -99,6 +108,10 @@ export default function TalkEvaluationModal() {
 
         try {
             await saveEvaluation(talk.id, rating, summary);
+            // Track talk rating if a rating was provided
+            if (rating > 0) {
+                await trackTalkRated(talk.id, rating, summary.trim().length > 0);
+            }
             router.back();
         } catch (error) {
             console.error("Error saving evaluation:", error);
