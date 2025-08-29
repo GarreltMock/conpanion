@@ -17,13 +17,24 @@ export default function ConferenceDetailScreen() {
     const [conferenceTalks, setConferenceTalks] = useState<Talk[]>([]);
     const [isActive, setIsActive] = useState(false);
 
+    // Helper function to calculate current conference status based on dates
+    const calculateCurrentStatus = (startDate: Date, endDate: Date) => {
+        const now = new Date();
+        if (startDate <= now && endDate >= now) {
+            return "ongoing";
+        } else if (endDate < now) {
+            return "past";
+        }
+        return "upcoming";
+    };
+
     const router = useRouter();
     const { t } = useI18n();
     const tintColor = useThemeColor({}, "tint");
     const backgroundColor = useThemeColor({}, "background");
-    const whiteColor = useThemeColor({}, "white");
     const borderLight = useThemeColor({}, "borderLight");
     const textColor = useThemeColor({}, "text");
+    const mutedColor = useThemeColor({}, "tabIconDefault");
 
     useEffect(() => {
         // Log when accessed without ID, but don't try to redirect
@@ -161,8 +172,21 @@ export default function ConferenceDetailScreen() {
                             <></>
                         )}
                         <View style={styles.statusContainer}>
-                            <View style={[styles.statusBadge, { backgroundColor: tintColor }]}>
-                                <ThemedText style={styles.statusText}>{conference.status}</ThemedText>
+                            <View
+                                style={[
+                                    styles.statusBadge,
+                                    {
+                                        backgroundColor:
+                                            calculateCurrentStatus(conference.startDate, conference.endDate) ===
+                                            "ongoing"
+                                                ? tintColor
+                                                : mutedColor,
+                                    },
+                                ]}
+                            >
+                                <ThemedText style={styles.statusText}>
+                                    {calculateCurrentStatus(conference.startDate, conference.endDate)}
+                                </ThemedText>
                             </View>
                             {isActive && (
                                 <View style={[styles.activeBadge, { backgroundColor: tintColor }]}>
@@ -239,12 +263,12 @@ export default function ConferenceDetailScreen() {
                     ) : (
                         <ThemedView style={styles.emptyContainer}>
                             <ThemedText style={styles.emptyText}>No talks added yet</ThemedText>
-                            <TouchableOpacity
+                            {/* <TouchableOpacity
                                 style={[styles.addTalkButton, { backgroundColor: tintColor }]}
                                 onPress={() => router.push("/modals/new-talk")}
                             >
                                 <ThemedText style={styles.addTalkButtonText}>Add First Talk</ThemedText>
-                            </TouchableOpacity>
+                            </TouchableOpacity> */}
                         </ThemedView>
                     )}
                 </ThemedView>
@@ -256,7 +280,7 @@ export default function ConferenceDetailScreen() {
                         style={[styles.actionButton, styles.makeActiveButton, { backgroundColor: tintColor }]}
                         onPress={handleMakeActive}
                     >
-                        <Ionicons name="checkmark-circle-outline" size={20} color={whiteColor} />
+                        <Ionicons name="checkmark-circle-outline" size={20} color="black" />
                         <ThemedText style={styles.actionButtonText}>{t("conferences.makeActive")}</ThemedText>
                     </TouchableOpacity>
                 )}
@@ -351,7 +375,7 @@ const styles = StyleSheet.create({
         borderRadius: 16,
     },
     statusText: {
-        color: "white",
+        color: "black",
         fontWeight: "bold",
         fontSize: 12,
         textTransform: "uppercase",
@@ -403,8 +427,8 @@ const styles = StyleSheet.create({
         position: "relative",
     },
     timeContainer: {
-        width: 80,
-        marginRight: 16,
+        width: 100,
+        marginRight: 4,
     },
     timeText: {
         fontSize: 14,
@@ -416,8 +440,8 @@ const styles = StyleSheet.create({
     timelineLine: {
         position: "absolute",
         width: 2,
-        height: "100%",
-        left: 88,
+        height: "90%",
+        left: 109,
         top: 24,
     },
     timelineDot: {
@@ -455,7 +479,7 @@ const styles = StyleSheet.create({
         borderRadius: 20,
     },
     addTalkButtonText: {
-        color: "white",
+        color: "black",
         fontWeight: "bold",
     },
     actionBar: {
@@ -478,6 +502,6 @@ const styles = StyleSheet.create({
     actionButtonText: {
         marginLeft: 8,
         fontWeight: "bold",
-        color: "white",
+        color: "black",
     },
 });

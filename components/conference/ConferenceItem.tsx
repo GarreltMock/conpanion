@@ -29,13 +29,26 @@ export const ConferenceItem: React.FC<ConferenceItemProps> = ({
 }) => {
     const { talks } = useApp();
     const { t, locale } = useI18n();
-    
+
+    // Calculate current status based on dates
+    const calculateCurrentStatus = (startDate: Date, endDate: Date) => {
+        const now = new Date();
+        if (startDate <= now && endDate >= now) {
+            return "ongoing";
+        } else if (endDate < now) {
+            return "past";
+        }
+        return "upcoming";
+    };
+
+    const currentStatus = calculateCurrentStatus(conference.startDate, conference.endDate);
+
     // Get appropriate date-fns locale based on current i18n locale
     const dateFnsLocale = React.useMemo(() => {
         switch (locale) {
-            case 'de':
+            case "de":
                 return de;
-            case 'en':
+            case "en":
             default:
                 return enUS;
         }
@@ -49,22 +62,9 @@ export const ConferenceItem: React.FC<ConferenceItemProps> = ({
     const borderLightColor = useThemeColor({}, "borderLight");
     const backgroundOverlayLightColor = useThemeColor({}, "backgroundOverlayLight");
 
-    const getStatusColor = (status: string) => {
-        switch (status) {
-            case "active":
-                return tintColor;
-            case "upcoming":
-                return mutedColor;
-            case "past":
-                return "transparent";
-            default:
-                return mutedColor;
-        }
-    };
-
     const getStatusBadge = (status: string) => {
         return (
-            <View style={[styles.statusBadge, { backgroundColor: getStatusColor(status) }]}>
+            <View style={[styles.statusBadge, { backgroundColor: status === "ongoing" ? tintColor : mutedColor }]}>
                 <ThemedText style={[styles.statusText, { color: backgroundColor }]}>{status}</ThemedText>
             </View>
         );
@@ -84,7 +84,8 @@ export const ConferenceItem: React.FC<ConferenceItemProps> = ({
                     <View style={styles.mainContent}>
                         <ThemedText style={styles.title}>{conference.name}</ThemedText>
                         <ThemedText style={styles.date}>
-                            {format(conference.startDate, dateFormat, { locale: dateFnsLocale })} - {format(conference.endDate, dateFormat, { locale: dateFnsLocale })}
+                            {format(conference.startDate, dateFormat, { locale: dateFnsLocale })} -{" "}
+                            {format(conference.endDate, dateFormat, { locale: dateFnsLocale })}
                         </ThemedText>
                         {conference.location ? (
                             <View style={styles.locationContainer}>
@@ -95,11 +96,13 @@ export const ConferenceItem: React.FC<ConferenceItemProps> = ({
                         <View style={styles.talksCountContainer}>
                             <Ionicons name="calendar-outline" size={14} color={mutedColor} />
                             <ThemedText style={styles.talksCount}>
-                                {`${conferenceTalks.length} ${conferenceTalks.length === 1 ? t("talks.talk") : t("common.talks")}`}
+                                {`${conferenceTalks.length} ${
+                                    conferenceTalks.length === 1 ? t("talks.talk") : t("common.talks")
+                                }`}
                             </ThemedText>
                         </View>
                     </View>
-                    <View style={styles.statusContainer}>{getStatusBadge(conference.status)}</View>
+                    <View style={styles.statusContainer}>{getStatusBadge(currentStatus)}</View>
                 </View>
 
                 <View style={[styles.actions, { borderTopColor: backgroundOverlayLightColor }]}>

@@ -40,7 +40,6 @@ interface AppContextType {
     updateConference: (conference: Conference) => Promise<void>;
     deleteConference: (conferenceId: string) => Promise<void>;
     switchActiveConference: (conferenceId: string) => Promise<void>;
-    archiveConference: (conferenceId: string) => Promise<void>;
     getConferences: () => Promise<Conference[]>;
     hasConferences: () => Promise<boolean>;
 
@@ -103,6 +102,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [isRecording, setIsRecording] = useState<boolean>(false);
     const [recording, setRecording] = useState<Audio.Recording | null>(null);
+
 
     const loadConference = useCallback(async () => {
         try {
@@ -243,14 +243,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
         const now = new Date();
 
-        // Determine status based on dates
-        let status: ConferenceStatus = "upcoming";
-        if (startDate <= now && endDate >= now) {
-            status = "active";
-        } else if (endDate < now) {
-            status = "past";
-        }
-
         const newConference: Conference = {
             id: generateId(),
             name,
@@ -258,7 +250,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
             endDate,
             location,
             description,
-            status,
             createdAt: now,
             updatedAt: now,
         };
@@ -350,20 +341,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         setActiveTalk(null);
     };
 
-    const archiveConference = async (conferenceId: string): Promise<void> => {
-        const conference = conferences.find((conf) => conf.id === conferenceId);
-        if (!conference) {
-            throw new Error("Conference not found");
-        }
-
-        const updatedConference = {
-            ...conference,
-            status: "past" as ConferenceStatus,
-            updatedAt: new Date(),
-        };
-
-        await updateConference(updatedConference);
-    };
 
     const getConferencesFromContext = async (): Promise<Conference[]> => {
         // First check if we already have conferences in state
@@ -878,7 +855,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         updateConference,
         deleteConference: deleteConferenceById,
         switchActiveConference,
-        archiveConference,
         getConferences: getConferencesFromContext,
         hasConferences: hasConferencesInStorage,
 

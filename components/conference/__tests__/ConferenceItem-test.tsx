@@ -30,7 +30,6 @@ describe('ConferenceItem', () => {
     startDate: new Date('2023-06-01'),
     endDate: new Date('2023-06-03'),
     location: 'Test Location',
-    status: 'active' as const,
     createdAt: new Date(),
     updatedAt: new Date(),
   };

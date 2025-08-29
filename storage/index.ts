@@ -277,7 +277,6 @@ export const initializeDefaultConference = async (): Promise<Conference> => {
             name: "My Conference",
             startDate: now,
             endDate: endDate,
-            status: "active",
             createdAt: now,
             updatedAt: now,
         };
@@ -326,7 +325,6 @@ export const initializeDefaultConference = async (): Promise<Conference> => {
         name: "Default Conference",
         startDate: now,
         endDate: endDate,
-        status: "active",
         createdAt: now,
         updatedAt: now,
     };

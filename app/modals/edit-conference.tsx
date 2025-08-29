@@ -8,7 +8,6 @@ import { ThemedView } from "../../components/ThemedView";
 import { format } from "date-fns";
 import { useThemeColor } from "../../hooks/useThemeColor";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import { ConferenceStatus } from "../../types";
 
 export default function EditConferenceModal() {
     const { id } = useLocalSearchParams<{ id: string }>();
@@ -19,11 +18,9 @@ export default function EditConferenceModal() {
     const [description, setDescription] = useState("");
     const [startDate, setStartDate] = useState(new Date());
     const [endDate, setEndDate] = useState(new Date());
-    const [status, setStatus] = useState<ConferenceStatus>("active");
     const [createdAt, setCreatedAt] = useState<Date>(new Date());
     const [showStartCalendar, setShowStartCalendar] = useState(false);
     const [showEndCalendar, setShowEndCalendar] = useState(false);
-    const [showStatusOptions, setShowStatusOptions] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState("");
 
@@ -44,7 +41,6 @@ export default function EditConferenceModal() {
                 setDescription(conference.description || "");
                 setStartDate(conference.startDate);
                 setEndDate(conference.endDate);
-                setStatus(conference.status);
                 setCreatedAt(conference.createdAt);
             }
         }
@@ -71,7 +67,6 @@ export default function EditConferenceModal() {
                 endDate,
                 location: location || undefined,
                 description: description || undefined,
-                status,
                 createdAt,
                 updatedAt: new Date(),
             };
@@ -97,9 +92,6 @@ export default function EditConferenceModal() {
         router.back();
     };
 
-    const getStatusLabel = (status: ConferenceStatus) => {
-        return status.charAt(0).toUpperCase() + status.slice(1);
-    };
 
     return (
         <SafeAreaView style={styles.safeArea}>
@@ -166,7 +158,6 @@ export default function EditConferenceModal() {
                             onPress={() => {
                                 setShowStartCalendar(!showStartCalendar);
                                 setShowEndCalendar(false);
-                                setShowStatusOptions(false);
                             }}
                         >
                             <ThemedText>Start: {formatDisplayDate(startDate)}</ThemedText>
@@ -210,7 +201,6 @@ export default function EditConferenceModal() {
                             onPress={() => {
                                 setShowEndCalendar(!showEndCalendar);
                                 setShowStartCalendar(false);
-                                setShowStatusOptions(false);
                             }}
                         >
                             <ThemedText>End: {formatDisplayDate(endDate)}</ThemedText>
@@ -240,45 +230,6 @@ export default function EditConferenceModal() {
                             </View>
                         )}
 
-                        <ThemedText style={styles.label}>Status</ThemedText>
-                        <TouchableOpacity
-                            style={[styles.dateButton, { backgroundColor: backgroundColor, borderColor: borderColor }]}
-                            onPress={() => {
-                                setShowStatusOptions(!showStatusOptions);
-                                setShowStartCalendar(false);
-                                setShowEndCalendar(false);
-                            }}
-                        >
-                            <ThemedText>{getStatusLabel(status)}</ThemedText>
-                            <Ionicons name="chevron-down-outline" size={20} color={textColor} />
-                        </TouchableOpacity>
-
-                        {showStatusOptions && (
-                            <View style={styles.statusOptionsContainer}>
-                                {(["active", "upcoming", "past"] as ConferenceStatus[]).map((statusOption) => (
-                                    <TouchableOpacity
-                                        key={statusOption}
-                                        style={[
-                                            styles.statusOption,
-                                            status === statusOption && {
-                                                backgroundColor: `${tintColor}20`,
-                                            },
-                                        ]}
-                                        onPress={() => {
-                                            setStatus(statusOption);
-                                            setShowStatusOptions(false);
-                                        }}
-                                    >
-                                        <ThemedText style={styles.statusOptionText}>
-                                            {getStatusLabel(statusOption)}
-                                        </ThemedText>
-                                        {status === statusOption && (
-                                            <Ionicons name="checkmark" size={20} color={tintColor} />
-                                        )}
-                                    </TouchableOpacity>
-                                ))}
-                            </View>
-                        )}
 
                         {error ? (
                             <ThemedText style={[styles.errorText, { color: errorColor }]}>{error}</ThemedText>

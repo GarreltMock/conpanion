@@ -7,7 +7,6 @@ export interface Conference {
     endDate: Date;
     location?: string;
     description?: string;
-    status: ConferenceStatus;
     createdAt: Date;
     updatedAt: Date;
 }

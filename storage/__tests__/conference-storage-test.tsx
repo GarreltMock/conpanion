@@ -33,7 +33,6 @@ describe('Conference Storage Functions', () => {
     name: 'Test Conference',
     startDate: new Date('2023-06-01'),
     endDate: new Date('2023-06-03'),
-    status: 'active',
     createdAt: new Date('2023-05-01'),
     updatedAt: new Date('2023-05-01'),
   };
