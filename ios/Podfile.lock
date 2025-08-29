@@ -2284,11 +2284,19 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - SDWebImage/Core (5.21.0)
+  - RNZipArchive (7.0.2):
+    - React-Core
+    - RNZipArchive/Core (= 7.0.2)
+    - SSZipArchive (~> 2.5.5)
+  - RNZipArchive/Core (7.0.2):
+    - React-Core
+    - SSZipArchive (~> 2.5.5)
+  - SDWebImage/Core (5.21.1)
   - SDWebImageWebPCoder (0.14.6):
     - libwebp (~> 1.0)
     - SDWebImage/Core (~> 5.17)
   - SocketRocket (0.7.1)
+  - SSZipArchive (2.5.5)
   - Yoga (0.0.0)
 
 DEPENDENCIES:
@@ -2398,6 +2406,7 @@ DEPENDENCIES:
   - RNScreens (from `../node_modules/react-native-screens`)
   - RNShare (from `../node_modules/react-native-share`)
   - RNSVG (from `../node_modules/react-native-svg`)
+  - RNZipArchive (from `../node_modules/react-native-zip-archive`)
   - Yoga (from `../node_modules/react-native/ReactCommon/yoga`)
 
 SPEC REPOS:
@@ -2407,6 +2416,7 @@ SPEC REPOS:
     - SDWebImage
     - SDWebImageWebPCoder
     - SocketRocket
+    - SSZipArchive
 
 EXTERNAL SOURCES:
   boost:
@@ -2618,6 +2628,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-share"
   RNSVG:
     :path: "../node_modules/react-native-svg"
+  RNZipArchive:
+    :path: "../node_modules/react-native-zip-archive"
   Yoga:
     :path: "../node_modules/react-native/ReactCommon/yoga"
 
@@ -2728,9 +2740,11 @@ SPEC CHECKSUMS:
   RNScreens: 362f4c861dd155f898908d5035d97b07a3f1a9d1
   RNShare: ecb6d391fafc00cc8ce0d571998edd61795a5c24
   RNSVG: b889dc9c1948eeea0576a16cc405c91c37a12c19
-  SDWebImage: f84b0feeb08d2d11e6a9b843cb06d75ebf5b8868
+  RNZipArchive: 4304f5100eab004eeb7349adc51997b3a28deb76
+  SDWebImage: f29024626962457f3470184232766516dee8dfea
   SDWebImageWebPCoder: e38c0a70396191361d60c092933e22c20d5b1380
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
+  SSZipArchive: c69881e8ac5521f0e622291387add5f60f30f3c4
   Yoga: feb4910aba9742cfedc059e2b2902e22ffe9954a
 
 PODFILE CHECKSUM: 49ac908b04d20d229e39ad9d1b764147ef838ea6

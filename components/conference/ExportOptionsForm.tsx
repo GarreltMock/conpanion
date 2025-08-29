@@ -28,7 +28,7 @@ export const ExportOptionsForm: React.FC<ExportOptionsFormProps> = ({ conference
     );
 
     const [options, setOptions] = useState<ExportOptions>({
-        format: "pdf",
+        format: "md",
         includeImages: true,
         includeTalkIds: conferenceTalks.map((talk) => talk.id),
         filename: conference ? `${conference.name.replace(/\s+/g, "-")}-${Date.now()}` : "conference-export",
@@ -156,7 +156,7 @@ export const ExportOptionsForm: React.FC<ExportOptionsFormProps> = ({ conference
                     <ThemedText style={styles.sectionTitle}>Export Format</ThemedText>
 
                     <View style={styles.formatOptions}>
-                        <TouchableOpacity
+                        {/* <TouchableOpacity
                             style={[
                                 styles.formatOption,
                                 options.format === "pdf" && styles.selectedFormat,
@@ -185,7 +185,7 @@ export const ExportOptionsForm: React.FC<ExportOptionsFormProps> = ({ conference
                             >
                                 PDF
                             </ThemedText>
-                        </TouchableOpacity>
+                        </TouchableOpacity> */}
 
                         <TouchableOpacity
                             style={[
@@ -292,7 +292,9 @@ export const ExportOptionsForm: React.FC<ExportOptionsFormProps> = ({ conference
                         )}
                     </View>
 
-                    {error ? <ThemedText style={[styles.errorMessage, { color: errorColor }]}>{error}</ThemedText> : null}
+                    {error ? (
+                        <ThemedText style={[styles.errorMessage, { color: errorColor }]}>{error}</ThemedText>
+                    ) : null}
 
                     <View style={styles.buttonRow}>
                         {onCancel && (

@@ -1,5 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as FileSystem from "expo-file-system";
+import { zip } from "react-native-zip-archive";
 import { Conference, Talk, Note, ExportOptions } from "../types";
 import { getAbsolutePath, generateId } from "./helper";
 
@@ -513,14 +514,144 @@ export const generateMarkdown = async (
     notes: Note[],
     options: ExportOptions
 ): Promise<string> => {
-    // This will generate a markdown file
-    const filename = options.filename || `${conference.name.replace(/\s+/g, "-")}-${Date.now()}.md`;
-    const filePath = `${EXPORTS_DIRECTORY}${filename}`;
+    const baseFilename = options.filename || `${conference.name.replace(/\s+/g, "-")}-${Date.now()}`;
+    const tempDir = `${EXPORTS_DIRECTORY}temp_${Date.now()}/`;
+    const imagesDir = `${tempDir}images/`;
+    
+    // Create temporary directories
+    await FileSystem.makeDirectoryAsync(tempDir, { intermediates: true });
+    await FileSystem.makeDirectoryAsync(imagesDir, { intermediates: true });
 
-    // Placeholder for markdown creation logic
-    // We'll implement this later after UI is set up
+    // Filter talks based on options
+    const selectedTalks = talks.filter(
+        (talk) => options.includeTalkIds.length === 0 || options.includeTalkIds.includes(talk.id)
+    );
 
-    return filePath;
+    // Collect all images and create image filename mapping
+    const imageMapping = new Map<string, string>();
+    let imageCounter = 1;
+
+    if (options.includeImages) {
+        for (const talk of selectedTalks) {
+            const talkNotes = notes.filter((note) => note.talkId === talk.id);
+            for (const note of talkNotes) {
+                for (const image of note.images) {
+                    if (!imageMapping.has(image.uri)) {
+                        const extension = image.uri.split('.').pop() || 'jpg';
+                        const newFilename = `image_${imageCounter}.${extension}`;
+                        imageMapping.set(image.uri, newFilename);
+                        imageCounter++;
+                        
+                        // Copy image to temp directory
+                        try {
+                            const sourceAbsolutePath = getAbsolutePath(image.uri);
+                            const destPath = `${imagesDir}${newFilename}`;
+                            await FileSystem.copyAsync({
+                                from: sourceAbsolutePath,
+                                to: destPath
+                            });
+                        } catch (error) {
+                            console.error(`Error copying image ${image.uri}:`, error);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Build markdown content with relative image paths
+    let markdown = `# ${conference.name}\n\n`;
+
+    if (conference.description) {
+        markdown += `${conference.description}\n\n`;
+    }
+
+    markdown += `**Conference Period:** ${conference.startDate.toLocaleDateString()} - ${conference.endDate.toLocaleDateString()}\n`;
+    if (conference.location) {
+        markdown += `**Location:** ${conference.location}\n`;
+    }
+    markdown += `\n---\n\n`;
+
+    // Add talks and their notes
+    for (const talk of selectedTalks) {
+        markdown += `## ${talk.title}\n\n`;
+
+        if (talk.speakers && talk.speakers.length > 0) {
+            markdown += `**Speaker(s):** ${talk.speakers.map((s) => s.name).join(", ")}\n`;
+        }
+
+        markdown += `**Time:** ${talk.startTime.toLocaleString()}`;
+        if (talk.duration) {
+            markdown += ` (${talk.duration} minutes)`;
+        }
+        markdown += `\n`;
+
+        if (talk.stage) {
+            markdown += `**Stage:** ${talk.stage}\n`;
+        }
+
+        if (talk.description) {
+            markdown += `\n${talk.description}\n`;
+        }
+
+        if (talk.rating) {
+            markdown += `\n**Rating:** ${"⭐".repeat(talk.rating)} (${talk.rating}/5)\n`;
+        }
+
+        if (talk.summary) {
+            markdown += `\n**Summary:** ${talk.summary}\n`;
+        }
+
+        // Add notes for this talk
+        const talkNotes = notes.filter((note) => note.talkId === talk.id);
+        if (talkNotes.length > 0) {
+            markdown += `\n### Notes\n\n`;
+
+            for (const note of talkNotes.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())) {
+                const timeLabel = note.relativeTime
+                    ? `${Math.floor(note.relativeTime / 60)}:${String(note.relativeTime % 60).padStart(2, "0")}`
+                    : note.timestamp.toLocaleTimeString();
+
+                markdown += `**${timeLabel}**\n\n`;
+
+                if (note.textContent.trim()) {
+                    markdown += `${note.textContent}\n\n`;
+                }
+
+                if (options.includeImages && note.images.length > 0) {
+                    for (const image of note.images) {
+                        const relativeImagePath = imageMapping.get(image.uri);
+                        if (relativeImagePath) {
+                            markdown += `![Note Image](images/${relativeImagePath})\n\n`;
+
+                            if (image.links && image.links.length > 0) {
+                                markdown += `**Links detected:** ${image.links.join(", ")}\n\n`;
+                            }
+                        }
+                    }
+                }
+
+                if (note.audioRecordings.length > 0) {
+                    markdown += `**Audio recordings:** ${note.audioRecordings.length} file(s)\n\n`;
+                }
+            }
+        }
+
+        markdown += `\n---\n\n`;
+    }
+
+    // Write the markdown file to temp directory
+    const markdownPath = `${tempDir}${baseFilename}.md`;
+    await FileSystem.writeAsStringAsync(markdownPath, markdown);
+
+    // Create zip file
+    const zipPath = `${EXPORTS_DIRECTORY}${baseFilename}.zip`;
+    await zip(tempDir, zipPath);
+
+    // Clean up temporary directory
+    await FileSystem.deleteAsync(tempDir, { idempotent: true });
+
+    return zipPath;
 };
 
 // Delete image from file system
