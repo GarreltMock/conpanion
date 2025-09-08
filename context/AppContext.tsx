@@ -385,9 +385,15 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         // Update talks with API data
         await updateApiTalks(conferenceId, result.data.talks);
 
-        // Update conference with successful sync timestamp
+        // Update conference with API data and sync timestamp
         const updatedConference = {
             ...conference,
+            // Update conference metadata if provided by the API
+            ...(result.data.conference?.name && { name: result.data.conference.name }),
+            ...(result.data.conference?.description && { description: result.data.conference.description }),
+            ...(result.data.conference?.location && { location: result.data.conference.location }),
+            ...(result.data.conference?.startDate && { startDate: new Date(result.data.conference.startDate) }),
+            ...(result.data.conference?.endDate && { endDate: new Date(result.data.conference.endDate) }),
             lastApiSync: new Date(),
             updatedAt: new Date(),
         };

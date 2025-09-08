@@ -170,8 +170,10 @@ const programmierconTransformer: ApiTransformerFunction = (data: any): ApiAgenda
         lastModified: data.conference.date_created || new Date().toISOString(),
         conference: {
             name: data.conference.title,
-            description: data.conference.headline_1,
+            description: data.conference.text_1,
             location: undefined, // Not provided in this API format
+            startDate: data.conference.start_on,
+            endDate: data.conference.end_on,
         },
     };
 };

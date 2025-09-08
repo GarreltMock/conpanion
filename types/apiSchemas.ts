@@ -6,6 +6,8 @@ export interface ApiAgendaResponse {
         name?: string;
         description?: string;
         location?: string;
+        startDate?: string | Date;
+        endDate?: string | Date;
     };
 }
 
