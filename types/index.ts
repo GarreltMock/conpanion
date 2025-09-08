@@ -10,8 +10,6 @@ export interface Conference {
     apiUrl?: string;
     apiTransformer?: string;
     lastApiSync?: Date;
-    apiSyncStatus?: "idle" | "syncing" | "error";
-    apiError?: string;
 }
 
 export interface Speaker {

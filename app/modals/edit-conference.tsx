@@ -80,10 +80,8 @@ export default function EditConferenceModal() {
                 updatedAt: new Date(),
                 apiUrl: apiUrl || undefined,
                 apiTransformer: apiUrl ? apiTransformer : undefined,
-                // Preserve existing API sync status
+                // Preserve existing API sync timestamp
                 lastApiSync: oldConference?.lastApiSync,
-                apiSyncStatus: oldConference?.apiSyncStatus || "idle",
-                apiError: oldConference?.apiError,
             };
 
             await updateConference(updatedConference);

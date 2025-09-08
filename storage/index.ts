@@ -347,7 +347,7 @@ export const getTalks = async (): Promise<Talk[]> => {
                 ...talk,
                 startTime: new Date(talk.startTime),
                 duration: talk.duration,
-                source: talk.source || 'user', // Default to 'user' for existing talks
+                source: talk.source || "user", // Default to 'user' for existing talks
             }));
         }
         return [];
@@ -517,7 +517,7 @@ export const generateMarkdown = async (
     const baseFilename = options.filename || `${conference.name.replace(/\s+/g, "-")}-${Date.now()}`;
     const tempDir = `${EXPORTS_DIRECTORY}temp_${Date.now()}/`;
     const imagesDir = `${tempDir}images/`;
-    
+
     // Create temporary directories
     await FileSystem.makeDirectoryAsync(tempDir, { intermediates: true });
     await FileSystem.makeDirectoryAsync(imagesDir, { intermediates: true });
@@ -537,18 +537,18 @@ export const generateMarkdown = async (
             for (const note of talkNotes) {
                 for (const image of note.images) {
                     if (!imageMapping.has(image.uri)) {
-                        const extension = image.uri.split('.').pop() || 'jpg';
+                        const extension = image.uri.split(".").pop() || "jpg";
                         const newFilename = `image_${imageCounter}.${extension}`;
                         imageMapping.set(image.uri, newFilename);
                         imageCounter++;
-                        
+
                         // Copy image to temp directory
                         try {
                             const sourceAbsolutePath = getAbsolutePath(image.uri);
                             const destPath = `${imagesDir}${newFilename}`;
                             await FileSystem.copyAsync({
                                 from: sourceAbsolutePath,
-                                to: destPath
+                                to: destPath,
                             });
                         } catch (error) {
                             console.error(`Error copying image ${image.uri}:`, error);

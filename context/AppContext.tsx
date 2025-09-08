@@ -373,51 +373,25 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
             throw new Error("Conference not found or no API URL configured");
         }
 
-        // Update sync status
-        const syncingConference = {
+        const result = await conferenceApiService.fetchConferenceAgenda(
+            conference.apiUrl,
+            conference.apiTransformer
+        );
+
+        if (!result.success || !result.data) {
+            throw new Error(result.error || "Failed to fetch agenda data");
+        }
+
+        // Update talks with API data
+        await updateApiTalks(conferenceId, result.data.talks);
+
+        // Update conference with successful sync timestamp
+        const updatedConference = {
             ...conference,
-            apiSyncStatus: "syncing" as const,
-            apiError: undefined,
+            lastApiSync: new Date(),
             updatedAt: new Date(),
         };
-        await updateConference(syncingConference);
-
-        try {
-            const result = await conferenceApiService.fetchConferenceAgenda(
-                conference.apiUrl,
-                conference.apiTransformer
-            );
-
-            if (!result.success || !result.data) {
-                throw new Error(result.error || "Failed to fetch agenda data");
-            }
-
-            // Update talks with API data
-            await updateApiTalks(conferenceId, result.data.talks);
-
-            // Update conference with successful sync
-            const successConference = {
-                ...conference,
-                lastApiSync: new Date(),
-                apiSyncStatus: "idle" as const,
-                apiError: undefined,
-                updatedAt: new Date(),
-            };
-            await updateConference(successConference);
-        } catch (error: any) {
-            console.error("API sync failed:", error);
-
-            // Update conference with error status
-            const errorConference = {
-                ...conference,
-                apiSyncStatus: "error" as const,
-                apiError: error.message || "Unknown sync error",
-                updatedAt: new Date(),
-            };
-            await updateConference(errorConference);
-
-            throw error;
-        }
+        await updateConference(updatedConference);
     };
 
     const updateApiTalks = async (conferenceId: string, apiTalks: ApiTalk[]): Promise<void> => {

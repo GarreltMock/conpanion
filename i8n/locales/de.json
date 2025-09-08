@@ -135,6 +135,7 @@
         "deleteFailed": "Konferenz konnte nicht gelöscht werden",
         "syncAgenda": "Agenda aktualisieren",
         "syncing": "Aktualisiere...",
+        "syncingDescription": "Lade die neueste Agenda von der API",
         "syncSuccess": "Konferenz-Agenda erfolgreich aktualisiert",
         "lastSync": "Zuletzt aktualisiert",
         "neverSynced": "Nie"

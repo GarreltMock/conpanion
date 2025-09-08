@@ -27,6 +27,7 @@ export default function ConferenceDetailScreen() {
     const [isActive, setIsActive] = useState(false);
     const [showSubmenu, setShowSubmenu] = useState(false);
     const [isSyncing, setIsSyncing] = useState(false);
+    const [syncError, setSyncError] = useState<string | null>(null);
 
     // Helper function to calculate current conference status based on dates
     const calculateCurrentStatus = (startDate: Date, endDate: Date) => {
@@ -144,13 +145,20 @@ export default function ConferenceDetailScreen() {
         }
 
         setIsSyncing(true);
+        setSyncError(null);
         setShowSubmenu(false);
 
         try {
             await syncConferenceAgenda(conference.id);
+            // Refresh the conference data to get the updated lastApiSync
+            const updatedConference = conferences.find((conf) => conf.id === conference.id);
+            if (updatedConference) {
+                setConference(updatedConference);
+            }
             Alert.alert(t("common.ok"), t("conferences.syncSuccess"));
         } catch (error: any) {
             console.error("Sync failed:", error);
+            setSyncError(error.message || t("errors.syncFailed"));
             Alert.alert(t("common.errors.title"), error.message || t("errors.syncFailed"));
         } finally {
             setIsSyncing(false);
@@ -403,6 +411,23 @@ export default function ConferenceDetailScreen() {
                     </View>
                 </TouchableOpacity>
             </Modal>
+
+            {/* Sync Loading Modal */}
+            <Modal
+                visible={isSyncing}
+                transparent={true}
+                animationType="fade"
+            >
+                <View style={styles.syncModalOverlay}>
+                    <View style={[styles.syncModalContent, { backgroundColor: backgroundColor, borderColor: borderLight }]}>
+                        <ActivityIndicator size="large" color={tintColor} style={styles.syncLoader} />
+                        <ThemedText style={styles.syncText}>{t("conferences.syncing")}</ThemedText>
+                        <ThemedText style={styles.syncSubtext}>
+                            {t("conferences.syncingDescription")}
+                        </ThemedText>
+                    </View>
+                </View>
+            </Modal>
         </ThemedView>
     );
 }
@@ -635,5 +660,36 @@ const styles = StyleSheet.create({
     menuSeparator: {
         height: 1,
         marginHorizontal: 16,
+    },
+    syncModalOverlay: {
+        flex: 1,
+        backgroundColor: "rgba(0, 0, 0, 0.5)",
+        justifyContent: "center",
+        alignItems: "center",
+    },
+    syncModalContent: {
+        borderRadius: 16,
+        borderWidth: 1,
+        padding: 32,
+        alignItems: "center",
+        marginHorizontal: 32,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 12,
+        elevation: 8,
+    },
+    syncLoader: {
+        marginBottom: 16,
+    },
+    syncText: {
+        fontSize: 18,
+        fontWeight: "600",
+        marginBottom: 8,
+        textAlign: "center",
+    },
+    syncSubtext: {
+        fontSize: 14,
+        opacity: 0.7,
+        textAlign: "center",
     },
 });

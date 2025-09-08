@@ -135,6 +135,7 @@
         "deleteFailed": "Failed to delete conference",
         "syncAgenda": "Update Agenda",
         "syncing": "Updating...",
+        "syncingDescription": "Fetching the latest agenda from the API",
         "syncSuccess": "Conference agenda updated successfully",
         "lastSync": "Last Updated",
         "neverSynced": "Never"
