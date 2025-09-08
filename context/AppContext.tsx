@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
 import * as ImagePicker from "expo-image-picker";
 import { Audio } from "expo-av";
-import { Conference, Talk, Note, ExportOptions, ConferenceStatus, NoteImage, Speaker } from "../types";
+import { Conference, Talk, Note, ExportOptions, NoteImage, Speaker } from "../types";
 import {
     getTalks,
     getNotes,

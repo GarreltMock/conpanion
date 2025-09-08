@@ -1,5 +1,3 @@
-export type ConferenceStatus = "active" | "past" | "upcoming";
-
 export interface Conference {
     id: string;
     name: string;
