@@ -88,3 +88,6 @@ npm run postinstall        # Apply patches with patch-package
 - Jest configuration in `jest.config.js`
 - Component tests use `@testing-library/react-native`
 - Storage operations have dedicated test suites
+
+### Use i18n
+- If you add any visible text use the implemented i18n features and add it to all languages.
