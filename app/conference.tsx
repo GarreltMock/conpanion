@@ -13,11 +13,20 @@ import { format } from "date-fns";
 
 export default function ConferenceDetailScreen() {
     const { id } = useLocalSearchParams<{ id: string }>();
-    const { conferences, talks, notes, switchActiveConference, currentConference, deleteConference } = useApp();
+    const {
+        conferences,
+        talks,
+        notes,
+        switchActiveConference,
+        currentConference,
+        deleteConference,
+        syncConferenceAgenda,
+    } = useApp();
     const [conference, setConference] = useState<Conference | null>(null);
     const [conferenceTalks, setConferenceTalks] = useState<Talk[]>([]);
     const [isActive, setIsActive] = useState(false);
     const [showSubmenu, setShowSubmenu] = useState(false);
+    const [isSyncing, setIsSyncing] = useState(false);
 
     // Helper function to calculate current conference status based on dates
     const calculateCurrentStatus = (startDate: Date, endDate: Date) => {
@@ -126,6 +135,26 @@ export default function ConferenceDetailScreen() {
     const handleEditConferenceFromMenu = () => {
         setShowSubmenu(false);
         handleEditConference();
+    };
+
+    const handleSyncAgenda = async () => {
+        if (!conference?.apiUrl) {
+            Alert.alert(t("common.errors.title"), t("errors.apiNotConfigured"));
+            return;
+        }
+
+        setIsSyncing(true);
+        setShowSubmenu(false);
+
+        try {
+            await syncConferenceAgenda(conference.id);
+            Alert.alert(t("common.ok"), t("conferences.syncSuccess"));
+        } catch (error: any) {
+            console.error("Sync failed:", error);
+            Alert.alert(t("common.errors.title"), error.message || t("errors.syncFailed"));
+        } finally {
+            setIsSyncing(false);
+        }
     };
 
     const handleBack = () => {
@@ -265,6 +294,16 @@ export default function ConferenceDetailScreen() {
                             </ThemedText>
                             <ThemedText style={styles.statLabel}>{t("conferences.created")}</ThemedText>
                         </View>
+                        {conference.apiUrl && (
+                            <View style={styles.statItem}>
+                                <ThemedText style={styles.statValue}>
+                                    {conference.lastApiSync
+                                        ? format(conference.lastApiSync, "MMM d")
+                                        : t("conferences.neverSynced")}
+                                </ThemedText>
+                                <ThemedText style={styles.statLabel}>{t("conferences.lastSync")}</ThemedText>
+                            </View>
+                        )}
                     </View>
                 </ThemedView>
 
@@ -338,6 +377,18 @@ export default function ConferenceDetailScreen() {
                             <Ionicons name="pencil-outline" size={20} color={textColor} />
                             <ThemedText style={styles.menuItemText}>{t("common.edit")}</ThemedText>
                         </TouchableOpacity>
+                        {conference?.apiUrl && (
+                            <TouchableOpacity
+                                style={[styles.menuItem, isSyncing && { opacity: 0.5 }]}
+                                onPress={handleSyncAgenda}
+                                disabled={isSyncing}
+                            >
+                                <Ionicons name="refresh-outline" size={20} color={textColor} />
+                                <ThemedText style={styles.menuItemText}>
+                                    {isSyncing ? t("conferences.syncing") : t("conferences.syncAgenda")}
+                                </ThemedText>
+                            </TouchableOpacity>
+                        )}
                         <TouchableOpacity style={styles.menuItem} onPress={handleExportConference}>
                             <Ionicons name="share-outline" size={20} color={textColor} />
                             <ThemedText style={styles.menuItemText}>{t("common.actions.export")}</ThemedText>

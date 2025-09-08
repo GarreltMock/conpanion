@@ -2,6 +2,8 @@ import React, { createContext, useContext, useState, useEffect, ReactNode, useCa
 import * as ImagePicker from "expo-image-picker";
 import { Audio } from "expo-av";
 import { Conference, Talk, Note, ExportOptions, NoteImage, Speaker } from "../types";
+import { ApiTalk } from "../types/apiSchemas";
+import conferenceApiService from "../services/conferenceApiService";
 import {
     getTalks,
     getNotes,
@@ -42,6 +44,8 @@ interface AppContextType {
     switchActiveConference: (conferenceId: string) => Promise<void>;
     getConferences: () => Promise<Conference[]>;
     hasConferences: () => Promise<boolean>;
+    syncConferenceAgenda: (conferenceId: string) => Promise<void>;
+    testApiEndpoint: (apiUrl: string, transformerId?: string) => Promise<{ success: boolean; error?: string }>;
 
     // Talk Management
     talks: Talk[];
@@ -362,6 +366,131 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         return storedConferences.length > 0;
     };
 
+    // API Sync Methods
+    const syncConferenceAgenda = async (conferenceId: string): Promise<void> => {
+        const conference = conferences.find((conf) => conf.id === conferenceId);
+        if (!conference || !conference.apiUrl) {
+            throw new Error("Conference not found or no API URL configured");
+        }
+
+        // Update sync status
+        const syncingConference = {
+            ...conference,
+            apiSyncStatus: "syncing" as const,
+            apiError: undefined,
+            updatedAt: new Date(),
+        };
+        await updateConference(syncingConference);
+
+        try {
+            const result = await conferenceApiService.fetchConferenceAgenda(
+                conference.apiUrl,
+                conference.apiTransformer
+            );
+
+            if (!result.success || !result.data) {
+                throw new Error(result.error || "Failed to fetch agenda data");
+            }
+
+            // Update talks with API data
+            await updateApiTalks(conferenceId, result.data.talks);
+
+            // Update conference with successful sync
+            const successConference = {
+                ...conference,
+                lastApiSync: new Date(),
+                apiSyncStatus: "idle" as const,
+                apiError: undefined,
+                updatedAt: new Date(),
+            };
+            await updateConference(successConference);
+        } catch (error: any) {
+            console.error("API sync failed:", error);
+
+            // Update conference with error status
+            const errorConference = {
+                ...conference,
+                apiSyncStatus: "error" as const,
+                apiError: error.message || "Unknown sync error",
+                updatedAt: new Date(),
+            };
+            await updateConference(errorConference);
+
+            throw error;
+        }
+    };
+
+    const updateApiTalks = async (conferenceId: string, apiTalks: ApiTalk[]): Promise<void> => {
+        const currentTalks = talks.filter((talk) => talk.conferenceId === conferenceId);
+        const currentApiTalks = currentTalks.filter((talk) => talk.source === "api");
+        const userTalks = currentTalks.filter((talk) => talk.source === "user");
+
+        // Convert API talks to our Talk format
+        const newApiTalks: Talk[] = apiTalks.map((apiTalk) => {
+            // Try to find existing talk by API ID
+            const existingTalk = currentApiTalks.find((talk) => talk.apiId === apiTalk.id);
+
+            return {
+                id: existingTalk?.id || generateId(), // Keep existing ID if found
+                conferenceId,
+                title: apiTalk.title,
+                startTime: new Date(apiTalk.startTime),
+                duration: apiTalk.duration,
+                isUserSelected: existingTalk?.isUserSelected || false, // Preserve user selection
+                speakers: apiTalk.speakers,
+                stage: apiTalk.stage,
+                description: apiTalk.description,
+                source: "api" as const,
+                apiId: apiTalk.id,
+                // Preserve user-added evaluation data
+                rating: existingTalk?.rating,
+                summary: existingTalk?.summary,
+                feedback: existingTalk?.feedback,
+            };
+        });
+
+        // Save all API talks (this will update existing ones and create new ones)
+        for (const talk of newApiTalks) {
+            await saveTalk(talk);
+        }
+
+        // Remove API talks that are no longer in the API response
+        const apiTalkIds = new Set(apiTalks.map((t) => t.id));
+        const staleTalks = currentApiTalks.filter((talk) => talk.apiId && !apiTalkIds.has(talk.apiId));
+
+        for (const staleTalk of staleTalks) {
+            // TODO: In future, we might want to ask user before deleting
+            // For now, we'll remove them as they're no longer in the API
+            // Note: We need to add a deleteTalk method to storage, for now just remove from state
+            console.log(`Removing stale API talk: ${staleTalk.title} (ID: ${staleTalk.id})`);
+        }
+
+        // Update state with combined talks (user + api)
+        const updatedTalks = [...userTalks, ...newApiTalks];
+        setTalks((prevTalks) => prevTalks.filter((talk) => talk.conferenceId !== conferenceId).concat(updatedTalks));
+
+        // Refresh active talk in case it was affected
+        await refreshActiveTalk();
+    };
+
+    const testApiEndpoint = async (
+        apiUrl: string,
+        transformerId?: string
+    ): Promise<{ success: boolean; error?: string }> => {
+        try {
+            const result = await conferenceApiService.testApiEndpoint(apiUrl, transformerId);
+            return {
+                success: result.success,
+                error: result.error,
+            };
+        } catch (error: any) {
+            return {
+                success: false,
+                error: error.message || "Failed to test API endpoint",
+            };
+        }
+    };
+
     // Talk Management
     const createTalk = async (title: string): Promise<Talk> => {
         if (!currentConference) {
@@ -380,6 +509,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
             title,
             startTime: new Date(),
             isUserSelected: true,
+            source: "user",
         };
 
         await saveTalk(newTalk);
@@ -414,6 +544,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
             speakers,
             stage,
             description,
+            source: "user",
         };
 
         await saveTalk(newTalk);
@@ -862,6 +993,8 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         switchActiveConference,
         getConferences: getConferencesFromContext,
         hasConferences: hasConferencesInStorage,
+        syncConferenceAgenda,
+        testApiEndpoint,
 
         // Talk Management
         talks,

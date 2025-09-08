@@ -7,6 +7,11 @@ export interface Conference {
     description?: string;
     createdAt: Date;
     updatedAt: Date;
+    apiUrl?: string;
+    apiTransformer?: string;
+    lastApiSync?: Date;
+    apiSyncStatus?: "idle" | "syncing" | "error";
+    apiError?: string;
 }
 
 export interface Speaker {
@@ -18,6 +23,8 @@ export interface Speaker {
 export interface Talk {
     id: string;
     conferenceId: string;
+    apiId?: string; // External ID from the API (for matching during updates)
+    source: "user" | "api";
     title: string;
     startTime: Date;
     duration?: number; // Duration in minutes
@@ -26,8 +33,8 @@ export interface Talk {
     stage?: string;
     description?: string;
     rating?: number; // 1-5 stars for talk evaluation
-    summary?: string; // Evaluation summary/remaining thoughts
-    feedback?: string; // User feedback about the talk
+    summary?: string;
+    feedback?: string;
 }
 
 export interface NoteImage {

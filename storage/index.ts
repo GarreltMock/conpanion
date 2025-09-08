@@ -180,6 +180,7 @@ export const getConferences = async (): Promise<Conference[]> => {
                 endDate: new Date(conf.endDate),
                 createdAt: new Date(conf.createdAt),
                 updatedAt: new Date(conf.updatedAt),
+                lastApiSync: conf.lastApiSync ? new Date(conf.lastApiSync) : undefined,
             }));
         }
         return [];
@@ -346,6 +347,7 @@ export const getTalks = async (): Promise<Talk[]> => {
                 ...talk,
                 startTime: new Date(talk.startTime),
                 duration: talk.duration,
+                source: talk.source || 'user', // Default to 'user' for existing talks
             }));
         }
         return [];

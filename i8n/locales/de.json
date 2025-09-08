@@ -65,7 +65,9 @@
         "urlOpenFailed": "URL konnte nicht geöffnet werden",
         "transformationFailed": "Bild konnte nicht mit den gewählten Ecken transformiert werden.",
         "networkError": "Netzwerkfehler. Bitte überprüfen Sie Ihre Verbindung.",
-        "unknownError": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut."
+        "unknownError": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut.",
+        "apiNotConfigured": "Keine API-URL für diese Konferenz konfiguriert",
+        "syncFailed": "Konferenz-Agenda konnte nicht synchronisiert werden"
     },
     "notes": {
         "noActiveTalk": "Kein aktiver Vortrag",
@@ -130,7 +132,12 @@
         "created": "Erstellt",
         "myConference": "Meine Konferenz",
         "deleteWarning": "Dies wird alle Vorträge und Notizen löschen, die mit dieser Konferenz verbunden sind und kann nicht rückgängig gemacht werden.",
-        "deleteFailed": "Konferenz konnte nicht gelöscht werden"
+        "deleteFailed": "Konferenz konnte nicht gelöscht werden",
+        "syncAgenda": "Agenda aktualisieren",
+        "syncing": "Aktualisiere...",
+        "syncSuccess": "Konferenz-Agenda erfolgreich aktualisiert",
+        "lastSync": "Zuletzt aktualisiert",
+        "neverSynced": "Nie"
     },
     "forms": {
         "conference": {

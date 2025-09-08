@@ -93,7 +93,7 @@ export const getAnalytics = (): Octolytics | null => {
 // Generic tracking function with development mode check
 export const trackEvent = async (eventName: string, parameters: Record<string, any> = {}): Promise<void> => {
     if (isDevelopment()) {
-        console.log(`[Analytics] Skipping tracking in development mode: ${eventName}`, parameters);
+        console.log(`[Analytics] Skipping tracking in development: ${eventName}`, parameters);
         return;
     }
 

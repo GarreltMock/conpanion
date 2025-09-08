@@ -8,6 +8,8 @@ import { ThemedView } from "../../components/ThemedView";
 import { format } from "date-fns";
 import { useThemeColor } from "../../hooks/useThemeColor";
 import { useRouter, useLocalSearchParams } from "expo-router";
+import { getAvailableTransformers } from "../../services/apiTransformers";
+import { Picker } from "@react-native-picker/picker";
 
 export default function EditConferenceModal() {
     const { id } = useLocalSearchParams<{ id: string }>();
@@ -23,6 +25,9 @@ export default function EditConferenceModal() {
     const [showEndCalendar, setShowEndCalendar] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState("");
+    const [apiUrl, setApiUrl] = useState("");
+    const [apiTransformer, setApiTransformer] = useState("generic");
+    const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
 
     const router = useRouter();
     const backgroundColor = useThemeColor({}, "background");
@@ -42,6 +47,9 @@ export default function EditConferenceModal() {
                 setStartDate(conference.startDate);
                 setEndDate(conference.endDate);
                 setCreatedAt(conference.createdAt);
+                setApiUrl(conference.apiUrl || "");
+                setApiTransformer(conference.apiTransformer || "generic");
+                setShowAdvancedOptions(!!conference.apiUrl);
             }
         }
     }, [id, conferences]);
@@ -60,6 +68,7 @@ export default function EditConferenceModal() {
         try {
             setIsSubmitting(true);
 
+            const oldConference = conferences.find((c) => c.id === id);
             const updatedConference = {
                 id,
                 name,
@@ -69,6 +78,12 @@ export default function EditConferenceModal() {
                 description: description || undefined,
                 createdAt,
                 updatedAt: new Date(),
+                apiUrl: apiUrl || undefined,
+                apiTransformer: apiUrl ? apiTransformer : undefined,
+                // Preserve existing API sync status
+                lastApiSync: oldConference?.lastApiSync,
+                apiSyncStatus: oldConference?.apiSyncStatus || "idle",
+                apiError: oldConference?.apiError,
             };
 
             await updateConference(updatedConference);
@@ -91,7 +106,6 @@ export default function EditConferenceModal() {
     const handleCancel = () => {
         router.back();
     };
-
 
     return (
         <SafeAreaView style={styles.safeArea}>
@@ -150,6 +164,69 @@ export default function EditConferenceModal() {
                             numberOfLines={4}
                             textAlignVertical="top"
                         />
+
+                        {/* Advanced Options Toggle */}
+                        <TouchableOpacity
+                            style={styles.advancedToggle}
+                            onPress={() => setShowAdvancedOptions(!showAdvancedOptions)}
+                        >
+                            <ThemedText style={styles.advancedToggleText}>API Configuration (Optional)</ThemedText>
+                            <Ionicons
+                                name={showAdvancedOptions ? "chevron-up" : "chevron-down"}
+                                size={20}
+                                color={textColor}
+                            />
+                        </TouchableOpacity>
+
+                        {showAdvancedOptions && (
+                            <View style={styles.advancedSection}>
+                                <ThemedText style={styles.label}>API URL</ThemedText>
+                                <TextInput
+                                    style={[
+                                        styles.input,
+                                        {
+                                            color: textColor,
+                                            backgroundColor: backgroundColor,
+                                            borderColor: borderColor,
+                                        },
+                                    ]}
+                                    value={apiUrl}
+                                    onChangeText={setApiUrl}
+                                    placeholder="https://api.example.com/agenda"
+                                    placeholderTextColor={placeholderColor}
+                                    autoCapitalize="none"
+                                    autoCorrect={false}
+                                />
+
+                                <ThemedText style={styles.label}>Data Format</ThemedText>
+                                <View
+                                    style={[
+                                        styles.pickerContainer,
+                                        { borderColor: borderColor, backgroundColor: backgroundColor },
+                                    ]}
+                                >
+                                    <Picker
+                                        selectedValue={apiTransformer}
+                                        onValueChange={setApiTransformer}
+                                        style={[styles.picker, { color: textColor }]}
+                                        itemStyle={{ color: textColor }}
+                                    >
+                                        {getAvailableTransformers().map((transformer) => (
+                                            <Picker.Item
+                                                key={transformer.id}
+                                                label={`${transformer.name} - ${transformer.description}`}
+                                                value={transformer.id}
+                                            />
+                                        ))}
+                                    </Picker>
+                                </View>
+
+                                <ThemedText style={styles.helpText}>
+                                    Configure an API endpoint to automatically sync conference agenda. The system will
+                                    fetch talk information from the provided URL.
+                                </ThemedText>
+                            </View>
+                        )}
 
                         <ThemedText style={styles.label}>Date Range *</ThemedText>
 
@@ -229,7 +306,6 @@ export default function EditConferenceModal() {
                                 />
                             </View>
                         )}
-
 
                         {error ? (
                             <ThemedText style={[styles.errorText, { color: errorColor }]}>{error}</ThemedText>
@@ -363,5 +439,36 @@ const styles = StyleSheet.create({
     saveButtonText: {
         fontSize: 16,
         fontWeight: "bold",
+    },
+    advancedToggle: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        paddingVertical: 12,
+        marginTop: 16,
+    },
+    advancedToggleText: {
+        fontSize: 16,
+        fontWeight: "600",
+    },
+    advancedSection: {
+        marginTop: 12,
+        padding: 16,
+        backgroundColor: "rgba(0,0,0,0.02)",
+        borderRadius: 8,
+    },
+    pickerContainer: {
+        borderWidth: 1,
+        borderRadius: 8,
+        marginBottom: 8,
+    },
+    picker: {
+        height: 50,
+    },
+    helpText: {
+        fontSize: 14,
+        opacity: 0.7,
+        marginTop: 8,
+        lineHeight: 20,
     },
 });

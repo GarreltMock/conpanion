@@ -65,7 +65,9 @@
         "urlOpenFailed": "Failed to open URL",
         "transformationFailed": "Failed to transform the image with the selected corners.",
         "networkError": "Network error. Please check your connection.",
-        "unknownError": "Something went wrong. Please try again."
+        "unknownError": "Something went wrong. Please try again.",
+        "apiNotConfigured": "No API URL configured for this conference",
+        "syncFailed": "Failed to sync conference agenda"
     },
     "notes": {
         "noActiveTalk": "No Active Talk",
@@ -130,7 +132,12 @@
         "created": "Created",
         "myConference": "My Conference",
         "deleteWarning": "This will delete all talks and notes associated with this conference and cannot be undone.",
-        "deleteFailed": "Failed to delete conference"
+        "deleteFailed": "Failed to delete conference",
+        "syncAgenda": "Update Agenda",
+        "syncing": "Updating...",
+        "syncSuccess": "Conference agenda updated successfully",
+        "lastSync": "Last Updated",
+        "neverSynced": "Never"
     },
     "forms": {
         "conference": {
