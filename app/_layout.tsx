@@ -50,16 +50,12 @@ export default function RootLayout() {
                             name="talk"
                             options={{
                                 headerShown: false,
-                                headerTitle: "Talk Details",
-                                headerBackTitle: "Back",
                             }}
                         />
                         <Stack.Screen
                             name="conference"
                             options={{
-                                headerShown: true,
-                                headerTitle: "Conference Details",
-                                headerBackTitle: "Back",
+                                headerShown: false,
                             }}
                         />
                         <Stack.Screen

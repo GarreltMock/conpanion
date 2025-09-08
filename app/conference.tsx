@@ -3,6 +3,7 @@ import { View, StyleSheet, ScrollView, TouchableOpacity, Alert, ActivityIndicato
 import { useApp } from "../context/AppContext";
 import { ThemedText } from "../components/ThemedText";
 import { ThemedView } from "../components/ThemedView";
+import { IconSymbol } from "../components/ui/IconSymbol";
 import { useThemeColor } from "../hooks/useThemeColor";
 import { useI18n } from "../hooks/useI18n";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -33,6 +34,7 @@ export default function ConferenceDetailScreen() {
     const { t } = useI18n();
     const tintColor = useThemeColor({}, "tint");
     const backgroundColor = useThemeColor({}, "background");
+    const headerBackgroundColor = useThemeColor({}, "headerBackground");
     const borderLight = useThemeColor({}, "borderLight");
     const textColor = useThemeColor({}, "text");
     const mutedColor = useThemeColor({}, "tabIconDefault");
@@ -102,32 +104,32 @@ export default function ConferenceDetailScreen() {
 
     const handleDeleteConference = () => {
         if (!conference) return;
-        
-        Alert.alert(
-            t("common.delete"),
-            t("conferences.deleteWarning"),
-            [
-                { text: t("common.cancel"), style: "cancel" },
-                {
-                    text: t("common.delete"),
-                    style: "destructive",
-                    onPress: async () => {
-                        try {
-                            await deleteConference(conference.id);
-                            setShowSubmenu(false);
-                            router.back();
-                        } catch {
-                            Alert.alert(t("common.errors.title"), t("conferences.deleteFailed"));
-                        }
-                    },
+
+        Alert.alert(t("common.delete"), t("conferences.deleteWarning"), [
+            { text: t("common.cancel"), style: "cancel" },
+            {
+                text: t("common.delete"),
+                style: "destructive",
+                onPress: async () => {
+                    try {
+                        await deleteConference(conference.id);
+                        setShowSubmenu(false);
+                        router.back();
+                    } catch {
+                        Alert.alert(t("common.errors.title"), t("conferences.deleteFailed"));
+                    }
                 },
-            ]
-        );
+            },
+        ]);
     };
 
     const handleEditConferenceFromMenu = () => {
         setShowSubmenu(false);
         handleEditConference();
+    };
+
+    const handleBack = () => {
+        router.back();
     };
 
     const formatDate = (date: Date) => {
@@ -176,7 +178,7 @@ export default function ConferenceDetailScreen() {
             <View style={styles.centered}>
                 <ThemedText style={styles.errorText}>{t("errors.conferenceNotFound")}</ThemedText>
                 <TouchableOpacity
-                    style={[styles.backButton, { backgroundColor: tintColor }]}
+                    style={[styles.errorBackButton, { backgroundColor: tintColor }]}
                     onPress={() => router.push("/(tabs)")}
                 >
                     <ThemedText style={styles.backButtonText}>{t("conferences.goToConferences")}</ThemedText>
@@ -187,6 +189,15 @@ export default function ConferenceDetailScreen() {
 
     return (
         <ThemedView style={styles.container}>
+            <View style={[styles.header, { backgroundColor: headerBackgroundColor, borderColor: borderLight }]}>
+                <TouchableOpacity style={styles.backButton} onPress={handleBack}>
+                    <IconSymbol name="chevron.left" size={20} color={textColor} />
+                    <ThemedText style={styles.backText}>{t("conferences.title")}</ThemedText>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.headerMenuButton} onPress={() => setShowSubmenu(true)}>
+                    <Ionicons name="ellipsis-vertical" size={24} color={textColor} />
+                </TouchableOpacity>
+            </View>
             <ScrollView contentContainerStyle={styles.scrollContent}>
                 <View style={[styles.headerContainer, { borderBottomColor: borderLight }]}>
                     <View style={styles.headerContent}>
@@ -204,36 +215,28 @@ export default function ConferenceDetailScreen() {
                         ) : (
                             <></>
                         )}
-                        <View style={styles.headerTop}>
-                            <View style={styles.statusContainer}>
-                                <View
-                                    style={[
-                                        styles.statusBadge,
-                                        {
-                                            backgroundColor:
-                                                calculateCurrentStatus(conference.startDate, conference.endDate) ===
-                                                "ongoing"
-                                                    ? tintColor
-                                                    : mutedColor,
-                                        },
-                                    ]}
-                                >
-                                    <ThemedText style={styles.statusText}>
-                                        {t(`status.${calculateCurrentStatus(conference.startDate, conference.endDate)}`)}
-                                    </ThemedText>
-                                </View>
-                                {isActive && (
-                                    <View style={[styles.activeBadge, { backgroundColor: tintColor }]}>
-                                        <ThemedText style={styles.statusText}>{t("status.active")}</ThemedText>
-                                    </View>
-                                )}
-                            </View>
-                            <TouchableOpacity
-                                style={styles.menuButton}
-                                onPress={() => setShowSubmenu(true)}
+                        <View style={styles.statusContainer}>
+                            <View
+                                style={[
+                                    styles.statusBadge,
+                                    {
+                                        backgroundColor:
+                                            calculateCurrentStatus(conference.startDate, conference.endDate) ===
+                                            "ongoing"
+                                                ? tintColor
+                                                : mutedColor,
+                                    },
+                                ]}
                             >
-                                <Ionicons name="ellipsis-vertical" size={24} color={textColor} />
-                            </TouchableOpacity>
+                                <ThemedText style={styles.statusText}>
+                                    {t(`status.${calculateCurrentStatus(conference.startDate, conference.endDate)}`)}
+                                </ThemedText>
+                            </View>
+                            {isActive && (
+                                <View style={[styles.activeBadge, { backgroundColor: tintColor }]}>
+                                    <ThemedText style={styles.statusText}>{t("status.active")}</ThemedText>
+                                </View>
+                            )}
                         </View>
                     </View>
                 </View>
@@ -321,11 +324,7 @@ export default function ConferenceDetailScreen() {
                 animationType="fade"
                 onRequestClose={() => setShowSubmenu(false)}
             >
-                <TouchableOpacity
-                    style={styles.modalOverlay}
-                    activeOpacity={1}
-                    onPress={() => setShowSubmenu(false)}
-                >
+                <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setShowSubmenu(false)}>
                     <View style={[styles.submenu, { backgroundColor: backgroundColor, borderColor: borderLight }]}>
                         {!isActive && (
                             <TouchableOpacity style={styles.menuItem} onPress={handleMakeActive}>
@@ -372,7 +371,7 @@ const styles = StyleSheet.create({
         marginBottom: 20,
         textAlign: "center",
     },
-    backButton: {
+    errorBackButton: {
         paddingHorizontal: 20,
         paddingVertical: 10,
         borderRadius: 20,
@@ -411,19 +410,9 @@ const styles = StyleSheet.create({
         marginLeft: 4,
         lineHeight: 22,
     },
-    headerTop: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "flex-start",
-        marginTop: 8,
-    },
     statusContainer: {
         flexDirection: "row",
-    },
-    menuButton: {
-        padding: 8,
-        marginTop: -8,
-        marginRight: -8,
+        marginTop: 8,
     },
     statusBadge: {
         paddingHorizontal: 12,
@@ -544,12 +533,32 @@ const styles = StyleSheet.create({
         color: "black",
         fontWeight: "bold",
     },
+    header: {
+        paddingHorizontal: 8,
+        paddingTop: 60,
+        paddingBottom: 10,
+        borderBottomWidth: 1,
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+    },
+    backButton: {
+        flexDirection: "row",
+        alignItems: "center",
+    },
+    backText: {
+        fontSize: 17,
+        marginLeft: 4,
+    },
+    headerMenuButton: {
+        paddingHorizontal: 8,
+    },
     modalOverlay: {
         flex: 1,
         backgroundColor: "rgba(0, 0, 0, 0.5)",
         justifyContent: "flex-start",
         alignItems: "flex-end",
-        paddingTop: 100,
+        paddingTop: 110,
         paddingRight: 16,
     },
     submenu: {
