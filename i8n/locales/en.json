@@ -112,6 +112,8 @@
         "evaluation": "Evaluation",
         "nextTalk": "Next Talk: {{title}}",
         "summary": "Summary",
+        "feedback": "Feedback",
+        "shareHint": "will be shared with us",
         "keepTakingNotes": "Keep taking notes",
         "addTalk": "Add Talk"
     },

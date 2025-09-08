@@ -112,6 +112,8 @@
         "evaluation": "Bewertung",
         "nextTalk": "Nächster Vortrag: {{title}}",
         "summary": "Zusammenfassung",
+        "feedback": "Feedback",
+        "shareHint": "wird mit uns geteilt",
         "keepTakingNotes": "Fortsetzen",
         "addTalk": "Neuer Vortrag"
     },

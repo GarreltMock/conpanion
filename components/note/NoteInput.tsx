@@ -182,6 +182,7 @@ export const NoteInput: React.FC<NoteInputProps> = ({
                 hasText: text.trim().length > 0,
                 hasImages: noteImages.length > 0,
                 hasAudio: audioUris.length > 0,
+                textLength: text.trim().length,
                 imageCount: noteImages.length,
                 audioCount: audioUris.length,
             });

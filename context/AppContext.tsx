@@ -61,7 +61,13 @@ interface AppContextType {
     toggleTalkSelection: (talkId: string) => Promise<void>;
     getUserSelectedTalks: () => Talk[];
     getAgendaTalks: () => Talk[];
-    saveEvaluation: (talkId: string, rating: number, summary: string, markAsEvaluated?: boolean) => Promise<void>;
+    saveEvaluation: (
+        talkId: string,
+        rating: number,
+        summary: string,
+        feedback: string,
+        markAsEvaluated?: boolean
+    ) => Promise<void>;
     shouldShowEvaluationModal: () => boolean;
     refreshActiveTalk: () => Promise<void>;
 
@@ -102,7 +108,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [isRecording, setIsRecording] = useState<boolean>(false);
     const [recording, setRecording] = useState<Audio.Recording | null>(null);
-
 
     const loadConference = useCallback(async () => {
         try {
@@ -340,7 +345,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         // Reset active talk
         setActiveTalk(null);
     };
-
 
     const getConferencesFromContext = async (): Promise<Conference[]> => {
         // First check if we already have conferences in state
@@ -784,7 +788,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     };
 
     // Evaluation Functions
-    const saveEvaluation = async (talkId: string, rating: number, summary: string): Promise<void> => {
+    const saveEvaluation = async (talkId: string, rating: number, summary: string, feedback: string): Promise<void> => {
         const talk = talks.find((t) => t.id === talkId);
         if (!talk) {
             throw new Error("Talk not found");
@@ -794,6 +798,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
             ...talk,
             rating,
             summary,
+            feedback,
         };
 
         await saveTalk(updatedTalk);

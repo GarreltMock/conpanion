@@ -121,16 +121,24 @@ export const trackTalkRemovedFromAgenda = async (talkId: string): Promise<void> 
 };
 
 // Track talk rating and summary
-export const trackTalkRated = async (talkId: string, rating: number, hasSummary: boolean = false): Promise<void> => {
-    await trackEvent("talk_rated", {
-        talkId,
-        rating,
-        hasSummary,
-    });
+export const trackTalkRated = async (params: {
+    talkId: string;
+    rating?: number;
+    feedback?: string;
+    hasSummary?: boolean;
+}): Promise<void> => {
+    await trackEvent("talk_rated", params);
 };
 
 // Track note item creation
-export const trackNoteAdded = async (contentParameter: Record<string, any>): Promise<void> => {
+export const trackNoteAdded = async (contentParameter: {
+    hasText: boolean;
+    hasImages: boolean;
+    hasAudio: boolean;
+    textLength: number;
+    imageCount: number;
+    audioCount: number;
+}): Promise<void> => {
     await trackEvent("note_added", contentParameter);
 };
 

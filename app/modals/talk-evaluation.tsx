@@ -1,6 +1,15 @@
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, Alert, StyleSheet, View, Text, TouchableOpacity, TextInput } from "react-native";
+import {
+    ActivityIndicator,
+    Alert,
+    StyleSheet,
+    View,
+    Text,
+    TouchableOpacity,
+    TextInput,
+    ScrollView,
+} from "react-native";
 
 import { MyKeyboardAvoidingView } from "@/components/MyKeyboardAvoidingView";
 import { ThemedView } from "@/components/ThemedView";
@@ -17,6 +26,7 @@ export default function TalkEvaluationModal() {
     const [talk, setTalk] = useState<Talk | null>(null);
     const [rating, setRating] = useState<number>(0);
     const [summary, setSummary] = useState<string>("");
+    const [feedback, setFeedback] = useState<string>("");
     const [isLoading, setIsLoading] = useState(true);
 
     const { talks, saveEvaluation, endTalk, currentConference } = useApp();
@@ -61,6 +71,7 @@ export default function TalkEvaluationModal() {
                 // Prefill existing evaluation data
                 setRating(foundTalk.rating || 0);
                 setSummary(foundTalk.summary || "");
+                setFeedback(foundTalk.feedback || "");
             } else {
                 Alert.alert("Error", "Talk not found");
                 router.back();
@@ -73,11 +84,9 @@ export default function TalkEvaluationModal() {
         if (!talk) return;
 
         try {
-            await saveEvaluation(talk.id, rating, summary);
-            // Track talk rating if a rating was provided
-            if (rating > 0) {
-                await trackTalkRated(talk.id, rating, summary.trim().length > 0);
-            }
+            await saveEvaluation(talk.id, rating, summary, feedback);
+            await trackEvaluation();
+
             router.back();
         } catch (error) {
             console.error("Error saving evaluation:", error);
@@ -89,11 +98,8 @@ export default function TalkEvaluationModal() {
         if (!talk) return;
 
         try {
-            await saveEvaluation(talk.id, rating, summary);
-            // Track talk rating if a rating was provided
-            if (rating > 0) {
-                await trackTalkRated(talk.id, rating, summary.trim().length > 0);
-            }
+            await saveEvaluation(talk.id, rating, summary, feedback);
+            await trackEvaluation();
             await endTalk(talk);
 
             router.back();
@@ -107,15 +113,21 @@ export default function TalkEvaluationModal() {
         if (!talk) return;
 
         try {
-            await saveEvaluation(talk.id, rating, summary);
-            // Track talk rating if a rating was provided
-            if (rating > 0) {
-                await trackTalkRated(talk.id, rating, summary.trim().length > 0);
-            }
+            await saveEvaluation(talk.id, rating, summary, feedback);
+            await trackEvaluation();
+
             router.back();
         } catch (error) {
             console.error("Error saving evaluation:", error);
             Alert.alert("Error", "Failed to save evaluation. Please try again.");
+        }
+    };
+
+    const trackEvaluation = async () => {
+        if (!talk) return;
+
+        if (rating > 0 || feedback.length > 0) {
+            await trackTalkRated({ talkId: talk.id, rating, feedback, hasSummary: summary.trim().length > 0 });
         }
     };
 
@@ -161,11 +173,11 @@ export default function TalkEvaluationModal() {
             {nextTalk && (
                 <View style={styles.nextTalkContainer}>
                     <View style={styles.nextTalkRow}>
-                        <IconSymbol 
-                            name="arrow.right.circle" 
-                            size={16} 
-                            color={textColor + "80"} 
-                            style={styles.nextTalkIcon} 
+                        <IconSymbol
+                            name="arrow.right.circle"
+                            size={16}
+                            color={textColor + "80"}
+                            style={styles.nextTalkIcon}
                         />
                         <ThemedText style={[styles.nextTalkText, { color: textColor + "80" }]}>
                             Next Talk: {nextTalk.title}
@@ -174,75 +186,107 @@ export default function TalkEvaluationModal() {
                 </View>
             )}
             <ThemedView style={styles.container}>
-                <View style={styles.content}>
-                    <View style={styles.header}>
-                        <View>
-                            <ThemedText style={styles.subtitle}>Evaluation</ThemedText>
-                            <ThemedText style={styles.title}>{talk.title}</ThemedText>
+                <ScrollView showsVerticalScrollIndicator={false} bounces={false}>
+                    <View style={styles.content}>
+                        <View style={styles.header}>
+                            <View>
+                                <ThemedText style={styles.subtitle}>Evaluation</ThemedText>
+                                <ThemedText style={styles.title}>{talk.title}</ThemedText>
+                            </View>
+                            {isFromTalkDetail && (
+                                <TouchableOpacity style={styles.closeButton} onPress={handleClose} activeOpacity={0.6}>
+                                    <IconSymbol name="xmark" size={18} color={textColor + "80"} />
+                                </TouchableOpacity>
+                            )}
                         </View>
-                        {isFromTalkDetail && (
-                            <TouchableOpacity style={styles.closeButton} onPress={handleClose} activeOpacity={0.6}>
-                                <IconSymbol name="xmark" size={18} color={textColor + "80"} />
-                            </TouchableOpacity>
-                        )}
-                    </View>
 
-                    <View style={styles.summarySection}>
-                        <TextInput
-                            style={[
-                                styles.summaryInput,
-                                {
-                                    borderColor: borderLightColor,
-                                    backgroundColor: backgroundOverlayLightColor,
-                                    color: textColor,
-                                },
-                            ]}
-                            placeholder={t("talks.summary")}
-                            placeholderTextColor={textColor + "60"}
-                            multiline
-                            value={summary}
-                            onChangeText={setSummary}
-                            textAlignVertical="top"
-                        />
-                    </View>
+                        <View style={styles.summarySection}>
+                            <TextInput
+                                style={[
+                                    styles.summaryInput,
+                                    {
+                                        borderColor: borderLightColor,
+                                        backgroundColor: backgroundOverlayLightColor,
+                                        color: textColor,
+                                    },
+                                ]}
+                                placeholder={t("talks.summary")}
+                                placeholderTextColor={textColor + "60"}
+                                multiline
+                                value={summary}
+                                onChangeText={setSummary}
+                                textAlignVertical="top"
+                            />
+                        </View>
 
-                    <View style={styles.ratingSection}>
-                        <View style={styles.starsContainer}>{renderStars()}</View>
-                    </View>
+                        <View style={styles.feedbackSection}>
+                            <TextInput
+                                style={[
+                                    styles.feedbackInput,
+                                    {
+                                        borderColor: borderLightColor,
+                                        backgroundColor: backgroundOverlayLightColor,
+                                        color: textColor,
+                                    },
+                                ]}
+                                placeholder={t("talks.feedback") + "*"}
+                                placeholderTextColor={textColor + "60"}
+                                multiline
+                                value={feedback}
+                                onChangeText={setFeedback}
+                                textAlignVertical="top"
+                            />
+                        </View>
 
-                    <View style={styles.buttonsContainer}>
-                        {isFromTalkDetail ? (
-                            // When opened from talk detail view - just show Save button
-                            <TouchableOpacity
-                                style={[styles.button, styles.saveButton, { backgroundColor: tintColor }]}
-                                onPress={handleSave}
-                            >
-                                <Text style={[styles.buttonText, { color: backgroundColor }]}>Save</Text>
-                            </TouchableOpacity>
-                        ) : (
-                            // When opened from normal flow - show original buttons
-                            <>
+                        <View style={styles.ratingSection}>
+                            <View style={styles.starsRow}>
+                                <View style={styles.starsContainer}>{renderStars()}</View>
+                                <ThemedText style={[styles.ratingAsterisk, { color: textColor + "60" }]}>*</ThemedText>
+                            </View>
+                        </View>
+
+                        <ThemedText style={[styles.feedbackNote, { color: textColor + "60" }]}>
+                            * {t("talks.shareHint")}
+                        </ThemedText>
+
+                        <View style={styles.buttonsContainer}>
+                            {isFromTalkDetail ? (
+                                // When opened from talk detail view - just show Save button
                                 <TouchableOpacity
-                                    style={[styles.button, styles.keepNotesButton, { borderColor: borderLightColor }]}
-                                    onPress={handleKeepTakingNotes}
+                                    style={[styles.button, styles.saveButton, { backgroundColor: tintColor }]}
+                                    onPress={handleSave}
                                 >
-                                    <Text style={[styles.buttonText, { color: textColor }]}>
-                                        {t("talks.keepTakingNotes")}
-                                    </Text>
+                                    <Text style={[styles.buttonText, { color: backgroundColor }]}>Save</Text>
                                 </TouchableOpacity>
+                            ) : (
+                                // When opened from normal flow - show original buttons
+                                <>
+                                    <TouchableOpacity
+                                        style={[
+                                            styles.button,
+                                            styles.keepNotesButton,
+                                            { borderColor: borderLightColor },
+                                        ]}
+                                        onPress={handleKeepTakingNotes}
+                                    >
+                                        <Text style={[styles.buttonText, { color: textColor }]}>
+                                            {t("talks.keepTakingNotes")}
+                                        </Text>
+                                    </TouchableOpacity>
 
-                                <TouchableOpacity
-                                    style={[styles.button, styles.doneButton, { backgroundColor: tintColor }]}
-                                    onPress={handleDone}
-                                >
-                                    <Text style={[styles.buttonText, { color: backgroundColor }]}>
-                                        {t("common.done")}
-                                    </Text>
-                                </TouchableOpacity>
-                            </>
-                        )}
+                                    <TouchableOpacity
+                                        style={[styles.button, styles.doneButton, { backgroundColor: tintColor }]}
+                                        onPress={handleDone}
+                                    >
+                                        <Text style={[styles.buttonText, { color: backgroundColor }]}>
+                                            {t("common.done")}
+                                        </Text>
+                                    </TouchableOpacity>
+                                </>
+                            )}
+                        </View>
                     </View>
-                </View>
+                </ScrollView>
             </ThemedView>
         </MyKeyboardAvoidingView>
     );
@@ -319,14 +363,43 @@ const styles = StyleSheet.create({
         minHeight: 80,
         maxHeight: 120,
     },
+    feedbackSection: {
+        marginBottom: 24,
+    },
+    feedbackInput: {
+        borderWidth: 1,
+        borderRadius: 8,
+        padding: 12,
+        fontSize: 15,
+        minHeight: 80,
+        maxHeight: 120,
+    },
+    feedbackNote: {
+        fontSize: 12,
+        marginTop: 2,
+        fontStyle: "italic",
+    },
     ratingSection: {
         alignItems: "center",
-        marginBottom: 24,
+        marginBottom: 12,
+    },
+    starsRow: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 8,
     },
     starsContainer: {
         flexDirection: "row",
         justifyContent: "center",
         gap: 6,
+    },
+    ratingAsterisk: {
+        position: "relative",
+        top: -8,
+        left: -10,
+        fontSize: 16,
+        fontWeight: "500",
     },
     starButton: {
         padding: 2,
