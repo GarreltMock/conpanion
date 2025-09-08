@@ -76,7 +76,7 @@ export default function EditNoteModal() {
         router.back();
     };
 
-    const handleTakePhoto = async (fromGallery: boolean): Promise<string> => {
+    const handleTakePhoto = async (fromGallery: boolean): Promise<string | null> => {
         try {
             return await addImageNote(fromGallery);
         } catch (error) {
