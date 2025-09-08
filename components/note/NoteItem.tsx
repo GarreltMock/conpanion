@@ -1,17 +1,18 @@
 import { format } from "date-fns";
 import { Audio } from "expo-av";
 import { router } from "expo-router";
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
     Alert,
     Image,
     Linking,
+    Modal,
     Pressable,
     ScrollView,
     StyleSheet,
     TouchableOpacity,
     View,
-    ActionSheetIOS,
+    Dimensions,
 } from "react-native";
 
 import { ThemedText } from "@/components/ThemedText";
@@ -31,6 +32,9 @@ export const NoteItem: React.FC<NoteItemProps> = ({ note, onDelete, readOnly = f
     const [sound, setSound] = useState<Audio.Sound | null>(null);
     const [isPlaying, setIsPlaying] = useState<boolean>(false);
     const [playingIndex, setPlayingIndex] = useState<number | null>(null);
+    const [showSubmenu, setShowSubmenu] = useState<boolean>(false);
+    const [submenuPosition, setSubmenuPosition] = useState<{ top: number; right: number }>({ top: 100, right: 16 });
+    const containerRef = useRef<View>(null);
 
     const tintColor = useThemeColor({}, "tint");
     const whiteColor = useThemeColor({}, "white");
@@ -141,20 +145,31 @@ export const NoteItem: React.FC<NoteItemProps> = ({ note, onDelete, readOnly = f
     const handleLongPress = () => {
         if (readOnly) return;
 
-        ActionSheetIOS.showActionSheetWithOptions(
-            {
-                options: ["Cancel", "Edit", "Delete"],
-                destructiveButtonIndex: 2,
-                cancelButtonIndex: 0,
-            },
-            (buttonIndex) => {
-                if (buttonIndex === 1) {
-                    handleEditNote();
-                } else if (buttonIndex === 2) {
-                    handleDeleteNote();
-                }
-            }
-        );
+        containerRef.current?.measureInWindow((x, y, width, height) => {
+            const screenHeight = Dimensions.get("window").height;
+            const screenWidth = Dimensions.get("window").width;
+
+            // Position the menu below the note item, towards the right
+            const menuTop = y + height + 8; // 8px below the note
+            const menuRight = screenWidth - (x + width); // Align with right edge of note
+
+            // Adjust if menu would go off screen
+            const adjustedTop = Math.min(menuTop, screenHeight - 200); // Prevent going off bottom
+            const adjustedRight = Math.max(menuRight, 16); // Ensure minimum margin from right
+
+            setSubmenuPosition({ top: adjustedTop, right: adjustedRight });
+            setShowSubmenu(true);
+        });
+    };
+
+    const handleEditNoteFromMenu = () => {
+        setShowSubmenu(false);
+        handleEditNote();
+    };
+
+    const handleDeleteNoteFromMenu = () => {
+        setShowSubmenu(false);
+        handleDeleteNote();
     };
 
     const handlePress = () => {
@@ -164,6 +179,7 @@ export const NoteItem: React.FC<NoteItemProps> = ({ note, onDelete, readOnly = f
 
     return (
         <Pressable
+            ref={containerRef}
             style={({ pressed }) => [
                 styles.container,
                 { borderColor: borderLightColor },
@@ -274,6 +290,38 @@ export const NoteItem: React.FC<NoteItemProps> = ({ note, onDelete, readOnly = f
                     </View>
                 </View>
             </ThemedView>
+
+            <Modal
+                visible={showSubmenu}
+                transparent={true}
+                animationType="fade"
+                onRequestClose={() => setShowSubmenu(false)}
+            >
+                <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setShowSubmenu(false)}>
+                    <View
+                        style={[
+                            styles.submenu,
+                            {
+                                backgroundColor: backgroundColor,
+                                borderColor: borderLightColor,
+                                position: "absolute",
+                                top: submenuPosition.top,
+                                right: submenuPosition.right,
+                            },
+                        ]}
+                    >
+                        <TouchableOpacity style={styles.menuItem} onPress={handleEditNoteFromMenu}>
+                            <IconSymbol name="pencil" size={20} color={tintColor} />
+                            <ThemedText style={[styles.menuItemText, { color: tintColor }]}>Edit</ThemedText>
+                        </TouchableOpacity>
+                        <View style={[styles.menuSeparator, { backgroundColor: borderLightColor }]} />
+                        <TouchableOpacity style={styles.menuItem} onPress={handleDeleteNoteFromMenu}>
+                            <IconSymbol name="trash" size={20} color="#FF3B30" />
+                            <ThemedText style={[styles.menuItemText, { color: "#FF3B30" }]}>Delete</ThemedText>
+                        </TouchableOpacity>
+                    </View>
+                </TouchableOpacity>
+            </Modal>
         </Pressable>
     );
 };
@@ -400,5 +448,33 @@ const styles = StyleSheet.create({
     textContent: {
         fontSize: 16,
         lineHeight: 22,
+    },
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: "rgba(0, 0, 0, 0.5)",
+    },
+    submenu: {
+        borderRadius: 12,
+        borderWidth: 1,
+        minWidth: 150,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 12,
+        elevation: 8,
+    },
+    menuItem: {
+        flexDirection: "row",
+        alignItems: "center",
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+    },
+    menuItemText: {
+        marginLeft: 12,
+        fontSize: 16,
+        fontWeight: "500",
+    },
+    menuSeparator: {
+        height: 1,
+        marginHorizontal: 16,
     },
 });
