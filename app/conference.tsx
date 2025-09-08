@@ -57,7 +57,6 @@ export default function ConferenceDetailScreen() {
         } else {
             // Find the conference
             const foundConference = conferences.find((conf) => conf.id === id);
-            console.log("Found conference:", foundConference);
 
             if (foundConference) {
                 setConference(foundConference);
@@ -413,18 +412,17 @@ export default function ConferenceDetailScreen() {
             </Modal>
 
             {/* Sync Loading Modal */}
-            <Modal
-                visible={isSyncing}
-                transparent={true}
-                animationType="fade"
-            >
+            <Modal visible={isSyncing} transparent={true} animationType="fade">
                 <View style={styles.syncModalOverlay}>
-                    <View style={[styles.syncModalContent, { backgroundColor: backgroundColor, borderColor: borderLight }]}>
+                    <View
+                        style={[
+                            styles.syncModalContent,
+                            { backgroundColor: backgroundColor, borderColor: borderLight },
+                        ]}
+                    >
                         <ActivityIndicator size="large" color={tintColor} style={styles.syncLoader} />
                         <ThemedText style={styles.syncText}>{t("conferences.syncing")}</ThemedText>
-                        <ThemedText style={styles.syncSubtext}>
-                            {t("conferences.syncingDescription")}
-                        </ThemedText>
+                        <ThemedText style={styles.syncSubtext}>{t("conferences.syncingDescription")}</ThemedText>
                     </View>
                 </View>
             </Modal>
