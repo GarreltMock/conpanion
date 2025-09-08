@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, StyleSheet, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from "react-native";
+import { View, StyleSheet, ScrollView, TouchableOpacity, Alert, ActivityIndicator, Modal } from "react-native";
 import { useApp } from "../context/AppContext";
 import { ThemedText } from "../components/ThemedText";
 import { ThemedView } from "../components/ThemedView";
@@ -12,10 +12,11 @@ import { format } from "date-fns";
 
 export default function ConferenceDetailScreen() {
     const { id } = useLocalSearchParams<{ id: string }>();
-    const { conferences, talks, notes, switchActiveConference, currentConference } = useApp();
+    const { conferences, talks, notes, switchActiveConference, currentConference, deleteConference } = useApp();
     const [conference, setConference] = useState<Conference | null>(null);
     const [conferenceTalks, setConferenceTalks] = useState<Talk[]>([]);
     const [isActive, setIsActive] = useState(false);
+    const [showSubmenu, setShowSubmenu] = useState(false);
 
     // Helper function to calculate current conference status based on dates
     const calculateCurrentStatus = (startDate: Date, endDate: Date) => {
@@ -79,6 +80,7 @@ export default function ConferenceDetailScreen() {
     };
 
     const handleExportConference = () => {
+        setShowSubmenu(false);
         router.push({
             pathname: "/modals/export-options",
             params: { id: conference?.id },
@@ -90,11 +92,42 @@ export default function ConferenceDetailScreen() {
             try {
                 await switchActiveConference(conference.id);
                 setIsActive(true);
+                setShowSubmenu(false);
                 Alert.alert(t("common.ok"), t("conferences.activeConference", { name: conference.name }));
-            } catch (error) {
+            } catch {
                 Alert.alert(t("common.errors.title"), t("errors.switchConferenceFailed"));
             }
         }
+    };
+
+    const handleDeleteConference = () => {
+        if (!conference) return;
+        
+        Alert.alert(
+            t("common.delete"),
+            t("conferences.deleteWarning"),
+            [
+                { text: t("common.cancel"), style: "cancel" },
+                {
+                    text: t("common.delete"),
+                    style: "destructive",
+                    onPress: async () => {
+                        try {
+                            await deleteConference(conference.id);
+                            setShowSubmenu(false);
+                            router.back();
+                        } catch {
+                            Alert.alert(t("common.errors.title"), t("conferences.deleteFailed"));
+                        }
+                    },
+                },
+            ]
+        );
+    };
+
+    const handleEditConferenceFromMenu = () => {
+        setShowSubmenu(false);
+        handleEditConference();
     };
 
     const formatDate = (date: Date) => {
@@ -171,28 +204,36 @@ export default function ConferenceDetailScreen() {
                         ) : (
                             <></>
                         )}
-                        <View style={styles.statusContainer}>
-                            <View
-                                style={[
-                                    styles.statusBadge,
-                                    {
-                                        backgroundColor:
-                                            calculateCurrentStatus(conference.startDate, conference.endDate) ===
-                                            "ongoing"
-                                                ? tintColor
-                                                : mutedColor,
-                                    },
-                                ]}
-                            >
-                                <ThemedText style={styles.statusText}>
-                                    {t(`status.${calculateCurrentStatus(conference.startDate, conference.endDate)}`)}
-                                </ThemedText>
-                            </View>
-                            {isActive && (
-                                <View style={[styles.activeBadge, { backgroundColor: tintColor }]}>
-                                    <ThemedText style={styles.statusText}>{t("status.active")}</ThemedText>
+                        <View style={styles.headerTop}>
+                            <View style={styles.statusContainer}>
+                                <View
+                                    style={[
+                                        styles.statusBadge,
+                                        {
+                                            backgroundColor:
+                                                calculateCurrentStatus(conference.startDate, conference.endDate) ===
+                                                "ongoing"
+                                                    ? tintColor
+                                                    : mutedColor,
+                                        },
+                                    ]}
+                                >
+                                    <ThemedText style={styles.statusText}>
+                                        {t(`status.${calculateCurrentStatus(conference.startDate, conference.endDate)}`)}
+                                    </ThemedText>
                                 </View>
-                            )}
+                                {isActive && (
+                                    <View style={[styles.activeBadge, { backgroundColor: tintColor }]}>
+                                        <ThemedText style={styles.statusText}>{t("status.active")}</ThemedText>
+                                    </View>
+                                )}
+                            </View>
+                            <TouchableOpacity
+                                style={styles.menuButton}
+                                onPress={() => setShowSubmenu(true)}
+                            >
+                                <Ionicons name="ellipsis-vertical" size={24} color={textColor} />
+                            </TouchableOpacity>
                         </View>
                     </View>
                 </View>
@@ -274,33 +315,44 @@ export default function ConferenceDetailScreen() {
                 </ThemedView>
             </ScrollView>
 
-            <View style={[styles.actionBar, { borderTopColor: borderLight }]}>
-                {!isActive && (
-                    <TouchableOpacity
-                        style={[styles.actionButton, styles.makeActiveButton, { backgroundColor: tintColor }]}
-                        onPress={handleMakeActive}
-                    >
-                        <Ionicons name="checkmark-circle-outline" size={20} color="black" />
-                        <ThemedText style={styles.actionButtonText}>{t("conferences.makeActive")}</ThemedText>
-                    </TouchableOpacity>
-                )}
+            <Modal
+                visible={showSubmenu}
+                transparent={true}
+                animationType="fade"
+                onRequestClose={() => setShowSubmenu(false)}
+            >
                 <TouchableOpacity
-                    style={[styles.actionButton, { backgroundColor: backgroundColor }]}
-                    onPress={handleEditConference}
+                    style={styles.modalOverlay}
+                    activeOpacity={1}
+                    onPress={() => setShowSubmenu(false)}
                 >
-                    <Ionicons name="pencil-outline" size={20} color={tintColor} />
-                    <ThemedText style={[styles.actionButtonText, { color: tintColor }]}>{t("common.edit")}</ThemedText>
+                    <View style={[styles.submenu, { backgroundColor: backgroundColor, borderColor: borderLight }]}>
+                        {!isActive && (
+                            <TouchableOpacity style={styles.menuItem} onPress={handleMakeActive}>
+                                <Ionicons name="checkmark-circle-outline" size={20} color={tintColor} />
+                                <ThemedText style={[styles.menuItemText, { color: tintColor }]}>
+                                    {t("conferences.makeActive")}
+                                </ThemedText>
+                            </TouchableOpacity>
+                        )}
+                        <TouchableOpacity style={styles.menuItem} onPress={handleEditConferenceFromMenu}>
+                            <Ionicons name="pencil-outline" size={20} color={textColor} />
+                            <ThemedText style={styles.menuItemText}>{t("common.edit")}</ThemedText>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.menuItem} onPress={handleExportConference}>
+                            <Ionicons name="share-outline" size={20} color={textColor} />
+                            <ThemedText style={styles.menuItemText}>{t("common.actions.export")}</ThemedText>
+                        </TouchableOpacity>
+                        <View style={[styles.menuSeparator, { backgroundColor: borderLight }]} />
+                        <TouchableOpacity style={styles.menuItem} onPress={handleDeleteConference}>
+                            <Ionicons name="trash-outline" size={20} color="#FF3B30" />
+                            <ThemedText style={[styles.menuItemText, { color: "#FF3B30" }]}>
+                                {t("common.delete")}
+                            </ThemedText>
+                        </TouchableOpacity>
+                    </View>
                 </TouchableOpacity>
-                <TouchableOpacity
-                    style={[styles.actionButton, { backgroundColor: backgroundColor }]}
-                    onPress={handleExportConference}
-                >
-                    <Ionicons name="share-outline" size={20} color={tintColor} />
-                    <ThemedText style={[styles.actionButtonText, { color: tintColor }]}>
-                        {t("common.actions.export")}
-                    </ThemedText>
-                </TouchableOpacity>
-            </View>
+            </Modal>
         </ThemedView>
     );
 }
@@ -359,9 +411,19 @@ const styles = StyleSheet.create({
         marginLeft: 4,
         lineHeight: 22,
     },
+    headerTop: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "flex-start",
+        marginTop: 8,
+    },
     statusContainer: {
         flexDirection: "row",
-        marginTop: 8,
+    },
+    menuButton: {
+        padding: 8,
+        marginTop: -8,
+        marginRight: -8,
     },
     statusBadge: {
         paddingHorizontal: 12,
@@ -482,26 +544,36 @@ const styles = StyleSheet.create({
         color: "black",
         fontWeight: "bold",
     },
-    actionBar: {
-        flexDirection: "row",
-        padding: 16,
-        borderTopWidth: 1,
-    },
-    actionButton: {
+    modalOverlay: {
         flex: 1,
+        backgroundColor: "rgba(0, 0, 0, 0.5)",
+        justifyContent: "flex-start",
+        alignItems: "flex-end",
+        paddingTop: 100,
+        paddingRight: 16,
+    },
+    submenu: {
+        borderRadius: 12,
+        borderWidth: 1,
+        minWidth: 200,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 12,
+        elevation: 8,
+    },
+    menuItem: {
         flexDirection: "row",
         alignItems: "center",
-        justifyContent: "center",
-        padding: 12,
-        borderRadius: 8,
-        marginHorizontal: 4,
+        paddingHorizontal: 16,
+        paddingVertical: 12,
     },
-    makeActiveButton: {
-        flex: 1.5,
+    menuItemText: {
+        marginLeft: 12,
+        fontSize: 16,
+        fontWeight: "500",
     },
-    actionButtonText: {
-        marginLeft: 8,
-        fontWeight: "bold",
-        color: "black",
+    menuSeparator: {
+        height: 1,
+        marginHorizontal: 16,
     },
 });

@@ -69,10 +69,7 @@ export default function RootLayout() {
                                 title: "Edit Image",
                             }}
                         />
-                        <Stack.Screen
-                            name="modals/new-talk"
-                            options={{ presentation: "modal", headerShown: false }}
-                        />
+                        <Stack.Screen name="modals/new-talk" options={{ presentation: "modal", headerShown: false }} />
                         <Stack.Screen
                             name="modals/new-agenda-talk"
                             options={{ presentation: "modal", headerShown: false }}

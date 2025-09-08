@@ -37,6 +37,7 @@ export default function TalkDetailScreen() {
     const textColor = useThemeColor({}, "text");
     const tintColor = useThemeColor({}, "tint");
     const backgroundColor = useThemeColor({}, "background");
+    const headerBackgroundColor = useThemeColor({}, "headerBackground");
     const borderLightColor = useThemeColor({}, "borderLight");
     const backgroundOverlayLightColor = useThemeColor({}, "backgroundOverlayLight");
     const iconColor = useThemeColor({}, "tabIconDefault");
@@ -141,9 +142,11 @@ export default function TalkDetailScreen() {
     return (
         <MyKeyboardAvoidingView>
             <ThemedView style={styles.container}>
-                <View style={styles.header}>
+                <View
+                    style={[styles.header, { backgroundColor: headerBackgroundColor, borderColor: borderLightColor }]}
+                >
                     <TouchableOpacity style={styles.backButton} onPress={handleBack}>
-                        <IconSymbol name="chevron.left" size={24} color={textColor} />
+                        <IconSymbol name="chevron.left" size={20} color={textColor} />
                         <ThemedText style={styles.backText}>{t("navigation.tabs.talks")}</ThemedText>
                     </TouchableOpacity>
                 </View>
@@ -170,12 +173,7 @@ export default function TalkDetailScreen() {
                                 disabled={!isTalkInPast(talk)}
                                 activeOpacity={isTalkInPast(talk) ? 0.6 : 1}
                             >
-                                <IconSymbol
-                                    name="star.fill"
-                                    size={16}
-                                    color={iconColor}
-                                    style={styles.detailIcon}
-                                />
+                                <IconSymbol name="star.fill" size={16} color={iconColor} style={styles.detailIcon} />
                                 <ThemedText style={styles.detailText}>{talk.rating}/5</ThemedText>
                                 {isTalkInPast(talk) && (
                                     <IconSymbol
@@ -193,7 +191,9 @@ export default function TalkDetailScreen() {
                                 activeOpacity={0.6}
                             >
                                 <IconSymbol name="star" size={16} color={iconColor} style={styles.detailIcon} />
-                                <ThemedText style={[styles.detailText, styles.rateButton]}>{t("talks.actions.rateTalk")}</ThemedText>
+                                <ThemedText style={[styles.detailText, styles.rateButton]}>
+                                    {t("talks.actions.rateTalk")}
+                                </ThemedText>
                             </TouchableOpacity>
                         ) : null}
                     </View>
@@ -246,7 +246,9 @@ export default function TalkDetailScreen() {
                                                 color={iconColor}
                                                 style={styles.talkDetailIcon}
                                             />
-                                            <ThemedText style={styles.talkDetailLabel}>{t("talks.userSummary")}</ThemedText>
+                                            <ThemedText style={styles.talkDetailLabel}>
+                                                {t("talks.userSummary")}
+                                            </ThemedText>
                                             {isTalkInPast(talk) && (
                                                 <IconSymbol
                                                     name="pencil"
@@ -333,7 +335,9 @@ export default function TalkDetailScreen() {
                                                 color={iconColor}
                                                 style={styles.talkDetailIcon}
                                             />
-                                            <ThemedText style={styles.talkDetailLabel}>{t("talks.location")}</ThemedText>
+                                            <ThemedText style={styles.talkDetailLabel}>
+                                                {t("talks.location")}
+                                            </ThemedText>
                                         </View>
                                         <ThemedText style={styles.talkDetailValue}>{talk.stage}</ThemedText>
                                     </View>
@@ -349,7 +353,9 @@ export default function TalkDetailScreen() {
                                                 color={iconColor}
                                                 style={styles.talkDetailIcon}
                                             />
-                                            <ThemedText style={styles.talkDetailLabel}>{t("talks.description")}</ThemedText>
+                                            <ThemedText style={styles.talkDetailLabel}>
+                                                {t("talks.description")}
+                                            </ThemedText>
                                         </View>
                                         <ThemedText style={styles.talkDetailValue}>{talk.description}</ThemedText>
                                     </View>
@@ -423,9 +429,10 @@ const styles = StyleSheet.create({
         alignItems: "center",
     },
     header: {
-        paddingHorizontal: 16,
+        paddingHorizontal: 8,
         paddingTop: 60,
-        paddingBottom: 16,
+        paddingBottom: 10,
+        borderBottomWidth: 1,
     },
     backButton: {
         flexDirection: "row",
@@ -436,6 +443,7 @@ const styles = StyleSheet.create({
         marginLeft: 4,
     },
     talkHeader: {
+        paddingTop: 16,
         paddingHorizontal: 16,
         paddingBottom: 16,
         borderBottomWidth: 1,

@@ -23,6 +23,7 @@ export default function ConferencesScreen() {
     const { t } = useI18n();
     const tintColor = useThemeColor({}, "tint");
     const backgroundColor = useThemeColor({}, "background");
+    const headerBackgroundColor = useThemeColor({}, "headerBackground");
     const borderLight = useThemeColor({}, "borderLight");
 
     useEffect(() => {
@@ -131,7 +132,7 @@ export default function ConferencesScreen() {
 
     return (
         <ThemedView style={styles.container}>
-            <View style={[styles.header, { borderBottomColor: borderLight }]}>
+            <View style={[styles.header, { borderBottomColor: borderLight, backgroundColor: headerBackgroundColor }]}>
                 <ThemedText style={styles.headerTitle}>{t("conferences.title")}</ThemedText>
                 <Pressable
                     style={({ pressed }) => [
@@ -190,7 +191,8 @@ const styles = StyleSheet.create({
         alignItems: "center",
         paddingHorizontal: 16,
         paddingTop: 60,
-        paddingBottom: 16,
+        paddingBottom: 10,
+        marginBottom: 6,
         borderBottomWidth: 1,
     },
     headerTitle: {

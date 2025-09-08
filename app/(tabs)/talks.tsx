@@ -57,6 +57,7 @@ export default function TalksScreen() {
     const tintColor = useThemeColor({}, "tint");
     const textColor = useThemeColor({}, "text");
     const backgroundColor = useThemeColor({}, "background");
+    const headerBackgroundColor = useThemeColor({}, "headerBackground");
     const borderLight = useThemeColor({}, "borderLight");
     const borderColor = useThemeColor({}, "border");
 
@@ -281,7 +282,7 @@ export default function TalksScreen() {
 
     return (
         <ThemedView style={styles.container}>
-            <View style={[styles.header, { borderBottomColor: borderLight }]}>
+            <View style={[styles.header, { borderBottomColor: borderLight, backgroundColor: headerBackgroundColor }]}>
                 <View>
                     <ThemedText style={styles.conferenceLabel}>{t("talks.title")}</ThemedText>
                     <ThemedText style={styles.conferenceName}>
@@ -357,9 +358,10 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         justifyContent: "space-between",
         alignItems: "center",
-        paddingHorizontal: 16,
+        paddingHorizontal: 10,
         paddingTop: 60,
         paddingBottom: 8,
+        marginBottom: 6,
         borderBottomWidth: 1,
     },
     conferenceLabel: {

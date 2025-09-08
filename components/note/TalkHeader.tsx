@@ -19,6 +19,7 @@ export const TalkHeader: React.FC<TalkHeaderProps> = ({ conferenceName, talk, on
     const { t } = useI18n();
     const tintColor = useThemeColor({}, "tint");
     const backgroundColor = useThemeColor({}, "background");
+    const headerBackgroundColor = useThemeColor({}, "headerBackground");
     const borderLightColor = useThemeColor({}, "borderLight");
     const textColor = useThemeColor({}, "text");
     const [currentTime, setCurrentTime] = useState(new Date());
@@ -57,7 +58,9 @@ export const TalkHeader: React.FC<TalkHeaderProps> = ({ conferenceName, talk, on
     const isOutlinedButton = isScheduledTalk && isTalkActive;
 
     return (
-        <ThemedView style={[styles.container, { borderBottomColor: borderLightColor }]}>
+        <ThemedView
+            style={[styles.container, { borderBottomColor: borderLightColor, backgroundColor: headerBackgroundColor }]}
+        >
             <View style={styles.headerContent}>
                 <View style={styles.titleContainer}>
                     {talk ? (

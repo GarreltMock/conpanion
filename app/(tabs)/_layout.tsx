@@ -4,12 +4,13 @@ import { Platform, Keyboard } from "react-native";
 
 import { HapticTab } from "@/components/HapticTab";
 import { IconSymbol } from "@/components/ui/IconSymbol";
-import { Colors } from "@/constants/Colors";
-import { useColorScheme } from "@/hooks/useColorScheme";
 import { useI18n } from "@/hooks/useI18n";
+import { useThemeColor } from "@/hooks/useThemeColor";
 
 export default function TabLayout() {
-    const colorScheme = useColorScheme();
+    const tintColor = useThemeColor({}, "tint");
+    const headerBackgroundColor = useThemeColor({}, "headerBackground");
+
     const { t } = useI18n();
     const [isKeyboardVisible, setKeyboardVisible] = useState(false);
 
@@ -30,14 +31,15 @@ export default function TabLayout() {
     return (
         <Tabs
             screenOptions={{
-                tabBarActiveTintColor: Colors[colorScheme ?? "light"].tint,
+                tabBarActiveTintColor: tintColor,
                 headerShown: false,
                 tabBarButton: HapticTab,
-                tabBarStyle: Platform.select({
-                    ios: {},
-                    android: isKeyboardVisible ? { display: "none" } : {},
-                    default: {},
-                }),
+                tabBarStyle: [
+                    Platform.select({
+                        android: isKeyboardVisible ? { display: "none" } : {},
+                    }),
+                    { backgroundColor: headerBackgroundColor },
+                ],
             }}
         >
             <Tabs.Screen
