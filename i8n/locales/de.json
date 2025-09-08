@@ -200,7 +200,10 @@
     "status": {
         "active": "Aktiv",
         "evaluation": "Bewertung",
-        "processing": "Verarbeite Bild..."
+        "processing": "Verarbeite Bild...",
+        "ongoing": "Laufend",
+        "past": "Vergangen",
+        "upcoming": "Bevorstehend"
     },
     "actions": {
         "transform": "Transformieren"

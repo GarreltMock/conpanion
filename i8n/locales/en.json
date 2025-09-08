@@ -200,7 +200,10 @@
     "status": {
         "active": "Active",
         "evaluation": "Evaluation",
-        "processing": "Processing image..."
+        "processing": "Processing image...",
+        "ongoing": "Ongoing",
+        "past": "Past",
+        "upcoming": "Upcoming"
     },
     "actions": {
         "transform": "Transform"

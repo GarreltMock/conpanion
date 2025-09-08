@@ -185,7 +185,7 @@ export default function ConferenceDetailScreen() {
                                 ]}
                             >
                                 <ThemedText style={styles.statusText}>
-                                    {calculateCurrentStatus(conference.startDate, conference.endDate)}
+                                    {t(`status.${calculateCurrentStatus(conference.startDate, conference.endDate)}`)}
                                 </ThemedText>
                             </View>
                             {isActive && (

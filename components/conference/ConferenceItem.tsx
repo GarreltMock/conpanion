@@ -65,7 +65,7 @@ export const ConferenceItem: React.FC<ConferenceItemProps> = ({
     const getStatusBadge = (status: string) => {
         return (
             <View style={[styles.statusBadge, { backgroundColor: status === "ongoing" ? tintColor : mutedColor }]}>
-                <ThemedText style={[styles.statusText, { color: backgroundColor }]}>{status}</ThemedText>
+                <ThemedText style={[styles.statusText, { color: backgroundColor }]}>{t(`status.${status}`)}</ThemedText>
             </View>
         );
     };
