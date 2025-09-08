@@ -89,6 +89,93 @@ const pretalxTransformer: ApiTransformerFunction = (data: any): ApiAgendaRespons
     };
 };
 
+// Custom conference API transformer (for example-api.json format)
+const programmierconTransformer: ApiTransformerFunction = (data: any): ApiAgendaResponse => {
+    if (!data.conference || !data.conference.agenda || !Array.isArray(data.conference.agenda)) {
+        throw new Error("Invalid custom conference response: expected conference.agenda array");
+    }
+
+    // Filter out agenda items that don't have talk_object or where talk_object is null
+    const validAgendaItems = data.conference.agenda.filter((item: any) => item.talk_object !== null);
+
+    const talks: ApiTalk[] = validAgendaItems.map((agendaItem: any) => {
+        const talkObject = agendaItem.talk_object;
+
+        // Combine speakers from both 'speakers' and 'members' arrays
+        const allSpeakers: ApiSpeaker[] = [];
+
+        // Add speakers from 'speakers' array
+        if (talkObject.speakers && Array.isArray(talkObject.speakers)) {
+            talkObject.speakers.forEach((speaker: any) => {
+                allSpeakers.push({
+                    id: speaker.id,
+                    name:
+                        speaker.first_name && speaker.last_name
+                            ? `${speaker.first_name} ${speaker.last_name}`.trim()
+                            : speaker.first_name || speaker.last_name || "Unknown Speaker",
+                    photo: speaker.profile_image || speaker.event_image,
+                    bio: speaker.description,
+                    company: speaker.occupation,
+                    twitter: speaker.twitter_url,
+                    linkedin: speaker.linkedin_url,
+                    github: speaker.github_url,
+                    website: speaker.website_url,
+                });
+            });
+        }
+
+        // Add speakers from 'members' array
+        if (talkObject.members && Array.isArray(talkObject.members)) {
+            talkObject.members.forEach((member: any) => {
+                allSpeakers.push({
+                    id: member.id,
+                    name:
+                        member.first_name && member.last_name
+                            ? `${member.first_name} ${member.last_name}`.trim()
+                            : member.first_name || member.last_name || "Unknown Member",
+                    photo: member.normal_image || member.action_image,
+                    bio: member.description,
+                    company: member.occupation,
+                    twitter: member.twitter_url,
+                    linkedin: member.linkedin_url,
+                    github: member.github_url,
+                    website: member.website_url,
+                });
+            });
+        }
+
+        // Calculate duration from start and end times if both are available
+        let duration: number | undefined;
+        if (agendaItem.start && agendaItem.end) {
+            const startTime = new Date(agendaItem.start);
+            const endTime = new Date(agendaItem.end);
+            duration = Math.round((endTime.getTime() - startTime.getTime()) / (1000 * 60)); // Convert to minutes
+        }
+
+        return {
+            id: talkObject.id,
+            title: talkObject.title,
+            description: talkObject.abstract,
+            startTime: agendaItem.start,
+            endTime: agendaItem.end,
+            duration,
+            speakers: allSpeakers.length > 0 ? allSpeakers : undefined,
+            stage: agendaItem.track,
+            type: agendaItem.subtitle, // Use subtitle as type (e.g., "Talk 1", "Special Talk")
+        };
+    });
+
+    return {
+        talks,
+        lastModified: data.conference.date_created || new Date().toISOString(),
+        conference: {
+            name: data.conference.title,
+            description: data.conference.headline_1,
+            location: undefined, // Not provided in this API format
+        },
+    };
+};
+
 // Generic transformer for simple JSON structures
 const genericTransformer: ApiTransformerFunction = (data: any): ApiAgendaResponse => {
     let talks: any[] = [];
@@ -168,6 +255,12 @@ const transformerRegistry: Record<string, ApiTransformerConfig> = {
         description: "For Pretalx conference management APIs",
         transformer: pretalxTransformer,
     },
+    custom_conference: {
+        id: "programmiercon",
+        name: "programmier.con",
+        description: "For custom conference APIs with agenda structure",
+        transformer: programmierconTransformer,
+    },
     generic: {
         id: "generic",
         name: "Generic",
@@ -196,6 +289,11 @@ export const transformApiResponse = (data: any, transformerId: string = "generic
 
 // Helper function to auto-detect transformer based on response structure
 export const autoDetectTransformer = (data: any): string => {
+    // Check for Custom Conference format
+    if (data.conference && data.conference.agenda && Array.isArray(data.conference.agenda)) {
+        return "custom_conference";
+    }
+
     // Check for Sessionize format
     if (Array.isArray(data) && data.length > 0 && data[0].startsAt && data[0].speakers) {
         return "sessionize";

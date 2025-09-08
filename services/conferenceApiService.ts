@@ -1,5 +1,5 @@
-import { ApiAgendaResponse } from '../types/apiSchemas';
-import { transformApiResponse, autoDetectTransformer } from './apiTransformers';
+import { ApiAgendaResponse } from "../types/apiSchemas";
+import { transformApiResponse, autoDetectTransformer } from "./apiTransformers";
 
 export interface FetchOptions {
     timeout?: number;
@@ -31,28 +31,28 @@ class ConferenceApiService {
         if (!this.isValidUrl(apiUrl)) {
             return {
                 success: false,
-                error: 'Invalid API URL format',
+                error: "Invalid API URL format",
                 statusCode: 400,
             };
         }
 
-        let lastError: string = '';
+        let lastError: string = "";
         let statusCode: number = 0;
 
         // Retry logic
         for (let attempt = 0; attempt <= retries; attempt++) {
             try {
                 console.log(`Fetching conference data from ${apiUrl} (attempt ${attempt + 1}/${retries + 1})`);
-                
+
                 // Create fetch request with timeout
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), timeout);
 
                 const response = await fetch(apiUrl, {
-                    method: 'GET',
+                    method: "GET",
                     headers: {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json',
+                        Accept: "application/json",
+                        "Content-Type": "application/json",
                         ...headers,
                     },
                     signal: controller.signal,
@@ -66,11 +66,6 @@ class ConferenceApiService {
                 }
 
                 const rawData = await response.json();
-                
-                // Validate the response
-                if (!this.validateApiResponse(rawData)) {
-                    throw new Error('Invalid API response structure');
-                }
 
                 // Auto-detect transformer if not specified
                 const detectedTransformer = transformerId || autoDetectTransformer(rawData);
@@ -83,19 +78,18 @@ class ConferenceApiService {
                     success: true,
                     data: transformedData,
                 };
-
             } catch (error: any) {
                 console.error(`Fetch attempt ${attempt + 1} failed:`, error);
-                
-                if (error.name === 'AbortError') {
+
+                if (error.name === "AbortError") {
                     lastError = `Request timeout after ${timeout}ms`;
-                } else if (error.message?.includes('Network request failed')) {
-                    lastError = 'Network error - please check your internet connection';
-                } else if (error.message?.includes('HTTP')) {
+                } else if (error.message?.includes("Network request failed")) {
+                    lastError = "Network error - please check your internet connection";
+                } else if (error.message?.includes("HTTP")) {
                     lastError = error.message;
-                    statusCode = parseInt(error.message.match(/HTTP (\d+)/)?.[1] || '0');
+                    statusCode = parseInt(error.message.match(/HTTP (\d+)/)?.[1] || "0");
                 } else {
-                    lastError = error.message || 'Unknown error occurred';
+                    lastError = error.message || "Unknown error occurred";
                 }
 
                 // Don't retry on certain errors
@@ -118,31 +112,12 @@ class ConferenceApiService {
     }
 
     /**
-     * Validates if the API response has the minimum required structure
-     */
-    private validateApiResponse(data: any): boolean {
-        if (!data) {
-            return false;
-        }
-
-        // Check for various common structures
-        const hasTalks = data.talks && Array.isArray(data.talks);
-        const hasResults = data.results && Array.isArray(data.results);
-        const isArray = Array.isArray(data);
-        const hasSessions = data.sessions && Array.isArray(data.sessions);
-        const hasEvents = data.events && Array.isArray(data.events);
-        const hasSchedule = data.schedule && Array.isArray(data.schedule);
-
-        return hasTalks || hasResults || isArray || hasSessions || hasEvents || hasSchedule;
-    }
-
-    /**
      * Validates URL format
      */
     private isValidUrl(url: string): boolean {
         try {
             const parsed = new URL(url);
-            return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+            return parsed.protocol === "http:" || parsed.protocol === "https:";
         } catch {
             return false;
         }
@@ -152,7 +127,7 @@ class ConferenceApiService {
      * Delays execution for the specified number of milliseconds
      */
     private delay(ms: number): Promise<void> {
-        return new Promise(resolve => setTimeout(resolve, ms));
+        return new Promise((resolve) => setTimeout(resolve, ms));
     }
 
     /**
@@ -179,10 +154,10 @@ class ConferenceApiService {
             const timeoutId = setTimeout(() => controller.abort(), 5000);
 
             const response = await fetch(apiUrl, {
-                method: 'GET',
+                method: "GET",
                 headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
+                    Accept: "application/json",
+                    "Content-Type": "application/json",
                 },
                 signal: controller.signal,
             });
@@ -212,11 +187,10 @@ class ConferenceApiService {
                 suggestedTransformer,
                 responsePreview: preview,
             };
-
         } catch (error: any) {
             return {
                 accessible: false,
-                error: error.message || 'Failed to access API endpoint',
+                error: error.message || "Failed to access API endpoint",
             };
         }
     }
