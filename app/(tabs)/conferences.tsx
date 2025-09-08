@@ -81,30 +81,6 @@ export default function ConferencesScreen() {
         });
     };
 
-    const handleDeleteConference = (conference: Conference) => {
-        Alert.alert(
-            t("common.delete") + " " + t("conferences.title").slice(0, -1),
-            `${t("common.delete")} "${conference.name}"? ${t("conferences.deleteWarning")}`,
-            [
-                { text: t("common.cancel"), style: "cancel" },
-                {
-                    text: t("common.delete"),
-                    style: "destructive",
-                    onPress: async () => {
-                        try {
-                            await deleteConference(conference.id);
-                            // Check if we have any conferences left
-                            const hasConfs = await hasConferences();
-                            setHasAnyConferences(hasConfs);
-                        } catch {
-                            Alert.alert(t("common.errors.title"), t("conferences.deleteFailed"));
-                        }
-                    },
-                },
-            ]
-        );
-    };
-
     const handleViewConferenceDetails = (conference: Conference) => {
         // Make sure we have an ID to navigate with
         if (!conference || !conference.id) {
@@ -158,7 +134,6 @@ export default function ConferencesScreen() {
                         onPress={() => handleViewConferenceDetails(item)}
                         onExport={() => handleExportConference(item)}
                         onEdit={() => handleEditConference(item)}
-                        onDelete={() => handleDeleteConference(item)}
                     />
                 )}
                 refreshing={refreshing}

@@ -16,7 +16,6 @@ interface ConferenceItemProps {
     onPress?: () => void;
     onExport?: () => void;
     onEdit?: () => void;
-    onDelete?: () => void;
 }
 
 export const ConferenceItem: React.FC<ConferenceItemProps> = ({
@@ -25,7 +24,6 @@ export const ConferenceItem: React.FC<ConferenceItemProps> = ({
     onPress,
     onExport,
     onEdit,
-    onDelete,
 }) => {
     const { talks } = useApp();
     const { t, locale } = useI18n();
@@ -58,7 +56,6 @@ export const ConferenceItem: React.FC<ConferenceItemProps> = ({
     const tintColor = useThemeColor({}, "tint");
     const mutedColor = useThemeColor({}, "tabIconDefault");
     const backgroundColor = useThemeColor({}, "background");
-    const errorColor = useThemeColor({}, "error");
     const borderLightColor = useThemeColor({}, "borderLight");
     const backgroundOverlayLightColor = useThemeColor({}, "backgroundOverlayLight");
 
@@ -116,12 +113,6 @@ export const ConferenceItem: React.FC<ConferenceItemProps> = ({
                         <TouchableOpacity style={styles.actionButton} onPress={onEdit}>
                             <Ionicons name="pencil-outline" size={20} color={tintColor} />
                             <ThemedText style={styles.actionText}>{t("common.edit")}</ThemedText>
-                        </TouchableOpacity>
-                    )}
-                    {onDelete && (
-                        <TouchableOpacity style={styles.actionButton} onPress={onDelete}>
-                            <Ionicons name="trash-outline" size={20} color={errorColor} />
-                            <ThemedText style={styles.actionText}>{t("common.delete")}</ThemedText>
                         </TouchableOpacity>
                     )}
                 </View>
