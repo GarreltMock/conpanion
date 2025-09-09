@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { View, StyleSheet, ScrollView, TouchableOpacity, Alert, ActivityIndicator, Modal } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useApp } from "../context/AppContext";
 import { ThemedText } from "../components/ThemedText";
 import { ThemedView } from "../components/ThemedView";
@@ -13,6 +14,7 @@ import { format } from "date-fns";
 
 export default function ConferenceDetailScreen() {
     const { id } = useLocalSearchParams<{ id: string }>();
+    const insets = useSafeAreaInsets();
     const {
         conferences,
         talks,
@@ -149,18 +151,20 @@ export default function ConferenceDetailScreen() {
 
         try {
             await syncConferenceAgenda(conference.id);
+
             // Refresh the conference data to get the updated lastApiSync
             const updatedConference = conferences.find((conf) => conf.id === conference.id);
             if (updatedConference) {
                 setConference(updatedConference);
             }
+
+            setIsSyncing(false);
             Alert.alert(t("common.ok"), t("conferences.syncSuccess"));
         } catch (error: any) {
             console.error("Sync failed:", error);
             setSyncError(error.message || t("errors.syncFailed"));
-            Alert.alert(t("common.errors.title"), error.message || t("errors.syncFailed"));
-        } finally {
             setIsSyncing(false);
+            Alert.alert(t("common.errors.title"), error.message || t("errors.syncFailed"));
         }
     };
 
@@ -225,7 +229,12 @@ export default function ConferenceDetailScreen() {
 
     return (
         <ThemedView style={styles.container}>
-            <View style={[styles.header, { backgroundColor: headerBackgroundColor, borderColor: borderLight }]}>
+            <View
+                style={[
+                    styles.header,
+                    { backgroundColor: headerBackgroundColor, borderColor: borderLight, paddingTop: insets.top + 10 },
+                ]}
+            >
                 <TouchableOpacity style={styles.backButton} onPress={handleBack}>
                     <IconSymbol name="chevron.left" size={20} color={textColor} />
                     <ThemedText style={styles.backText}>{t("conferences.title")}</ThemedText>
@@ -410,22 +419,6 @@ export default function ConferenceDetailScreen() {
                     </View>
                 </TouchableOpacity>
             </Modal>
-
-            {/* Sync Loading Modal */}
-            <Modal visible={isSyncing} transparent={true} animationType="fade">
-                <View style={styles.syncModalOverlay}>
-                    <View
-                        style={[
-                            styles.syncModalContent,
-                            { backgroundColor: backgroundColor, borderColor: borderLight },
-                        ]}
-                    >
-                        <ActivityIndicator size="large" color={tintColor} style={styles.syncLoader} />
-                        <ThemedText style={styles.syncText}>{t("conferences.syncing")}</ThemedText>
-                        <ThemedText style={styles.syncSubtext}>{t("conferences.syncingDescription")}</ThemedText>
-                    </View>
-                </View>
-            </Modal>
         </ThemedView>
     );
 }
@@ -609,7 +602,6 @@ const styles = StyleSheet.create({
     },
     header: {
         paddingHorizontal: 8,
-        paddingTop: 60,
         paddingBottom: 10,
         borderBottomWidth: 1,
         flexDirection: "row",

@@ -1,5 +1,6 @@
 import React from "react";
-import { StyleSheet, Alert, Share, SafeAreaView } from "react-native";
+import { StyleSheet, Alert, Share } from "react-native";
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { ExportOptionsForm } from "../../components/conference/ExportOptionsForm";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { ThemedView } from "../../components/ThemedView";

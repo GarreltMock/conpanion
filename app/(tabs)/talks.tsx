@@ -9,6 +9,7 @@ import {
     Text,
     ScrollView,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router, useFocusEffect } from "expo-router";
 import { format, differenceInDays, addDays, isSameDay } from "date-fns";
 import { enUS, de } from "date-fns/locale";
@@ -24,6 +25,7 @@ import { useThemeColor } from "@/hooks/useThemeColor";
 import { trackTalkAddedToAgenda, trackTalkRemovedFromAgenda } from "@/utils/analytics";
 
 export default function TalksScreen() {
+    const insets = useSafeAreaInsets();
     const {
         currentConference,
         activeTalk,
@@ -139,7 +141,7 @@ export default function TalksScreen() {
             try {
                 const wasSelected = item.isUserSelected;
                 await toggleTalkSelection(item.id);
-                
+
                 // Track the agenda action
                 if (wasSelected) {
                     await trackTalkRemovedFromAgenda(item.id);
@@ -291,7 +293,16 @@ export default function TalksScreen() {
 
     return (
         <ThemedView style={styles.container}>
-            <View style={[styles.header, { borderBottomColor: borderLight, backgroundColor: headerBackgroundColor }]}>
+            <View
+                style={[
+                    styles.header,
+                    {
+                        borderBottomColor: borderLight,
+                        backgroundColor: headerBackgroundColor,
+                        paddingTop: insets.top + 10,
+                    },
+                ]}
+            >
                 <View>
                     <ThemedText style={styles.conferenceLabel}>{t("talks.title")}</ThemedText>
                     <ThemedText style={styles.conferenceName}>
@@ -368,7 +379,6 @@ const styles = StyleSheet.create({
         justifyContent: "space-between",
         alignItems: "center",
         paddingHorizontal: 10,
-        paddingTop: 60,
         paddingBottom: 8,
         marginBottom: 6,
         borderBottomWidth: 1,

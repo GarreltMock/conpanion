@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { View, StyleSheet, TouchableOpacity, Platform, ScrollView, TextInput, SafeAreaView } from "react-native";
+import { View, StyleSheet, TouchableOpacity, Platform, ScrollView, TextInput } from "react-native";
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from "@expo/vector-icons";
 import { Calendar } from "react-native-calendars";
 import { useApp } from "../../context/AppContext";

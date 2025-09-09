@@ -2,13 +2,11 @@ import { router, useLocalSearchParams } from "expo-router";
 import React from "react";
 import {
     Dimensions,
-    SafeAreaView,
     StyleSheet,
     TouchableOpacity,
     View,
-    Platform,
-    StatusBar,
 } from "react-native";
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
     runOnJS,
@@ -27,6 +25,7 @@ export default function ImageViewModal() {
     }>();
 
     const decodedUri = decodeURIComponent(imageUri as string);
+    const insets = useSafeAreaInsets();
 
     // Theme colors
     const whiteColor = useThemeColor({}, "white");
@@ -137,8 +136,7 @@ export default function ImageViewModal() {
     });
 
     return (
-        <ThemedView style={styles.container}>
-            <SafeAreaView style={styles.safeArea}>
+        <ThemedView style={[styles.container, { paddingTop: insets.top }]}>
                 <View style={styles.header}>
                     <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
                         <IconSymbol name="xmark" size={24} color={whiteColor} />
@@ -154,7 +152,6 @@ export default function ImageViewModal() {
                         />
                     </Animated.View>
                 </GestureDetector>
-            </SafeAreaView>
         </ThemedView>
     );
 }
@@ -165,10 +162,6 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: "#000",
-    },
-    safeArea: {
-        flex: 1,
-        paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
     },
     header: {
         flexDirection: "row",

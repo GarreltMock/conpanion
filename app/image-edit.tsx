@@ -5,14 +5,12 @@ import {
     Alert,
     Dimensions,
     Image,
-    SafeAreaView,
     StyleSheet,
     TouchableOpacity,
     View,
-    Platform,
-    StatusBar,
     DeviceEventEmitter,
 } from "react-native";
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, { runOnJS, useAnimatedRef, useAnimatedStyle, useSharedValue } from "react-native-reanimated";
 import Svg, { Polygon } from "react-native-svg";
@@ -32,6 +30,8 @@ export default function ImageEditScreen() {
         imageUri: string;
         existingCorners?: string;
     }>();
+
+    const insets = useSafeAreaInsets();
 
     const decodedUri = decodeURIComponent(imageUri as string);
     const decodedExistingCorners = existingCorners ? JSON.parse(decodeURIComponent(existingCorners as string)) : null;
@@ -362,8 +362,7 @@ export default function ImageEditScreen() {
     };
 
     return (
-        <ThemedView style={[styles.container, { backgroundColor }]}>
-            <SafeAreaView style={styles.safeArea}>
+        <ThemedView style={[styles.container, { backgroundColor, paddingTop: insets.top }]}>
                 <View style={styles.header}>
                     <TouchableOpacity style={styles.cancelButton} onPress={handleCancel} disabled={loading}>
                         <IconSymbol name="xmark" size={24} color={whiteColor} />
@@ -415,7 +414,6 @@ export default function ImageEditScreen() {
                         </View>
                     </View>
                 )}
-            </SafeAreaView>
         </ThemedView>
     );
 }
@@ -425,10 +423,6 @@ const { width, height } = Dimensions.get("window");
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-    },
-    safeArea: {
-        flex: 1,
-        paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
     },
     header: {
         flexDirection: "row",

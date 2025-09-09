@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { View, StyleSheet, FlatList, Alert, Text, Pressable } from "react-native";
+import { View, StyleSheet, FlatList, Text, Pressable } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useApp } from "@/context/AppContext";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
@@ -13,7 +14,8 @@ import { IconSymbol } from "@/components/ui/IconSymbol";
 import { useI18n } from "@/hooks/useI18n";
 
 export default function ConferencesScreen() {
-    const { conferences, currentConference, getConferences, deleteConference, hasConferences } = useApp();
+    const { conferences, currentConference, getConferences, hasConferences } = useApp();
+    const insets = useSafeAreaInsets();
 
     const [loading, setLoading] = useState(true);
     const [hasAnyConferences, setHasAnyConferences] = useState(true);
@@ -108,7 +110,16 @@ export default function ConferencesScreen() {
 
     return (
         <ThemedView style={styles.container}>
-            <View style={[styles.header, { borderBottomColor: borderLight, backgroundColor: headerBackgroundColor }]}>
+            <View
+                style={[
+                    styles.header,
+                    {
+                        borderBottomColor: borderLight,
+                        backgroundColor: headerBackgroundColor,
+                        paddingTop: insets.top + 10,
+                    },
+                ]}
+            >
                 <ThemedText style={styles.headerTitle}>{t("conferences.title")}</ThemedText>
                 <Pressable
                     style={({ pressed }) => [
@@ -165,7 +176,6 @@ const styles = StyleSheet.create({
         justifyContent: "space-between",
         alignItems: "center",
         paddingHorizontal: 16,
-        paddingTop: 60,
         paddingBottom: 10,
         marginBottom: 6,
         borderBottomWidth: 1,

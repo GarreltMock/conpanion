@@ -6,10 +6,10 @@ import {
     Platform,
     ScrollView,
     TextInput,
-    SafeAreaView,
     Text,
     ActivityIndicator,
 } from "react-native";
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from "@expo/vector-icons";
 import { Calendar } from "react-native-calendars";
 import { useApp } from "../../context/AppContext";

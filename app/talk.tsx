@@ -2,6 +2,7 @@ import { format } from "date-fns";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, FlatList, StyleSheet, TouchableOpacity, View, Image, Text, ScrollView } from "react-native";
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { MyKeyboardAvoidingView } from "@/components/MyKeyboardAvoidingView";
 import { NoteInput } from "@/components/note/NoteInput";
@@ -16,6 +17,7 @@ import { Note, NoteImage, Talk } from "@/types";
 
 export default function TalkDetailScreen() {
     const { id } = useLocalSearchParams<{ id: string }>();
+    const insets = useSafeAreaInsets();
     const [talk, setTalk] = useState<Talk | null>(null);
     const [talkNotes, setTalkNotes] = useState<Note[]>([]);
     const [detailsExpanded, setDetailsExpanded] = useState(false);
@@ -143,7 +145,7 @@ export default function TalkDetailScreen() {
         <MyKeyboardAvoidingView>
             <ThemedView style={styles.container}>
                 <View
-                    style={[styles.header, { backgroundColor: headerBackgroundColor, borderColor: borderLightColor }]}
+                    style={[styles.header, { backgroundColor: headerBackgroundColor, borderColor: borderLightColor, paddingTop: insets.top + 10 }]}
                 >
                     <TouchableOpacity style={styles.backButton} onPress={handleBack}>
                         <IconSymbol name="chevron.left" size={20} color={textColor} />
@@ -430,7 +432,6 @@ const styles = StyleSheet.create({
     },
     header: {
         paddingHorizontal: 8,
-        paddingTop: 60,
         paddingBottom: 10,
         borderBottomWidth: 1,
     },
