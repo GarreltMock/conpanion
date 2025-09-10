@@ -73,6 +73,7 @@ export const NoteInput: React.FC<NoteInputProps> = ({
     const backgroundColor = useThemeColor({}, "background");
     const textColor = useThemeColor({}, "text");
     const tintColor = useThemeColor({}, "tint");
+    const tintContentColor = useThemeColor({}, "tintContent");
     const iconColor = useThemeColor({}, "icon");
     const errorColor = useThemeColor({}, "error");
     const whiteColor = useThemeColor({}, "white");
@@ -447,7 +448,7 @@ export const NoteInput: React.FC<NoteInputProps> = ({
                                     <IconSymbol
                                         name={playingId === audio.id && isPlaying ? "pause" : "play"}
                                         size={14}
-                                        color={whiteColor}
+                                        color={tintContentColor}
                                     />
                                 </View>
                                 <ThemedText style={styles.audioLabel}>Audio Recording</ThemedText>
@@ -519,9 +520,9 @@ export const NoteInput: React.FC<NoteInputProps> = ({
                         disabled={(!text.trim() && !hasAttachments) || disabled}
                     >
                         {isSubmitting ? (
-                            <ActivityIndicator color={backgroundColor} size="small" />
+                            <ActivityIndicator color={tintContentColor} size="small" />
                         ) : (
-                            <IconSymbol name="arrow.up" size={20} color={backgroundColor} />
+                            <IconSymbol name="arrow.up" size={20} color={tintContentColor} />
                         )}
                     </Pressable>
                 </View>

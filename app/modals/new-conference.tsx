@@ -9,7 +9,7 @@ import {
     Text,
     ActivityIndicator,
 } from "react-native";
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { Calendar } from "react-native-calendars";
 import { useApp } from "../../context/AppContext";
@@ -34,6 +34,8 @@ export default function NewConferenceModal() {
     const router = useRouter();
     const backgroundColor = useThemeColor({}, "background");
     const tintColor = useThemeColor({}, "tint");
+    const tintContentColor = useThemeColor({}, "tintContent");
+    const iconHighlightColor = useThemeColor({}, "iconHighlight");
     const textColor = useThemeColor({}, "text");
     const placeholderColor = useThemeColor({}, "tabIconDefault");
     const errorColor = useThemeColor({}, "error");
@@ -89,9 +91,9 @@ export default function NewConferenceModal() {
                         disabled={!name.trim() || isSubmitting}
                     >
                         {isSubmitting ? (
-                            <ActivityIndicator size="small" color={backgroundColor} />
+                            <ActivityIndicator size="small" color={tintContentColor} />
                         ) : (
-                            <Text style={[styles.createText, { color: backgroundColor }]}>Create</Text>
+                            <Text style={[styles.createText, { color: tintContentColor }]}>Create</Text>
                         )}
                     </TouchableOpacity>
                 </View>
@@ -102,9 +104,6 @@ export default function NewConferenceModal() {
                     contentContainerStyle={styles.formContainer}
                 >
                     <ThemedView style={styles.formSection}>
-                        {/* <ThemedText style={styles.label}>
-                        Conference Name *
-                    </ThemedText> */}
                         <TextInput
                             style={[
                                 styles.input,
@@ -120,9 +119,6 @@ export default function NewConferenceModal() {
                             placeholderTextColor={placeholderColor}
                         />
 
-                        {/* <ThemedText style={styles.label}>
-                        Location
-                    </ThemedText> */}
                         <TextInput
                             style={[
                                 styles.input,
@@ -138,9 +134,6 @@ export default function NewConferenceModal() {
                             placeholderTextColor={placeholderColor}
                         />
 
-                        {/* <ThemedText style={styles.label}>
-                        Description
-                    </ThemedText> */}
                         <TextInput
                             style={[
                                 styles.textArea,
@@ -175,7 +168,7 @@ export default function NewConferenceModal() {
                         {showStartCalendar && (
                             <View style={[styles.calendarContainer, { borderColor: borderColor }]}>
                                 <Calendar
-                                    onDayPress={(day) => {
+                                    onDayPress={(day: { timestamp: number }) => {
                                         const selectedDate = new Date(day.timestamp);
                                         setStartDate(selectedDate);
 
@@ -192,13 +185,13 @@ export default function NewConferenceModal() {
                                     markedDates={{
                                         [formatCalendarDate(startDate)]: {
                                             selected: true,
-                                            selectedColor: tintColor,
+                                            selectedColor: iconHighlightColor,
                                         },
                                     }}
                                     theme={{
                                         todayTextColor: tintColor,
-                                        selectedDayBackgroundColor: tintColor,
-                                        arrowColor: tintColor,
+                                        selectedDayBackgroundColor: iconHighlightColor,
+                                        arrowColor: tintContentColor,
                                     }}
                                 />
                             </View>
@@ -219,26 +212,28 @@ export default function NewConferenceModal() {
                             <View style={[styles.calendarContainer, { borderColor: borderColor }]}>
                                 <Calendar
                                     minDate={formatCalendarDate(startDate)}
-                                    onDayPress={(day) => {
+                                    onDayPress={(day: { timestamp: number }) => {
                                         setEndDate(new Date(day.timestamp));
                                         setShowEndCalendar(false);
                                     }}
                                     markedDates={{
                                         [formatCalendarDate(endDate)]: {
                                             selected: true,
-                                            selectedColor: tintColor,
+                                            selectedColor: iconHighlightColor,
                                         },
                                     }}
                                     theme={{
                                         todayTextColor: tintColor,
-                                        selectedDayBackgroundColor: tintColor,
-                                        arrowColor: tintColor,
+                                        selectedDayBackgroundColor: iconHighlightColor,
+                                        arrowColor: tintContentColor,
                                     }}
                                 />
                             </View>
                         )}
 
-                        {error ? <ThemedText style={[styles.errorText, { color: errorColor }]}>{error}</ThemedText> : null}
+                        {error ? (
+                            <ThemedText style={[styles.errorText, { color: errorColor }]}>{error}</ThemedText>
+                        ) : null}
                     </ThemedView>
                 </ScrollView>
             </ThemedView>

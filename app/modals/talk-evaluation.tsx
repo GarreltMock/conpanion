@@ -33,7 +33,7 @@ export default function TalkEvaluationModal() {
     const { t } = useI18n();
 
     const tintColor = useThemeColor({}, "tint");
-    const backgroundColor = useThemeColor({}, "background");
+    const tintContentColor = useThemeColor({}, "tintContent");
     const textColor = useThemeColor({}, "text");
     const borderLightColor = useThemeColor({}, "borderLight");
     const backgroundOverlayLightColor = useThemeColor({}, "backgroundOverlayLight");
@@ -256,7 +256,7 @@ export default function TalkEvaluationModal() {
                                     style={[styles.button, styles.saveButton, { backgroundColor: tintColor }]}
                                     onPress={handleSave}
                                 >
-                                    <Text style={[styles.buttonText, { color: backgroundColor }]}>Save</Text>
+                                    <Text style={[styles.buttonText, { color: tintContentColor }]}>Save</Text>
                                 </TouchableOpacity>
                             ) : (
                                 // When opened from normal flow - show original buttons
@@ -278,7 +278,7 @@ export default function TalkEvaluationModal() {
                                         style={[styles.button, styles.doneButton, { backgroundColor: tintColor }]}
                                         onPress={handleDone}
                                     >
-                                        <Text style={[styles.buttonText, { color: backgroundColor }]}>
+                                        <Text style={[styles.buttonText, { color: tintContentColor }]}>
                                             {t("common.done")}
                                         </Text>
                                     </TouchableOpacity>

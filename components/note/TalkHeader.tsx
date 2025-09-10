@@ -18,7 +18,7 @@ interface TalkHeaderProps {
 export const TalkHeader: React.FC<TalkHeaderProps> = ({ conferenceName, talk, onDone }) => {
     const { t } = useI18n();
     const tintColor = useThemeColor({}, "tint");
-    const backgroundColor = useThemeColor({}, "background");
+    const tintContentColor = useThemeColor({}, "tintContent");
     const headerBackgroundColor = useThemeColor({}, "headerBackground");
     const borderLightColor = useThemeColor({}, "borderLight");
     const textColor = useThemeColor({}, "text");
@@ -55,7 +55,6 @@ export const TalkHeader: React.FC<TalkHeaderProps> = ({ conferenceName, talk, on
     const isTalkActive = talk?.duration
         ? new Date(talk.startTime.getTime() + talk.duration * 60 * 1000) > currentTime
         : true;
-    const isOutlinedButton = isScheduledTalk && isTalkActive;
 
     return (
         <ThemedView
@@ -77,51 +76,53 @@ export const TalkHeader: React.FC<TalkHeaderProps> = ({ conferenceName, talk, on
                     )}
                 </View>
 
-                <Pressable
-                    style={({ pressed }) => [
-                        styles.newTalkButton,
-                        {
-                            backgroundColor: isOutlinedButton ? "transparent" : tintColor,
-                            borderWidth: isOutlinedButton ? 1 : 0,
-                            borderColor: isOutlinedButton ? borderLightColor : "transparent",
-                            opacity: pressed ? 0.8 : 1,
-                        },
-                    ]}
-                    onPress={handleDone}
-                >
-                    {(() => {
-                        if (!talk) {
-                            return (
-                                <>
-                                    <IconSymbol name="plus" size={18} color={backgroundColor} />
-                                    <Text style={[styles.buttonText, { color: backgroundColor }]}>
-                                        {t("talks.actions.new")}
-                                    </Text>
-                                </>
-                            );
-                        }
-
-                        if (isScheduledTalk && isTalkActive) {
-                            return (
-                                <>
-                                    <IconSymbol name="plus" size={18} color={textColor} />
-                                    <Text style={[styles.buttonText, { color: textColor }]}>
-                                        {t("talks.actions.switch")}
-                                    </Text>
-                                </>
-                            );
-                        } else {
-                            return (
-                                <>
-                                    <IconSymbol name="checkmark" size={18} color={backgroundColor} />
-                                    <Text style={[styles.buttonText, { color: backgroundColor }]}>
-                                        {t("common.done")}
-                                    </Text>
-                                </>
-                            );
-                        }
-                    })()}
-                </Pressable>
+                {!talk ? (
+                    <Pressable
+                        style={({ pressed }) => [
+                            styles.newTalkButton,
+                            {
+                                backgroundColor: tintColor,
+                                borderColor: "transparent",
+                                opacity: pressed ? 0.8 : 1,
+                            },
+                        ]}
+                        onPress={handleDone}
+                    >
+                        <IconSymbol name="plus" size={18} color={tintContentColor} />
+                        <Text style={[styles.buttonText, { color: tintContentColor }]}>{t("talks.actions.new")}</Text>
+                    </Pressable>
+                ) : isScheduledTalk && isTalkActive ? (
+                    <Pressable
+                        style={({ pressed }) => [
+                            styles.newTalkButton,
+                            {
+                                backgroundColor: "transparent",
+                                borderWidth: 1,
+                                borderColor: borderLightColor,
+                                opacity: pressed ? 0.8 : 1,
+                            },
+                        ]}
+                        onPress={handleDone}
+                    >
+                        <IconSymbol name="plus" size={18} color={textColor} />
+                        <Text style={[styles.buttonText, { color: textColor }]}>{t("talks.actions.switch")}</Text>
+                    </Pressable>
+                ) : (
+                    <Pressable
+                        style={({ pressed }) => [
+                            styles.newTalkButton,
+                            {
+                                backgroundColor: tintColor,
+                                borderColor: "transparent",
+                                opacity: pressed ? 0.8 : 1,
+                            },
+                        ]}
+                        onPress={handleDone}
+                    >
+                        <IconSymbol name="checkmark" size={18} color={tintContentColor} />
+                        <Text style={[styles.buttonText, { color: tintContentColor }]}>{t("common.done")}</Text>
+                    </Pressable>
+                )}
             </View>
         </ThemedView>
     );

@@ -17,7 +17,7 @@ export default function NewTalkModal() {
     const { t } = useI18n();
     const textColor = useThemeColor({}, "text");
     const tintColor = useThemeColor({}, "tint");
-    const backgroundColor = useThemeColor({}, "background");
+    const tintContentColor = useThemeColor({}, "tintContent");
     const borderLight = useThemeColor({}, "borderLight");
     const border = useThemeColor({}, "border");
 
@@ -68,9 +68,11 @@ export default function NewTalkModal() {
                     disabled={!title.trim() || isCreating}
                 >
                     {isCreating ? (
-                        <ActivityIndicator size="small" color={backgroundColor} />
+                        <ActivityIndicator size="small" color={tintContentColor} />
                     ) : (
-                        <Text style={[styles.createText, { color: backgroundColor }]}>{t("common.actions.create")}</Text>
+                        <Text style={[styles.createText, { color: tintContentColor }]}>
+                            {t("common.actions.create")}
+                        </Text>
                     )}
                 </TouchableOpacity>
             </View>
@@ -92,9 +94,7 @@ export default function NewTalkModal() {
                     />
                 </View>
 
-                <ThemedText style={styles.helpText}>
-                    {t("help.keepTakingNotes")}
-                </ThemedText>
+                <ThemedText style={styles.helpText}>{t("help.keepTakingNotes")}</ThemedText>
             </View>
         </ModalView>
     );

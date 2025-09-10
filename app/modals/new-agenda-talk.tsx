@@ -63,16 +63,16 @@ export default function NewAgendaTalkModal() {
     // Get appropriate date-fns locale based on current i18n locale
     const dateFnsLocale = useMemo(() => {
         switch (locale) {
-            case 'de':
+            case "de":
                 return de;
-            case 'en':
+            case "en":
             default:
                 return enUS;
         }
     }, [locale]);
     const textColor = useThemeColor({}, "text");
     const tintColor = useThemeColor({}, "tint");
-    const backgroundColor = useThemeColor({}, "background");
+    const tintContentColor = useThemeColor({}, "tintContent");
     const errorColor = useThemeColor({}, "error");
     const borderColor = useThemeColor({}, "border");
     const borderLightColor = useThemeColor({}, "borderLight");
@@ -197,9 +197,11 @@ export default function NewAgendaTalkModal() {
                         disabled={!title.trim() || isCreating}
                     >
                         {isCreating ? (
-                            <ActivityIndicator size="small" color={backgroundColor} />
+                            <ActivityIndicator size="small" color={tintContentColor} />
                         ) : (
-                            <Text style={[styles.createText, { color: backgroundColor }]}>{t("common.actions.create")}</Text>
+                            <Text style={[styles.createText, { color: tintContentColor }]}>
+                                {t("common.actions.create")}
+                            </Text>
                         )}
                     </TouchableOpacity>
                 </View>
@@ -210,9 +212,7 @@ export default function NewAgendaTalkModal() {
                     keyboardShouldPersistTaps="handled"
                     showsVerticalScrollIndicator={false}
                 >
-                    <ThemedText style={styles.helpText}>
-                        {t("help.createScheduledTalk")}
-                    </ThemedText>
+                    <ThemedText style={styles.helpText}>{t("help.createScheduledTalk")}</ThemedText>
 
                     <View style={[styles.inputContainer, { borderColor: borderColor }]}>
                         <IconSymbol name="mic.fill" size={22} color={textColor + "80"} style={styles.inputIcon} />
@@ -248,7 +248,7 @@ export default function NewAgendaTalkModal() {
                                         <Text
                                             style={[
                                                 styles.dayButtonText,
-                                                { color: selectedDay === day.index ? backgroundColor : textColor },
+                                                { color: selectedDay === day.index ? tintContentColor : textColor },
                                             ]}
                                         >
                                             {format(day.date, "EEE d", { locale: dateFnsLocale })}
@@ -272,7 +272,12 @@ export default function NewAgendaTalkModal() {
                                         { borderBottomColor: borderLightColor },
                                     ]}
                                 >
-                                    <IconSymbol name="clock" size={20} color={textColor + "80"} style={styles.dateIcon} />
+                                    <IconSymbol
+                                        name="clock"
+                                        size={20}
+                                        color={textColor + "80"}
+                                        style={styles.dateIcon}
+                                    />
                                     <ThemedText style={styles.dateLabel}>{t("forms.talk.startTime")}</ThemedText>
                                     <DateTimePicker
                                         value={startTime}
@@ -291,7 +296,12 @@ export default function NewAgendaTalkModal() {
                                     ]}
                                     onPress={() => setShowTimePicker(true)}
                                 >
-                                    <IconSymbol name="clock" size={20} color={textColor + "80"} style={styles.dateIcon} />
+                                    <IconSymbol
+                                        name="clock"
+                                        size={20}
+                                        color={textColor + "80"}
+                                        style={styles.dateIcon}
+                                    />
                                     <ThemedText style={styles.dateLabel}>{t("forms.talk.startTime")}</ThemedText>
                                     <ThemedText style={styles.dateValue}>
                                         {format(startTime, "h:mm a", { locale: dateFnsLocale })}
@@ -378,14 +388,16 @@ export default function NewAgendaTalkModal() {
                         <View style={styles.speakersHeader}>
                             <ThemedText style={styles.sectionTitle}>{t("forms.speakers.title")}</ThemedText>
                             <TouchableOpacity style={styles.addButton} onPress={addSpeaker}>
-                                <IconSymbol name="plus.circle.fill" size={24} color={tintColor} />
+                                <IconSymbol name="plus.circle" size={24} color={tintContentColor} />
                             </TouchableOpacity>
                         </View>
 
                         {speakers.map((speaker, index) => (
                             <View key={index} style={[styles.speakerContainer, { borderColor: borderColor }]}>
                                 <View style={styles.speakerHeader}>
-                                    <ThemedText style={styles.speakerLabel}>{t("talks.speaker")} {index + 1}</ThemedText>
+                                    <ThemedText style={styles.speakerLabel}>
+                                        {t("talks.speaker")} {index + 1}
+                                    </ThemedText>
                                     <TouchableOpacity onPress={() => removeSpeaker(index)}>
                                         <IconSymbol name="minus.circle.fill" size={20} color={errorColor} />
                                     </TouchableOpacity>

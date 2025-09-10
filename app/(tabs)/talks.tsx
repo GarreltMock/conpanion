@@ -58,6 +58,8 @@ export default function TalksScreen() {
 
     const layout = useWindowDimensions();
     const tintColor = useThemeColor({}, "tint");
+    const tintContentColor = useThemeColor({}, "tintContent");
+    const iconHighlightColor = useThemeColor({}, "iconHighlight");
     const textColor = useThemeColor({}, "text");
     const backgroundColor = useThemeColor({}, "background");
     const headerBackgroundColor = useThemeColor({}, "headerBackground");
@@ -178,7 +180,7 @@ export default function TalksScreen() {
                     <View style={styles.middleCol}>
                         {isActive && (
                             <View style={[styles.activeIndicator, { backgroundColor: tintColor }]}>
-                                <ThemedText style={styles.activeText} lightColor="#fff" darkColor={backgroundColor}>
+                                <ThemedText style={[styles.activeText, { color: tintContentColor }]}>
                                     {t("status.active")}
                                 </ThemedText>
                             </View>
@@ -194,7 +196,7 @@ export default function TalksScreen() {
                             <IconSymbol
                                 size={20}
                                 name={item.isUserSelected ? "bookmark.fill" : "bookmark"}
-                                color={tintColor}
+                                color={iconHighlightColor}
                             />
                         </TouchableOpacity>
 
@@ -315,8 +317,8 @@ export default function TalksScreen() {
                     onPress={handleNewTalk}
                     activeOpacity={0.8}
                 >
-                    <IconSymbol name="plus" size={18} color={backgroundColor} />
-                    <Text style={[styles.buttonText, { color: backgroundColor }]}>{t("talks.addTalk")}</Text>
+                    <IconSymbol name="plus" size={18} color={tintContentColor} />
+                    <Text style={[styles.buttonText, { color: tintContentColor }]}>{t("talks.addTalk")}</Text>
                 </TouchableOpacity>
             </View>
 
@@ -342,7 +344,7 @@ export default function TalksScreen() {
                                 <Text
                                     style={[
                                         styles.dayButtonText,
-                                        { color: selectedDay === day.index ? backgroundColor : textColor },
+                                        { color: selectedDay === day.index ? tintContentColor : textColor },
                                     ]}
                                 >
                                     {format(day.date, "EEE d", { locale: dateFnsLocale })}

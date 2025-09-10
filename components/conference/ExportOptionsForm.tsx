@@ -39,6 +39,8 @@ export const ExportOptionsForm: React.FC<ExportOptionsFormProps> = ({ conference
 
     const backgroundColor = useThemeColor({}, "background");
     const tintColor = useThemeColor({}, "tint");
+    const tintContentColor = useThemeColor({}, "tintContent");
+    const iconHighlightColor = useThemeColor({}, "iconHighlight");
     const textColor = useThemeColor({}, "text");
     const placeholderColor = useThemeColor({}, "tabIconDefault");
     const errorColor = useThemeColor({}, "error");
@@ -191,7 +193,7 @@ export const ExportOptionsForm: React.FC<ExportOptionsFormProps> = ({ conference
                             style={[
                                 styles.formatOption,
                                 options.format === "md" && styles.selectedFormat,
-                                { borderColor: options.format === "md" ? tintColor : textColor },
+                                { borderColor: options.format === "md" ? iconHighlightColor : textColor },
                             ]}
                             onPress={() =>
                                 setOptions((prev) => ({
@@ -203,13 +205,13 @@ export const ExportOptionsForm: React.FC<ExportOptionsFormProps> = ({ conference
                             <Ionicons
                                 name="code-outline"
                                 size={24}
-                                color={options.format === "md" ? tintColor : textColor}
+                                color={options.format === "md" ? iconHighlightColor : textColor}
                             />
                             <ThemedText
                                 style={[
                                     styles.formatLabel,
                                     options.format === "md" && {
-                                        color: tintColor,
+                                        color: iconHighlightColor,
                                         fontWeight: "bold",
                                     },
                                 ]}
@@ -278,7 +280,7 @@ export const ExportOptionsForm: React.FC<ExportOptionsFormProps> = ({ conference
                                 >
                                     <View style={styles.talkCheckbox}>
                                         {options.includeTalkIds.includes(talk.id) ? (
-                                            <Ionicons name="checkbox" size={24} color={tintColor} />
+                                            <Ionicons name="checkbox" size={24} color={iconHighlightColor} />
                                         ) : (
                                             <Ionicons name="square-outline" size={24} color={textColor} />
                                         )}
@@ -319,7 +321,7 @@ export const ExportOptionsForm: React.FC<ExportOptionsFormProps> = ({ conference
                             onPress={handleExport}
                             disabled={isSubmitting || options.includeTalkIds.length === 0}
                         >
-                            <ThemedText style={[styles.exportButtonText, { color: "white" }]}>
+                            <ThemedText style={[styles.exportButtonText, { color: tintContentColor }]}>
                                 {isSubmitting ? "Exporting..." : "Export"}
                             </ThemedText>
                         </TouchableOpacity>

@@ -8,7 +8,7 @@ import { useI18n } from "@/hooks/useI18n";
 import { useThemeColor } from "@/hooks/useThemeColor";
 
 export default function TabLayout() {
-    const tintColor = useThemeColor({}, "tint");
+    const iconHighlightColor = useThemeColor({}, "iconHighlight");
     const headerBackgroundColor = useThemeColor({}, "headerBackground");
 
     const { t } = useI18n();
@@ -31,7 +31,7 @@ export default function TabLayout() {
     return (
         <Tabs
             screenOptions={{
-                tabBarActiveTintColor: tintColor,
+                tabBarActiveTintColor: iconHighlightColor,
                 headerShown: false,
                 tabBarButton: HapticTab,
                 tabBarStyle: [

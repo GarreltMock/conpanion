@@ -24,7 +24,7 @@ export default function ConferencesScreen() {
     const router = useRouter();
     const { t } = useI18n();
     const tintColor = useThemeColor({}, "tint");
-    const backgroundColor = useThemeColor({}, "background");
+    const tintContentColor = useThemeColor({}, "tintContent");
     const headerBackgroundColor = useThemeColor({}, "headerBackground");
     const borderLight = useThemeColor({}, "borderLight");
 
@@ -131,8 +131,8 @@ export default function ConferencesScreen() {
                     ]}
                     onPress={handleCreateNewConference}
                 >
-                    <IconSymbol name="plus" size={18} color={backgroundColor} />
-                    <Text style={[styles.buttonText, { color: backgroundColor }]}>{t("common.actions.add")}</Text>
+                    <IconSymbol name="plus" size={18} color={tintContentColor} />
+                    <Text style={[styles.buttonText, { color: tintContentColor }]}>{t("common.actions.add")}</Text>
                 </Pressable>
             </View>
             <FlatList
