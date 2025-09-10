@@ -70,7 +70,12 @@ export default function TalksScreen() {
     const conferenceDays = useMemo(() => {
         if (!currentConference) return [];
 
-        const days = [];
+        const days: {
+            index: number;
+            date: Date | null;
+            label: string;
+            isOtherDay: boolean;
+        }[] = [];
         const durationInDays = differenceInDays(currentConference.endDate, currentConference.startDate) + 1;
 
         for (let i = 0; i < durationInDays; i++) {
@@ -79,17 +84,36 @@ export default function TalksScreen() {
                 index: i,
                 date: day,
                 label: format(day, "EEEE, MMMM d", { locale: dateFnsLocale }),
+                isOtherDay: false,
+            });
+        }
+
+        // Check if there are user-created talks outside the conference days
+        const allUserSelectedTalks = getUserSelectedTalks().filter(
+            (talk) => talk.conferenceId === currentConference.id
+        );
+        const hasOtherDayTalks = allUserSelectedTalks.some((talk) => {
+            return !days.some((day) => day.date && isSameDay(talk.startTime, day.date));
+        });
+
+        // Add "Other" day if there are talks outside conference days
+        if (hasOtherDayTalks) {
+            days.push({
+                index: days.length,
+                date: null, // Special case for "Other" day
+                label: t("talks.otherDay"),
+                isOtherDay: true,
             });
         }
 
         return days;
-    }, [currentConference, dateFnsLocale]);
+    }, [currentConference, dateFnsLocale, getUserSelectedTalks, t]);
 
     // Set current day as default when conference days change
     useMemo(() => {
         if (conferenceDays.length > 0) {
             const today = new Date();
-            const currentDayIndex = conferenceDays.findIndex((day) => isSameDay(day.date, today));
+            const currentDayIndex = conferenceDays.findIndex((day) => day.date && isSameDay(day.date, today));
             if (currentDayIndex !== -1) {
                 setSelectedDay(currentDayIndex);
             }
@@ -240,7 +264,21 @@ export default function TalksScreen() {
         const filteredTalks = useMemo(() => {
             if (conferenceDays.length === 0) return allUserSelectedTalks;
 
-            const selectedDate = conferenceDays[selectedDay]?.date;
+            const selectedConferenceDay = conferenceDays[selectedDay];
+            if (!selectedConferenceDay) return allUserSelectedTalks;
+
+            // Handle "Other" day filter
+            if (selectedConferenceDay.isOtherDay) {
+                return allUserSelectedTalks.filter((talk) => {
+                    // Show talks that don't match any conference day
+                    return !conferenceDays
+                        .filter((day) => !day.isOtherDay && day.date)
+                        .some((day) => day.date && isSameDay(talk.startTime, day.date));
+                });
+            }
+
+            // Handle regular conference days
+            const selectedDate = selectedConferenceDay.date;
             if (!selectedDate) return allUserSelectedTalks;
 
             return allUserSelectedTalks.filter((talk) => isSameDay(talk.startTime, selectedDate));
@@ -258,7 +296,21 @@ export default function TalksScreen() {
         const filteredTalks = useMemo(() => {
             if (conferenceDays.length === 0) return allAgendaTalks;
 
-            const selectedDate = conferenceDays[selectedDay]?.date;
+            const selectedConferenceDay = conferenceDays[selectedDay];
+            if (!selectedConferenceDay) return allAgendaTalks;
+
+            // Handle "Other" day filter
+            if (selectedConferenceDay.isOtherDay) {
+                return allAgendaTalks.filter((talk) => {
+                    // Show talks that don't match any conference day
+                    return !conferenceDays
+                        .filter((day) => !day.isOtherDay && day.date)
+                        .some((day) => day.date && isSameDay(talk.startTime, day.date));
+                });
+            }
+
+            // Handle regular conference days
+            const selectedDate = selectedConferenceDay.date;
             if (!selectedDate) return allAgendaTalks;
 
             return allAgendaTalks.filter((talk) => isSameDay(talk.startTime, selectedDate));
@@ -347,7 +399,7 @@ export default function TalksScreen() {
                                         { color: selectedDay === day.index ? tintContentColor : textColor },
                                     ]}
                                 >
-                                    {format(day.date, "EEE d", { locale: dateFnsLocale })}
+                                    {day.isOtherDay ? day.label : (day.date ? format(day.date, "EEE d", { locale: dateFnsLocale }) : '')}
                                 </Text>
                             </TouchableOpacity>
                         ))}

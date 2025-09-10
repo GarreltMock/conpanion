@@ -117,7 +117,8 @@
         "feedback": "Feedback",
         "shareHint": "wird mit uns geteilt",
         "keepTakingNotes": "Fortsetzen",
-        "addTalk": "Neuer Vortrag"
+        "addTalk": "Neuer Vortrag",
+        "otherDay": "Andere"
     },
     "conferences": {
         "title": "Konferenzen",
