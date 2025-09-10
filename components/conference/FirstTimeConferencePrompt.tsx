@@ -115,7 +115,7 @@ export const FirstTimeConferencePrompt: React.FC = () => {
                     {showStartCalendar && (
                         <View style={[styles.calendarContainer, { borderColor: borderColor }]}>
                             <Calendar
-                                onDayPress={(day) => {
+                                onDayPress={(day: { timestamp: number }) => {
                                     const selectedDate = new Date(day.timestamp);
                                     setStartDate(selectedDate);
 
@@ -159,7 +159,7 @@ export const FirstTimeConferencePrompt: React.FC = () => {
                         <View style={[styles.calendarContainer, { borderColor: borderColor }]}>
                             <Calendar
                                 minDate={formatCalendarDate(startDate)}
-                                onDayPress={(day) => {
+                                onDayPress={(day: { timestamp: number }) => {
                                     setEndDate(new Date(day.timestamp));
                                     setShowEndCalendar(false);
                                 }}
@@ -308,4 +308,3 @@ const styles = StyleSheet.create({
         fontSize: 16,
     },
 });
-

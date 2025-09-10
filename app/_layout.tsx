@@ -152,6 +152,7 @@ export default function RootLayout() {
                         ),
                         info: <IconSymbol name="info.circle.fill" size={20} color={invertedIconHighlightColor} />,
                     }}
+                    swipeToDismissDirection="left"
                     toastOptions={{
                         style: {
                             backgroundColor: invertedBackgroundColor,

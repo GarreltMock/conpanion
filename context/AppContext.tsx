@@ -83,6 +83,7 @@ interface AppContextType {
     addNote: (text: string, images: NoteImage[], audioRecordings: string[], talkId?: string) => Promise<Note>;
     updateNote: (note: Note) => Promise<void>;
     deleteNote: (noteId: string) => Promise<void>;
+    restoreNote: (note: Note) => Promise<void>;
     deleteImage: (imagePath: string) => Promise<void>;
     getNotesForTalk: (talkId: string) => Note[];
 
@@ -805,6 +806,13 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         setNotes((prevNotes) => prevNotes.filter((note) => note.id !== noteId));
     };
 
+    const restoreNoteById = async (note: Note): Promise<void> => {
+        // Save the note back to storage
+        await saveNote(note);
+        // Update state
+        setNotes((prevNotes) => [...prevNotes, note]);
+    };
+
     const deleteImage = async (imagePath: string): Promise<void> => {
         await deleteImageFromStorage(imagePath);
     };
@@ -999,6 +1007,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         addNote,
         updateNote,
         deleteNote: deleteNoteById,
+        restoreNote: restoreNoteById,
         deleteImage,
         getNotesForTalk,
 

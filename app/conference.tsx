@@ -116,7 +116,7 @@ export default function ConferenceDetailScreen() {
     const handleDeleteConference = () => {
         if (!conference) return;
 
-        toast.warning(t("conferences.deleteWarning"), {
+        const toastId = toast.warning(t("conferences.deleteWarning"), {
             duration: 10000,
             important: true,
             action: {
@@ -129,6 +129,8 @@ export default function ConferenceDetailScreen() {
                         router.back();
                     } catch {
                         toast.error(t("conferences.deleteFailed"));
+                    } finally {
+                        toast.dismiss(toastId);
                     }
                 },
             },

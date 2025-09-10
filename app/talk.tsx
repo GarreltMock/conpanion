@@ -30,6 +30,7 @@ export default function TalkDetailScreen() {
         getNotesForTalk,
         addAudioNote,
         deleteNote,
+        restoreNote,
         isLoading,
         isRecording,
         toggleTalkSelection,
@@ -110,6 +111,10 @@ export default function TalkDetailScreen() {
 
     const handleDeleteNote = async (noteId: string) => {
         await deleteNote(noteId);
+    };
+
+    const handleRestoreNote = async (note: Note) => {
+        await restoreNote(note);
     };
 
     const handleAddToUserTalks = async () => {
@@ -379,7 +384,7 @@ export default function TalkDetailScreen() {
                         <FlatList
                             data={talkNotes}
                             keyExtractor={(item) => item.id}
-                            renderItem={({ item }) => <NoteItem note={item} onDelete={handleDeleteNote} />}
+                            renderItem={({ item }) => <NoteItem note={item} onDelete={handleDeleteNote} onRestore={handleRestoreNote} />}
                             contentContainerStyle={styles.notesList}
                             keyboardShouldPersistTaps="handled"
                             ListEmptyComponent={() => (

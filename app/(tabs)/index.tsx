@@ -24,6 +24,7 @@ export default function NotesScreen() {
         stopAudioRecording,
         addNote,
         deleteNote,
+        restoreNote,
         getNotesForTalk,
         isLoading,
         isRecording,
@@ -151,6 +152,10 @@ export default function NotesScreen() {
         await deleteNote(noteId);
     };
 
+    const handleRestoreNote = async (note: Note) => {
+        await restoreNote(note);
+    };
+
     const renderEmptyState = () => (
         <View style={styles.emptyStateContainer}>
             <ThemedText style={styles.emptyStateTitle}>{t("notes.noActiveTalk")}</ThemedText>
@@ -180,7 +185,7 @@ export default function NotesScreen() {
                         ref={flatListRef}
                         data={talkNotes}
                         keyExtractor={(item) => item.id}
-                        renderItem={({ item }) => <NoteItem note={item} onDelete={handleDeleteNote} />}
+                        renderItem={({ item }) => <NoteItem note={item} onDelete={handleDeleteNote} onRestore={handleRestoreNote} />}
                         contentContainerStyle={styles.notesList}
                         keyboardShouldPersistTaps="handled"
                         ListEmptyComponent={() => (

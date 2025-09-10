@@ -25,10 +25,11 @@ import { toast } from "sonner-native";
 interface NoteItemProps {
     note: Note;
     onDelete?: (noteId: string) => Promise<void>;
+    onRestore?: (note: Note) => Promise<void>;
     readOnly?: boolean;
 }
 
-export const NoteItem: React.FC<NoteItemProps> = ({ note, onDelete, readOnly = false }) => {
+export const NoteItem: React.FC<NoteItemProps> = ({ note, onDelete, onRestore, readOnly = false }) => {
     const [sound, setSound] = useState<Audio.Sound | null>(null);
     const [isPlaying, setIsPlaying] = useState<boolean>(false);
     const [playingIndex, setPlayingIndex] = useState<number | null>(null);
@@ -118,16 +119,30 @@ export const NoteItem: React.FC<NoteItemProps> = ({ note, onDelete, readOnly = f
     };
 
     const handleDeleteNote = () => {
-        if (!onDelete) return;
+        if (!onDelete || !onRestore) return;
 
-        toast.warning("Are you sure you want to delete this note?", {
-            action: {
-                label: "Delete",
-                onClick: () => onDelete(note.id),
-            },
+        // Store the note data for potential undo
+        const noteData = { ...note };
+
+        // Immediately delete the note
+        onDelete(note.id);
+
+        // Show undo toast
+        const toastId = toast("Note deleted", {
+            duration: 5000,
             cancel: {
-                label: "Cancel",
-                onClick: () => {},
+                label: "Undo",
+                onClick: async () => {
+                    try {
+                        await onRestore(noteData);
+                        toast.success("Note restored");
+                    } catch (error) {
+                        console.error("Error restoring note:", error);
+                        toast.error("Failed to restore note");
+                    } finally {
+                        toast.dismiss(toastId);
+                    }
+                },
             },
         });
     };

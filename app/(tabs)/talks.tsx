@@ -113,7 +113,7 @@ export default function TalksScreen() {
     useMemo(() => {
         if (conferenceDays.length > 0) {
             const today = new Date();
-            const currentDayIndex = conferenceDays.findIndex((day) => isSameDay(day.date, today));
+            const currentDayIndex = conferenceDays.findIndex((day) => day.date && isSameDay(day.date, today));
             if (currentDayIndex !== -1) {
                 setSelectedDay(currentDayIndex);
             }
