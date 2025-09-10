@@ -2,7 +2,7 @@ import { format } from "date-fns";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, FlatList, StyleSheet, TouchableOpacity, View, Image, Text, ScrollView } from "react-native";
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { MyKeyboardAvoidingView } from "@/components/MyKeyboardAvoidingView";
 import { NoteInput } from "@/components/note/NoteInput";
@@ -43,7 +43,7 @@ export default function TalkDetailScreen() {
     const headerBackgroundColor = useThemeColor({}, "headerBackground");
     const borderLightColor = useThemeColor({}, "borderLight");
     const backgroundOverlayLightColor = useThemeColor({}, "backgroundOverlayLight");
-    const iconColor = useThemeColor({}, "tabIconDefault");
+    const iconColor = useThemeColor({}, "icon");
 
     useEffect(() => {
         if (id) {
@@ -150,7 +150,14 @@ export default function TalkDetailScreen() {
         <MyKeyboardAvoidingView>
             <ThemedView style={styles.container}>
                 <View
-                    style={[styles.header, { backgroundColor: headerBackgroundColor, borderColor: borderLightColor, paddingTop: insets.top + 10 }]}
+                    style={[
+                        styles.header,
+                        {
+                            backgroundColor: headerBackgroundColor,
+                            borderColor: borderLightColor,
+                            paddingTop: insets.top + 10,
+                        },
+                    ]}
                 >
                     <TouchableOpacity style={styles.backButton} onPress={handleBack}>
                         <IconSymbol name="chevron.left" size={20} color={textColor} />
@@ -384,7 +391,9 @@ export default function TalkDetailScreen() {
                         <FlatList
                             data={talkNotes}
                             keyExtractor={(item) => item.id}
-                            renderItem={({ item }) => <NoteItem note={item} onDelete={handleDeleteNote} onRestore={handleRestoreNote} />}
+                            renderItem={({ item }) => (
+                                <NoteItem note={item} onDelete={handleDeleteNote} onRestore={handleRestoreNote} />
+                            )}
                             contentContainerStyle={styles.notesList}
                             keyboardShouldPersistTaps="handled"
                             ListEmptyComponent={() => (

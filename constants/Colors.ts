@@ -15,7 +15,7 @@ export const Colors = {
         tintContent: "#11181C",
         icon: "#687076",
         iconHighlight: "#11181C",
-        tabIconDefault: "#687076",
+        muted: "#687076",
         error: "#FF3B30",
         warning: "#FF9500",
         white: "#FFFFFF",
@@ -30,9 +30,9 @@ export const Colors = {
         headerBackground: "#121313",
         tint: tintColorDark,
         tintContent: "#151718",
-        icon: "#D0D3D6", // Brighter for better contrast
+        icon: "#9298A1",
         iconHighlight: tintColorDark,
-        tabIconDefault: "#D0D3D6", // Brighter for better contrast
+        muted: "#D0D3D6",
         error: "#FF453A",
         warning: "#FF9F0A",
         white: "#FFFFFF",

@@ -23,7 +23,7 @@ export default function RootLayout() {
     const invertedBackgroundColor = useThemeColor({}, "background", true);
     const invertedBorderColor = useThemeColor({}, "border", true);
     const invertedTextColor = useThemeColor({}, "text", true);
-    const invertedTabIconColor = useThemeColor({}, "tabIconDefault", true);
+    const invertedMutedColor = useThemeColor({}, "muted", true);
     const invertedIconHighlightColor = useThemeColor({}, "iconHighlight", true);
     const invertedErrorColor = useThemeColor({}, "error", true);
     const whiteColor = useThemeColor({}, "white");
@@ -165,7 +165,7 @@ export default function RootLayout() {
                             fontFamily: "MuseoSans-Medium",
                         },
                         descriptionStyle: {
-                            color: invertedTabIconColor,
+                            color: invertedMutedColor,
                             fontSize: 14,
                             fontFamily: "MuseoSans-Light",
                         },

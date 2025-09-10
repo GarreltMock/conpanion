@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { View, StyleSheet, TouchableOpacity, Platform, ScrollView, TextInput } from "react-native";
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { Calendar } from "react-native-calendars";
 import { useApp } from "../../context/AppContext";
@@ -34,7 +34,7 @@ export default function EditConferenceModal() {
     const backgroundColor = useThemeColor({}, "background");
     const tintColor = useThemeColor({}, "tint");
     const textColor = useThemeColor({}, "text");
-    const placeholderColor = useThemeColor({}, "tabIconDefault");
+    const placeholderColor = useThemeColor({}, "muted");
     const errorColor = useThemeColor({}, "error");
     const borderColor = useThemeColor({}, "border");
 

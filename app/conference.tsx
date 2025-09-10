@@ -49,7 +49,8 @@ export default function ConferenceDetailScreen() {
     const headerBackgroundColor = useThemeColor({}, "headerBackground");
     const borderLight = useThemeColor({}, "borderLight");
     const textColor = useThemeColor({}, "text");
-    const mutedColor = useThemeColor({}, "tabIconDefault");
+    const iconColor = useThemeColor({}, "icon");
+    const mutedColor = useThemeColor({}, "muted");
 
     useEffect(() => {
         // Log when accessed without ID, but don't try to redirect
@@ -397,17 +398,17 @@ export default function ConferenceDetailScreen() {
                             </TouchableOpacity>
                         )}
                         <TouchableOpacity style={styles.menuItem} onPress={handleEditConferenceFromMenu}>
-                            <Ionicons name="pencil-outline" size={20} color={textColor} />
+                            <Ionicons name="pencil-outline" size={20} color={iconColor} />
                             <ThemedText style={styles.menuItemText}>{t("common.edit")}</ThemedText>
                         </TouchableOpacity>
                         {conference?.apiUrl && (
                             <TouchableOpacity style={styles.menuItem} onPress={handleSyncAgenda}>
-                                <Ionicons name="refresh-outline" size={20} color={textColor} />
+                                <Ionicons name="refresh-outline" size={20} color={iconColor} />
                                 <ThemedText style={styles.menuItemText}>{t("conferences.syncAgenda")}</ThemedText>
                             </TouchableOpacity>
                         )}
                         <TouchableOpacity style={styles.menuItem} onPress={handleExportConference}>
-                            <Ionicons name="share-outline" size={20} color={textColor} />
+                            <Ionicons name="share-outline" size={20} color={iconColor} />
                             <ThemedText style={styles.menuItemText}>{t("common.actions.export")}</ThemedText>
                         </TouchableOpacity>
                         <View style={[styles.menuSeparator, { backgroundColor: borderLight }]} />

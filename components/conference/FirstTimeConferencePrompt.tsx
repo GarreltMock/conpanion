@@ -23,7 +23,7 @@ export const FirstTimeConferencePrompt: React.FC = () => {
     const backgroundColor = useThemeColor({}, "background");
     const tintColor = useThemeColor({}, "tint");
     const textColor = useThemeColor({}, "text");
-    const placeholderColor = useThemeColor({}, "tabIconDefault");
+    const placeholderColor = useThemeColor({}, "muted");
     const errorColor = useThemeColor({}, "error");
     const borderColor = useThemeColor({}, "border");
     const whiteColor = useThemeColor({}, "white");

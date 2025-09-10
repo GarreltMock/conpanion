@@ -37,7 +37,7 @@ export default function NewConferenceModal() {
     const tintContentColor = useThemeColor({}, "tintContent");
     const iconHighlightColor = useThemeColor({}, "iconHighlight");
     const textColor = useThemeColor({}, "text");
-    const placeholderColor = useThemeColor({}, "tabIconDefault");
+    const placeholderColor = useThemeColor({}, "muted");
     const errorColor = useThemeColor({}, "error");
     const borderColor = useThemeColor({}, "border");
     const borderLightColor = useThemeColor({}, "borderLight");
