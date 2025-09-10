@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, StyleSheet, ScrollView, TouchableOpacity, Alert, ActivityIndicator, Modal } from "react-native";
+import { View, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Modal } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { toast } from "sonner-native";
 import { useApp } from "../context/AppContext";
@@ -116,12 +116,12 @@ export default function ConferenceDetailScreen() {
     const handleDeleteConference = () => {
         if (!conference) return;
 
-        Alert.alert(t("common.delete"), t("conferences.deleteWarning"), [
-            { text: t("common.cancel"), style: "cancel" },
-            {
-                text: t("common.delete"),
-                style: "destructive",
-                onPress: async () => {
+        toast.warning(t("conferences.deleteWarning"), {
+            duration: 10000,
+            important: true,
+            action: {
+                label: t("common.delete"),
+                onClick: async () => {
                     try {
                         await deleteConference(conference.id);
                         setShowSubmenu(false);
@@ -132,7 +132,11 @@ export default function ConferenceDetailScreen() {
                     }
                 },
             },
-        ]);
+            cancel: {
+                label: t("common.cancel"),
+                onClick: () => {},
+            },
+        });
     };
 
     const handleEditConferenceFromMenu = () => {

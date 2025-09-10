@@ -72,7 +72,7 @@
     "notes": {
         "noActiveTalk": "Kein aktiver Vortrag",
         "createTalkPrompt": "Erstellen Sie einen neuen Vortrag, um Notizen zu machen",
-        "noNotesYet": "Noch keine Notizen. Beginnen Sie mit Notizen für diesen Vortrag.",
+        "noNotesYet": "Noch keine Notizen",
         "note": "Notiz",
         "notes": "Notizen",
         "input": {
@@ -101,9 +101,8 @@
         "myTalks": "Meine Vorträge",
         "fullAgenda": "Vollständige Agenda",
         "noTalksSelected": "Keine Vorträge ausgewählt",
-        "browseTalks": "Durchsuchen Sie die Agenda, um Vorträge zu markieren",
+        "browseTalks": "Durchsuch die Agenda, um Vorträge zu markieren",
         "noTalksScheduled": "Keine Vorträge für diesen Tag geplant",
-        "createTalkToStart": "Erstellen Sie einen neuen Vortrag, um Notizen zu machen",
         "talkDetails": "Vortrag Details",
         "addSummary": "Zusammenfassung hinzufügen",
         "userSummary": "Benutzer-Zusammenfassung",

@@ -3,7 +3,6 @@ import { Audio } from "expo-av";
 import { router } from "expo-router";
 import React, { useState, useRef } from "react";
 import {
-    Alert,
     Image,
     Linking,
     Modal,
@@ -21,6 +20,7 @@ import { IconSymbol } from "@/components/ui/IconSymbol";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { Note } from "@/types";
 import { getAbsolutePath } from "@/storage/helper";
+import { toast } from "sonner-native";
 
 interface NoteItemProps {
     note: Note;
@@ -38,6 +38,8 @@ export const NoteItem: React.FC<NoteItemProps> = ({ note, onDelete, readOnly = f
 
     const tintColor = useThemeColor({}, "tint");
     const whiteColor = useThemeColor({}, "white");
+    const textColor = useThemeColor({}, "text");
+    const errorColor = useThemeColor({}, "error");
     const borderLightColor = useThemeColor({}, "borderLight");
     const backgroundOverlayColor = useThemeColor({}, "backgroundOverlay");
     const backgroundColor = useThemeColor({}, "background");
@@ -104,7 +106,7 @@ export const NoteItem: React.FC<NoteItemProps> = ({ note, onDelete, readOnly = f
             });
         } catch (error) {
             console.error("Error playing audio:", error);
-            Alert.alert("Error", "Failed to play audio recording.");
+            toast.error("Failed to play audio recording.");
         }
     };
 
@@ -118,14 +120,16 @@ export const NoteItem: React.FC<NoteItemProps> = ({ note, onDelete, readOnly = f
     const handleDeleteNote = () => {
         if (!onDelete) return;
 
-        Alert.alert("Delete Note", "Are you sure you want to delete this note?", [
-            { text: "Cancel", style: "cancel" },
-            {
-                text: "Delete",
-                style: "destructive",
-                onPress: () => onDelete(note.id),
+        toast.warning("Are you sure you want to delete this note?", {
+            action: {
+                label: "Delete",
+                onClick: () => onDelete(note.id),
             },
-        ]);
+            cancel: {
+                label: "Cancel",
+                onClick: () => {},
+            },
+        });
     };
 
     const handleOpenLink = async (url: string) => {
@@ -134,11 +138,11 @@ export const NoteItem: React.FC<NoteItemProps> = ({ note, onDelete, readOnly = f
             if (canOpen) {
                 await Linking.openURL(url);
             } else {
-                Alert.alert("Error", "Cannot open this URL");
+                toast.error("Cannot open this URL");
             }
         } catch (error) {
             console.error("Error opening URL:", error);
-            Alert.alert("Error", "Failed to open URL");
+            toast.error("Failed to open URL");
         }
     };
 
@@ -311,13 +315,13 @@ export const NoteItem: React.FC<NoteItemProps> = ({ note, onDelete, readOnly = f
                         ]}
                     >
                         <TouchableOpacity style={styles.menuItem} onPress={handleEditNoteFromMenu}>
-                            <IconSymbol name="pencil" size={20} color={tintColor} />
-                            <ThemedText style={[styles.menuItemText, { color: tintColor }]}>Edit</ThemedText>
+                            <IconSymbol name="pencil" size={20} color={textColor} />
+                            <ThemedText style={[styles.menuItemText, { color: textColor }]}>Edit</ThemedText>
                         </TouchableOpacity>
                         <View style={[styles.menuSeparator, { backgroundColor: borderLightColor }]} />
                         <TouchableOpacity style={styles.menuItem} onPress={handleDeleteNoteFromMenu}>
-                            <IconSymbol name="trash" size={20} color="#FF3B30" />
-                            <ThemedText style={[styles.menuItemText, { color: "#FF3B30" }]}>Delete</ThemedText>
+                            <IconSymbol name="trash" size={20} color={errorColor} />
+                            <ThemedText style={[styles.menuItemText, { color: errorColor }]}>Delete</ThemedText>
                         </TouchableOpacity>
                     </View>
                 </TouchableOpacity>

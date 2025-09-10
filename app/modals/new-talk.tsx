@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { StyleSheet, View, TextInput, TouchableOpacity, Keyboard, ActivityIndicator, Alert, Text } from "react-native";
+import { StyleSheet, View, TextInput, TouchableOpacity, Keyboard, ActivityIndicator, Text } from "react-native";
 import { router } from "expo-router";
 
 import { ThemedText } from "@/components/ThemedText";
@@ -8,6 +8,7 @@ import { IconSymbol } from "@/components/ui/IconSymbol";
 import { useApp } from "@/context/AppContext";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { useI18n } from "@/hooks/useI18n";
+import { toast } from "sonner-native";
 
 export default function NewTalkModal() {
     const [title, setTitle] = useState("");
@@ -23,7 +24,7 @@ export default function NewTalkModal() {
 
     const handleCreate = async () => {
         if (!title.trim()) {
-            Alert.alert(t("common.errors.title"), t("forms.talk.titleRequired"));
+            toast.error(t("forms.talk.titleRequired"));
             return;
         }
 
@@ -39,7 +40,7 @@ export default function NewTalkModal() {
         } catch (error) {
             console.error("Error creating talk:", error);
             const errorMessage = error instanceof Error ? error.message : "Failed to create talk. Please try again.";
-            Alert.alert(t("common.errors.title"), errorMessage);
+            toast.error(errorMessage);
         } finally {
             setIsCreating(false);
         }

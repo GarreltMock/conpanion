@@ -72,7 +72,7 @@
     "notes": {
         "noActiveTalk": "No Active Talk",
         "createTalkPrompt": "Create a new talk to start taking notes",
-        "noNotesYet": "No notes yet. Start taking notes for this talk.",
+        "noNotesYet": "No notes yet",
         "note": "note",
         "notes": "notes",
         "input": {
@@ -103,7 +103,6 @@
         "noTalksSelected": "No talks selected",
         "browseTalks": "Browse the agenda to bookmark talks",
         "noTalksScheduled": "No talks scheduled for this day",
-        "createTalkToStart": "Create a new talk to start taking notes",
         "talkDetails": "Talk Details",
         "addSummary": "Add Summary",
         "userSummary": "User Summary",

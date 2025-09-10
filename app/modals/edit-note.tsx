@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, Alert, StyleSheet, View } from "react-native";
+import { ActivityIndicator, StyleSheet, View } from "react-native";
 
 import { MyKeyboardAvoidingView } from "@/components/MyKeyboardAvoidingView";
 import { ThemedView } from "@/components/ThemedView";
@@ -8,6 +8,7 @@ import { NoteInput } from "@/components/note/NoteInput";
 import { useApp } from "@/context/AppContext";
 import { useI18n } from "@/hooks/useI18n";
 import { Note, NoteImage } from "@/types";
+import { toast } from "sonner-native";
 
 export default function EditNoteModal() {
     const { noteId } = useLocalSearchParams<{ noteId: string }>();
@@ -23,11 +24,11 @@ export default function EditNoteModal() {
             if (foundNote) {
                 setNote(foundNote);
             } else {
-                Alert.alert(t("common.errors.title"), t("errors.noteNotFound"));
+                toast.error(t("errors.noteNotFound"));
                 router.back();
             }
         }
-    }, [noteId, notes]);
+    }, [noteId, notes, t]);
 
     const handleDeletedImages = async (initialImages: NoteImage[], currentImages: NoteImage[]) => {
         const currentImageUris = new Set(currentImages.map((img) => img.uri));
@@ -66,7 +67,7 @@ export default function EditNoteModal() {
             router.back();
         } catch (error) {
             console.error("Error updating note:", error);
-            Alert.alert(t("common.errors.title"), t("errors.updateNoteFailed"));
+            toast.error(t("errors.updateNoteFailed"));
         } finally {
             setIsSaving(false);
         }

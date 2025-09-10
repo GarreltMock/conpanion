@@ -6,7 +6,6 @@ import {
     TouchableOpacity,
     Keyboard,
     ActivityIndicator,
-    Alert,
     Text,
     Platform,
     ScrollView,
@@ -25,6 +24,7 @@ import { useApp } from "@/context/AppContext";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { useI18n } from "@/hooks/useI18n";
 import { Speaker } from "@/types";
+import { toast } from "sonner-native";
 
 const roundToNearestFiveMinutes = (date: Date): Date => {
     const rounded = new Date(date);
@@ -97,17 +97,17 @@ export default function NewAgendaTalkModal() {
 
     const handleCreate = async () => {
         if (!title.trim()) {
-            Alert.alert(t("common.errors.title"), t("forms.talk.titleRequired"));
+            toast.error(t("forms.talk.titleRequired"));
             return;
         }
 
         if (!currentConference) {
-            Alert.alert(t("common.errors.title"), t("errors.conferenceNotFound"));
+            toast.error(t("errors.conferenceNotFound"));
             return;
         }
 
         if (duration <= 0) {
-            Alert.alert(t("common.errors.title"), t("forms.talk.durationRequired"));
+            toast.error(t("forms.talk.durationRequired"));
             return;
         }
 
@@ -138,7 +138,7 @@ export default function NewAgendaTalkModal() {
             console.error("Error creating agenda talk:", error);
             const errorMessage =
                 error instanceof Error ? error.message : "Failed to create agenda talk. Please try again.";
-            Alert.alert(t("common.errors.title"), errorMessage);
+            toast.error(errorMessage);
         } finally {
             setIsCreating(false);
         }

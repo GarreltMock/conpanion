@@ -2,7 +2,6 @@ import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
     ActivityIndicator,
-    Alert,
     Dimensions,
     Image,
     StyleSheet,
@@ -21,6 +20,7 @@ import { IconSymbol } from "@/components/ui/IconSymbol";
 import { useImageTransform } from "@/hooks/useImageTransform";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { Point, Polygon as PolygonType } from "@/types";
+import { toast } from "sonner-native";
 
 type ImageLayout = { x: number; y: number; width: number; height: number };
 
@@ -197,7 +197,7 @@ export default function ImageEditScreen() {
             router.back();
         } catch (error) {
             console.error("Error transforming image:", error);
-            Alert.alert("Transformation Error", "Failed to transform the image with the selected corners.");
+            toast.error("Failed to transform the image with the selected corners.");
         } finally {
             setLoading(false);
         }

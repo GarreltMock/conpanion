@@ -2,7 +2,6 @@ import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
     ActivityIndicator,
-    Alert,
     StyleSheet,
     View,
     Text,
@@ -20,6 +19,7 @@ import { useI18n } from "@/hooks/useI18n";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { Talk } from "@/types";
 import { trackTalkRated } from "@/utils/analytics";
+import { toast } from "sonner-native";
 
 export default function TalkEvaluationModal() {
     const { talkId, source } = useLocalSearchParams<{ talkId: string; source?: string }>();
@@ -73,7 +73,7 @@ export default function TalkEvaluationModal() {
                 setSummary(foundTalk.summary || "");
                 setFeedback(foundTalk.feedback || "");
             } else {
-                Alert.alert("Error", "Talk not found");
+                toast.error("Talk not found");
                 router.back();
             }
         }
@@ -105,7 +105,7 @@ export default function TalkEvaluationModal() {
             router.back();
         } catch (error) {
             console.error("Error finishing talk:", error);
-            Alert.alert("Error", "Failed to finish talk. Please try again.");
+            toast.error("Failed to finish talk. Please try again.");
         }
     };
 
@@ -119,7 +119,7 @@ export default function TalkEvaluationModal() {
             router.back();
         } catch (error) {
             console.error("Error saving evaluation:", error);
-            Alert.alert("Error", "Failed to save evaluation. Please try again.");
+            toast.error("Failed to save evaluation. Please try again.");
         }
     };
 

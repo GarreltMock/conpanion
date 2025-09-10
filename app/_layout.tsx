@@ -24,10 +24,9 @@ export default function RootLayout() {
     const invertedBorderColor = useThemeColor({}, "border", true);
     const invertedTextColor = useThemeColor({}, "text", true);
     const invertedTabIconColor = useThemeColor({}, "tabIconDefault", true);
-    const invertedTintColor = useThemeColor({}, "tint", true);
-    const invertedBackgroundOverlayColor = useThemeColor({}, "backgroundOverlay", true);
+    const invertedIconHighlightColor = useThemeColor({}, "iconHighlight", true);
     const invertedErrorColor = useThemeColor({}, "error", true);
-    const invertedWarningColor = useThemeColor({}, "warning", true);
+    const whiteColor = useThemeColor({}, "white");
 
     const [loaded] = useFonts({
         SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
@@ -144,12 +143,14 @@ export default function RootLayout() {
                     position="bottom-center"
                     theme={colorScheme === "dark" ? "dark" : "light"}
                     icons={{
-                        success: <IconSymbol name="checkmark.circle.fill" size={20} color={invertedTintColor} />,
+                        success: (
+                            <IconSymbol name="checkmark.circle.fill" size={20} color={invertedIconHighlightColor} />
+                        ),
                         error: <IconSymbol name="xmark.circle.fill" size={20} color={invertedErrorColor} />,
                         warning: (
-                            <IconSymbol name="exclamationmark.triangle.fill" size={20} color={invertedWarningColor} />
+                            <IconSymbol name="exclamationmark.triangle.fill" size={20} color={invertedErrorColor} />
                         ),
-                        info: <IconSymbol name="info.circle.fill" size={20} color={invertedTintColor} />,
+                        info: <IconSymbol name="info.circle.fill" size={20} color={invertedIconHighlightColor} />,
                     }}
                     toastOptions={{
                         style: {
@@ -168,10 +169,14 @@ export default function RootLayout() {
                             fontFamily: "MuseoSans-Light",
                         },
                         actionButtonStyle: {
-                            backgroundColor: invertedTintColor,
+                            backgroundColor: invertedErrorColor,
+                            borderWidth: 0,
                         },
-                        cancelButtonStyle: {
-                            backgroundColor: invertedBackgroundOverlayColor,
+                        actionButtonTextStyle: {
+                            color: whiteColor,
+                        },
+                        cancelButtonTextStyle: {
+                            color: invertedTextColor,
                         },
                     }}
                 />

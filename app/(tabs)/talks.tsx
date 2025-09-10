@@ -113,7 +113,7 @@ export default function TalksScreen() {
     useMemo(() => {
         if (conferenceDays.length > 0) {
             const today = new Date();
-            const currentDayIndex = conferenceDays.findIndex((day) => day.date && isSameDay(day.date, today));
+            const currentDayIndex = conferenceDays.findIndex((day) => isSameDay(day.date, today));
             if (currentDayIndex !== -1) {
                 setSelectedDay(currentDayIndex);
             }
@@ -238,7 +238,7 @@ export default function TalksScreen() {
         );
     };
 
-    const renderTalksList = (talksData: Talk[], emptyTitle: string, emptyDescription: string) => (
+    const renderTalksList = (talksData: Talk[], emptyTitle: string, emptyDescription?: string) => (
         <FlatList
             data={talksData}
             keyExtractor={(item) => item.id}
@@ -249,7 +249,7 @@ export default function TalksScreen() {
             ListEmptyComponent={() => (
                 <View style={styles.emptyContainer}>
                     <ThemedText style={styles.emptyTitle}>{emptyTitle}</ThemedText>
-                    <ThemedText style={styles.emptyDescription}>{emptyDescription}</ThemedText>
+                    {emptyDescription && <ThemedText style={styles.emptyDescription}>{emptyDescription}</ThemedText>}
                 </View>
             )}
         />
@@ -318,7 +318,7 @@ export default function TalksScreen() {
 
         const sortedTalks = filteredTalks.sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
 
-        return renderTalksList(sortedTalks, t("talks.noTalksScheduled"), t("talks.createTalkToStart"));
+        return renderTalksList(sortedTalks, t("talks.noTalksScheduled"));
     };
 
     const renderScene = SceneMap({
@@ -399,7 +399,11 @@ export default function TalksScreen() {
                                         { color: selectedDay === day.index ? tintContentColor : textColor },
                                     ]}
                                 >
-                                    {day.isOtherDay ? day.label : (day.date ? format(day.date, "EEE d", { locale: dateFnsLocale }) : '')}
+                                    {day.isOtherDay
+                                        ? day.label
+                                        : day.date
+                                        ? format(day.date, "EEE d", { locale: dateFnsLocale })
+                                        : ""}
                                 </Text>
                             </TouchableOpacity>
                         ))}
