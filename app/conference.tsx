@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { View, StyleSheet, ScrollView, TouchableOpacity, Alert, ActivityIndicator, Modal } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { toast } from "sonner-native";
 import { useApp } from "../context/AppContext";
 import { ThemedText } from "../components/ThemedText";
 import { ThemedView } from "../components/ThemedView";
@@ -28,7 +29,6 @@ export default function ConferenceDetailScreen() {
     const [conferenceTalks, setConferenceTalks] = useState<Talk[]>([]);
     const [isActive, setIsActive] = useState(false);
     const [showSubmenu, setShowSubmenu] = useState(false);
-    const [isSyncing, setIsSyncing] = useState(false);
     const [syncError, setSyncError] = useState<string | null>(null);
 
     // Helper function to calculate current conference status based on dates
@@ -106,9 +106,9 @@ export default function ConferenceDetailScreen() {
                 await switchActiveConference(conference.id);
                 setIsActive(true);
                 setShowSubmenu(false);
-                Alert.alert(t("common.ok"), t("conferences.activeConference", { name: conference.name }));
+                toast.success(t("conferences.activeConference", { name: conference.name }));
             } catch {
-                Alert.alert(t("common.errors.title"), t("errors.switchConferenceFailed"));
+                toast.error(t("errors.switchConferenceFailed"));
             }
         }
     };
@@ -125,9 +125,10 @@ export default function ConferenceDetailScreen() {
                     try {
                         await deleteConference(conference.id);
                         setShowSubmenu(false);
+                        toast.success(t("conferences.deleteSuccess") || "Conference deleted successfully");
                         router.back();
                     } catch {
-                        Alert.alert(t("common.errors.title"), t("conferences.deleteFailed"));
+                        toast.error(t("conferences.deleteFailed"));
                     }
                 },
             },
@@ -141,31 +142,31 @@ export default function ConferenceDetailScreen() {
 
     const handleSyncAgenda = async () => {
         if (!conference?.apiUrl) {
-            Alert.alert(t("common.errors.title"), t("errors.apiNotConfigured"));
+            toast.error(t("errors.apiNotConfigured"));
             return;
         }
 
-        setIsSyncing(true);
         setSyncError(null);
         setShowSubmenu(false);
 
-        try {
-            await syncConferenceAgenda(conference.id);
-
+        const syncPromise = syncConferenceAgenda(conference.id).then(() => {
             // Refresh the conference data to get the updated lastApiSync
             const updatedConference = conferences.find((conf) => conf.id === conference.id);
             if (updatedConference) {
                 setConference(updatedConference);
             }
+        });
 
-            setIsSyncing(false);
-            Alert.alert(t("common.ok"), t("conferences.syncSuccess"));
-        } catch (error: any) {
-            console.error("Sync failed:", error);
-            setSyncError(error.message || t("errors.syncFailed"));
-            setIsSyncing(false);
-            Alert.alert(t("common.errors.title"), error.message || t("errors.syncFailed"));
-        }
+        toast.promise(syncPromise, {
+            loading: t("conferences.syncing"),
+            success: () => t("conferences.syncSuccess"),
+            error: (error: any) => {
+                console.error("Sync failed:", error);
+                const errorMessage = error.message || t("errors.syncFailed");
+                setSyncError(errorMessage);
+                return errorMessage;
+            },
+        });
     };
 
     const handleBack = () => {
@@ -394,15 +395,9 @@ export default function ConferenceDetailScreen() {
                             <ThemedText style={styles.menuItemText}>{t("common.edit")}</ThemedText>
                         </TouchableOpacity>
                         {conference?.apiUrl && (
-                            <TouchableOpacity
-                                style={[styles.menuItem, isSyncing && { opacity: 0.5 }]}
-                                onPress={handleSyncAgenda}
-                                disabled={isSyncing}
-                            >
+                            <TouchableOpacity style={styles.menuItem} onPress={handleSyncAgenda}>
                                 <Ionicons name="refresh-outline" size={20} color={textColor} />
-                                <ThemedText style={styles.menuItemText}>
-                                    {isSyncing ? t("conferences.syncing") : t("conferences.syncAgenda")}
-                                </ThemedText>
+                                <ThemedText style={styles.menuItemText}>{t("conferences.syncAgenda")}</ThemedText>
                             </TouchableOpacity>
                         )}
                         <TouchableOpacity style={styles.menuItem} onPress={handleExportConference}>
@@ -650,36 +645,5 @@ const styles = StyleSheet.create({
     menuSeparator: {
         height: 1,
         marginHorizontal: 16,
-    },
-    syncModalOverlay: {
-        flex: 1,
-        backgroundColor: "rgba(0, 0, 0, 0.5)",
-        justifyContent: "center",
-        alignItems: "center",
-    },
-    syncModalContent: {
-        borderRadius: 16,
-        borderWidth: 1,
-        padding: 32,
-        alignItems: "center",
-        marginHorizontal: 32,
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.15,
-        shadowRadius: 12,
-        elevation: 8,
-    },
-    syncLoader: {
-        marginBottom: 16,
-    },
-    syncText: {
-        fontSize: 18,
-        fontWeight: "600",
-        marginBottom: 8,
-        textAlign: "center",
-    },
-    syncSubtext: {
-        fontSize: 14,
-        opacity: 0.7,
-        textAlign: "center",
     },
 });
