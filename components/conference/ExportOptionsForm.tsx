@@ -6,6 +6,7 @@ import { ThemedText } from "../ThemedText";
 import { ThemedView } from "../ThemedView";
 import { TextInput } from "react-native-gesture-handler";
 import { useThemeColor } from "../../hooks/useThemeColor";
+import { useI18n } from "../../hooks/useI18n";
 import { Talk, ExportOptions } from "../../types";
 import { format } from "date-fns";
 
@@ -17,6 +18,7 @@ interface ExportOptionsFormProps {
 
 export const ExportOptionsForm: React.FC<ExportOptionsFormProps> = ({ conferenceId, onCancel, onExport }) => {
     const { conferences, talks, saveExportOptions, getExportOptions, exportToPDF, exportToMarkdown } = useApp();
+    const { t } = useI18n();
 
     const conference = useMemo(() => conferences.find((conf) => conf.id === conferenceId), [conferences, conferenceId]);
     const conferenceTalks = useMemo(
@@ -31,7 +33,7 @@ export const ExportOptionsForm: React.FC<ExportOptionsFormProps> = ({ conference
         format: "md",
         includeImages: true,
         includeTalkIds: conferenceTalks.map((talk) => talk.id),
-        filename: conference ? `${conference.name.replace(/\s+/g, "-")}-${Date.now()}` : "conference-export",
+        filename: conference ? `${conference.name.replace(/\s+/g, "-")}-${Date.now()}` : t("export.defaultFilename"),
     });
 
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -59,7 +61,7 @@ export const ExportOptionsForm: React.FC<ExportOptionsFormProps> = ({ conference
                         includeTalkIds: conferenceTalks.map((talk) => talk.id),
                         filename: conference
                             ? `${conference.name.replace(/\s+/g, "-")}-${Date.now()}`
-                            : "conference-export",
+                            : t("export.defaultFilename"),
                     });
                 }
             } catch (error) {
@@ -106,7 +108,7 @@ export const ExportOptionsForm: React.FC<ExportOptionsFormProps> = ({ conference
 
     const handleExport = async () => {
         if (!options.filename.trim()) {
-            setError("Filename is required");
+            setError(t("export.errors.filenameRequired"));
             return;
         }
 
@@ -131,7 +133,7 @@ export const ExportOptionsForm: React.FC<ExportOptionsFormProps> = ({ conference
                 onExport(exportPath);
             }
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Export failed");
+            setError(err instanceof Error ? err.message : t("export.errors.exportFailed"));
         } finally {
             setIsSubmitting(false);
         }
@@ -144,7 +146,7 @@ export const ExportOptionsForm: React.FC<ExportOptionsFormProps> = ({ conference
     if (!conference) {
         return (
             <ThemedView style={styles.errorContainer}>
-                <ThemedText style={styles.errorText}>Conference not found</ThemedText>
+                <ThemedText style={styles.errorText}>{t("errors.conferenceNotFound")}</ThemedText>
             </ThemedView>
         );
     }
@@ -152,10 +154,10 @@ export const ExportOptionsForm: React.FC<ExportOptionsFormProps> = ({ conference
     return (
         <ScrollView showsVerticalScrollIndicator={false}>
             <ThemedView style={styles.container}>
-                <ThemedText style={styles.title}>Export {conference.name}</ThemedText>
+                <ThemedText style={styles.title}>{t("export.title", { name: conference.name })}</ThemedText>
 
                 <ThemedView style={styles.formSection}>
-                    <ThemedText style={styles.sectionTitle}>Export Format</ThemedText>
+                    <ThemedText style={styles.sectionTitle}>{t("export.format.title")}</ThemedText>
 
                     <View style={styles.formatOptions}>
                         {/* <TouchableOpacity
@@ -185,7 +187,7 @@ export const ExportOptionsForm: React.FC<ExportOptionsFormProps> = ({ conference
                                     },
                                 ]}
                             >
-                                PDF
+                                {t("export.format.pdf")}
                             </ThemedText>
                         </TouchableOpacity> */}
 
@@ -216,13 +218,13 @@ export const ExportOptionsForm: React.FC<ExportOptionsFormProps> = ({ conference
                                     },
                                 ]}
                             >
-                                Markdown
+                                {t("export.format.markdown")}
                             </ThemedText>
                         </TouchableOpacity>
                     </View>
 
                     <View style={styles.optionRow}>
-                        <ThemedText style={styles.optionLabel}>Include Images</ThemedText>
+                        <ThemedText style={styles.optionLabel}>{t("export.includeImages")}</ThemedText>
                         <Switch
                             value={options.includeImages}
                             onValueChange={(value) =>
@@ -238,7 +240,7 @@ export const ExportOptionsForm: React.FC<ExportOptionsFormProps> = ({ conference
                         />
                     </View>
 
-                    <ThemedText style={styles.label}>Filename</ThemedText>
+                    <ThemedText style={styles.label}>{t("export.filename")}</ThemedText>
                     <TextInput
                         style={[
                             styles.input,
@@ -250,27 +252,27 @@ export const ExportOptionsForm: React.FC<ExportOptionsFormProps> = ({ conference
                         ]}
                         value={options.filename}
                         onChangeText={(text) => setOptions((prev) => ({ ...prev, filename: text }))}
-                        placeholder="Enter export filename"
+                        placeholder={t("export.filenamePlaceholder")}
                         placeholderTextColor={placeholderColor}
                     />
                     <ThemedText style={styles.helperText}>
-                        Export will be saved as {options.filename}.{options.format}
+                        {t("export.saveAsHelp", { filename: options.filename, format: options.format })}
                     </ThemedText>
 
-                    <ThemedText style={styles.sectionTitle}>Select Talks to Include</ThemedText>
+                    <ThemedText style={styles.sectionTitle}>{t("export.selectTalks")}</ThemedText>
 
                     <View style={styles.selectAllRow}>
                         <TouchableOpacity style={styles.selectButton} onPress={handleSelectAll}>
-                            <ThemedText style={styles.selectButtonText}>Select All</ThemedText>
+                            <ThemedText style={styles.selectButtonText}>{t("export.selectAll")}</ThemedText>
                         </TouchableOpacity>
                         <TouchableOpacity style={styles.selectButton} onPress={handleSelectNone}>
-                            <ThemedText style={styles.selectButtonText}>Select None</ThemedText>
+                            <ThemedText style={styles.selectButtonText}>{t("export.selectNone")}</ThemedText>
                         </TouchableOpacity>
                     </View>
 
                     <View style={styles.talksContainer}>
                         {conferenceTalks.length === 0 ? (
-                            <ThemedText style={styles.noTalksText}>No talks found in this conference</ThemedText>
+                            <ThemedText style={styles.noTalksText}>{t("export.noTalks")}</ThemedText>
                         ) : (
                             conferenceTalks.map((talk) => (
                                 <TouchableOpacity
@@ -305,7 +307,7 @@ export const ExportOptionsForm: React.FC<ExportOptionsFormProps> = ({ conference
                                 onPress={onCancel}
                                 disabled={isSubmitting}
                             >
-                                <ThemedText style={styles.cancelButtonText}>Cancel</ThemedText>
+                                <ThemedText style={styles.cancelButtonText}>{t("common.cancel")}</ThemedText>
                             </TouchableOpacity>
                         )}
 
@@ -322,7 +324,7 @@ export const ExportOptionsForm: React.FC<ExportOptionsFormProps> = ({ conference
                             disabled={isSubmitting || options.includeTalkIds.length === 0}
                         >
                             <ThemedText style={[styles.exportButtonText, { color: tintContentColor }]}>
-                                {isSubmitting ? "Exporting..." : "Export"}
+                                {isSubmitting ? t("export.exporting") : t("common.actions.export")}
                             </ThemedText>
                         </TouchableOpacity>
                     </View>

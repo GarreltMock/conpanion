@@ -168,14 +168,26 @@
             "bioOptional": "Bio (optional)"
         },
         "export": {
-            "title": "Export {{conference}}",
-            "formatTitle": "Export Format",
+            "defaultFilename": "conference-export",
+            "title": "Export {{name}}",
+            "format": {
+                "title": "Export Format",
+                "pdf": "PDF",
+                "markdown": "Markdown"
+            },
             "includeImages": "Include Images",
-            "filenameLabel": "Filename",
+            "filename": "Filename",
             "filenamePlaceholder": "Enter export filename",
-            "filenameHelper": "Export will be saved as {{filename}}.{{format}}",
+            "saveAsHelp": "Export will be saved as {{filename}}.{{format}}",
             "selectTalks": "Select Talks to Include",
-            "noTalks": "No talks found in this conference"
+            "selectAll": "Select All",
+            "selectNone": "Select None",
+            "noTalks": "No talks found in this conference",
+            "exporting": "Exporting...",
+            "errors": {
+                "filenameRequired": "Filename is required",
+                "exportFailed": "Export failed"
+            }
         },
         "validation": {
             "nameRequired": "Conference name is required",

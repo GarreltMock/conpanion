@@ -168,14 +168,26 @@
             "bioOptional": "Biografie (optional)"
         },
         "export": {
-            "title": "{{conference}} exportieren",
-            "formatTitle": "Export Format",
+            "defaultFilename": "konferenz-export",
+            "title": "{{name}} exportieren",
+            "format": {
+                "title": "Export Format",
+                "pdf": "PDF",
+                "markdown": "Markdown"
+            },
             "includeImages": "Bilder einschließen",
-            "filenameLabel": "Dateiname",
+            "filename": "Dateiname",
             "filenamePlaceholder": "Export Dateiname eingeben",
-            "filenameHelper": "Export wird gespeichert als {{filename}}.{{format}}",
+            "saveAsHelp": "Export wird gespeichert als {{filename}}.{{format}}",
             "selectTalks": "Vorträge zum Einschließen auswählen",
-            "noTalks": "Keine Vorträge in dieser Konferenz gefunden"
+            "selectAll": "Alle auswählen",
+            "selectNone": "Keine auswählen",
+            "noTalks": "Keine Vorträge in dieser Konferenz gefunden",
+            "exporting": "Exportiere...",
+            "errors": {
+                "filenameRequired": "Dateiname ist erforderlich",
+                "exportFailed": "Export fehlgeschlagen"
+            }
         },
         "validation": {
             "nameRequired": "Konferenz Name ist erforderlich",
