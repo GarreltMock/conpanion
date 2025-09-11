@@ -154,7 +154,7 @@
         "talk": {
             "titleRequired": "Please enter a talk title",
             "titlePlaceholder": "Enter talk title",
-            "stageOptional": "Stage (optional)",
+            "locationOptional": "Location (optional)",
             "descriptionOptional": "Description (optional)",
             "startTime": "Start Time",
             "duration": "Duration",
@@ -198,6 +198,8 @@
         "newConference": "New Conference",
         "newTalk": "New Talk",
         "newAgendaTalk": "New Agenda Talk",
+        "newActivity": "New Activity",
+        "thisIsNoTalk": "This is no talk",
         "editImage": "Edit Image"
     },
     "onboarding": {
@@ -216,6 +218,7 @@
     },
     "help": {
         "createScheduledTalk": "Create a scheduled talk for your agenda. The talk will become active when its start time arrives.",
+        "createScheduledActivity": "Create a scheduled activity like lunch, registration, or networking.",
         "dragCorners": "Drag the corners to adjust the document boundaries",
         "keepTakingNotes": "This will create a new talk and set it as the active talk for taking notes."
     },

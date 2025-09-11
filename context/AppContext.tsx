@@ -1,8 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
 import * as ImagePicker from "expo-image-picker";
 import { Audio } from "expo-av";
-import { Conference, Talk, Note, ExportOptions, NoteImage, Speaker } from "../types";
-import { ApiTalk } from "../types/apiSchemas";
+import { Conference, Talk, Note, ExportOptions, NoteImage, Speaker, Activity } from "../types";
+import { ApiTalk, ApiActivity } from "../types/apiSchemas";
 import conferenceApiService from "../services/conferenceApiService";
 import {
     getTalks,
@@ -24,6 +24,9 @@ import {
     generateMarkdown,
     initializeConferenceDirectories,
     deleteImage as deleteImageFromStorage,
+    getActivities,
+    saveActivity,
+    deleteActivity,
 } from "../storage";
 import { generateId } from "@/storage/helper";
 
@@ -56,7 +59,7 @@ interface AppContextType {
         startTime: Date,
         duration: number,
         speakers?: Speaker[],
-        stage?: string,
+        location?: string,
         description?: string
     ) => Promise<Talk>;
     endTalk: (talk: Talk) => Promise<void>;
@@ -74,6 +77,20 @@ interface AppContextType {
     ) => Promise<void>;
     shouldShowEvaluationModal: () => boolean;
     refreshActiveTalk: () => Promise<void>;
+
+    // Activity Management
+    activities: Activity[];
+    createActivity: (
+        title: string,
+        startTime: Date,
+        duration?: number,
+        location?: string,
+        description?: string
+    ) => Promise<Activity>;
+    getAllActivities: () => Promise<Activity[]>;
+    toggleActivitySelection: (activityId: string) => Promise<void>;
+    getUserSelectedActivities: () => Activity[];
+    getAgendaActivities: () => Activity[];
 
     // Note Management
     notes: Note[];
@@ -108,6 +125,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     const [currentConference, setCurrentConference] = useState<Conference | null>(null);
     const [conferences, setConferences] = useState<Conference[]>([]);
     const [talks, setTalks] = useState<Talk[]>([]);
+    const [activities, setActivities] = useState<Activity[]>([]);
     const [activeTalk, setActiveTalk] = useState<Talk | null>(null);
     const [notes, setNotes] = useState<Note[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -167,9 +185,12 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
                     }
                 }
 
-                // Load talks and notes
+                // Load talks, activities, and notes
                 const storedTalks = await getTalks();
                 setTalks(storedTalks);
+
+                const storedActivities = await getActivities();
+                setActivities(storedActivities);
 
                 const storedNotes = await getNotes();
                 setNotes(storedNotes);
@@ -386,6 +407,11 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         // Update talks with API data
         await updateApiTalks(conferenceId, result.data.talks);
 
+        // Update activities with API data if provided
+        if (result.data.activities) {
+            await updateApiActivities(conferenceId, result.data.activities);
+        }
+
         // Update conference with API data and sync timestamp
         const updatedConference = {
             ...conference,
@@ -419,7 +445,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
                 duration: apiTalk.duration,
                 isUserSelected: existingTalk?.isUserSelected || false, // Preserve user selection
                 speakers: apiTalk.speakers,
-                stage: apiTalk.stage,
+                location: apiTalk.location,
                 description: apiTalk.description,
                 source: "api" as const,
                 apiId: apiTalk.id,
@@ -452,6 +478,53 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
         // Refresh active talk in case it was affected
         await refreshActiveTalk();
+    };
+
+    const updateApiActivities = async (conferenceId: string, apiActivities: ApiActivity[]): Promise<void> => {
+        const currentActivities = activities.filter((activity) => activity.conferenceId === conferenceId);
+        const currentApiActivities = currentActivities.filter((activity) => activity.source === "api");
+        const userActivities = currentActivities.filter((activity) => activity.source === "user");
+
+        // Convert API activities to our Activity format
+        const newApiActivities: Activity[] = apiActivities.map((apiActivity) => {
+            // Try to find existing activity by API ID
+            const existingActivity = currentApiActivities.find((activity) => activity.apiId === apiActivity.id);
+
+            return {
+                id: existingActivity?.id || generateId(), // Keep existing ID if found
+                conferenceId,
+                title: apiActivity.title,
+                startTime: new Date(apiActivity.startTime),
+                duration: apiActivity.duration,
+                isUserSelected: existingActivity?.isUserSelected || false, // Preserve user selection
+                location: apiActivity.location,
+                description: apiActivity.description,
+                source: "api" as const,
+                apiId: apiActivity.id,
+            };
+        });
+
+        // Save all API activities
+        for (const activity of newApiActivities) {
+            await saveActivity(activity);
+        }
+
+        // Remove API activities that are no longer in the API response
+        const apiActivityIds = new Set(apiActivities.map((a) => a.id));
+        const staleActivities = currentApiActivities.filter(
+            (activity) => activity.apiId && !apiActivityIds.has(activity.apiId)
+        );
+
+        for (const staleActivity of staleActivities) {
+            console.log(`Removing stale API activity: ${staleActivity.title} (ID: ${staleActivity.id})`);
+            // TODO: Add deleteActivity method to storage if needed
+        }
+
+        // Update state with combined activities (user + api)
+        const updatedActivities = [...userActivities, ...newApiActivities];
+        setActivities((prevActivities) =>
+            prevActivities.filter((activity) => activity.conferenceId !== conferenceId).concat(updatedActivities)
+        );
     };
 
     const testApiEndpoint = async (
@@ -507,7 +580,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         startTime: Date,
         duration: number,
         speakers?: Speaker[],
-        stage?: string,
+        location?: string,
         description?: string
     ): Promise<Talk> => {
         if (!currentConference) {
@@ -523,7 +596,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
             duration,
             isUserSelected: false,
             speakers,
-            stage,
+            location,
             description,
             source: "user",
         };
@@ -569,6 +642,70 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         setTalks(storedTalks);
         return storedTalks;
     }, []);
+
+    // Activity Management
+    const createActivity = async (
+        title: string,
+        startTime: Date,
+        duration?: number,
+        location?: string,
+        description?: string
+    ): Promise<Activity> => {
+        if (!currentConference) {
+            console.error("Conference is null or undefined");
+            throw new Error("No current conference exists");
+        }
+
+        const newActivity: Activity = {
+            id: generateId(),
+            conferenceId: currentConference.id,
+            title,
+            startTime,
+            duration,
+            isUserSelected: false,
+            location,
+            description,
+            source: "user",
+        };
+
+        await saveActivity(newActivity);
+
+        // Update state
+        setActivities((prevActivities) => [...prevActivities, newActivity]);
+
+        return newActivity;
+    };
+
+    const getAllActivities = useCallback(async (): Promise<Activity[]> => {
+        const storedActivities = await getActivities();
+        setActivities(storedActivities);
+        return storedActivities;
+    }, []);
+
+    const toggleActivitySelection = async (activityId: string): Promise<void> => {
+        const activity = activities.find((a) => a.id === activityId);
+        if (!activity) {
+            throw new Error("Activity not found");
+        }
+
+        const updatedActivity: Activity = {
+            ...activity,
+            isUserSelected: !activity.isUserSelected,
+        };
+
+        await saveActivity(updatedActivity);
+
+        // Update state
+        setActivities((prevActivities) => prevActivities.map((a) => (a.id === activityId ? updatedActivity : a)));
+    };
+
+    const getUserSelectedActivities = (): Activity[] => {
+        return activities.filter((activity) => activity.isUserSelected === true);
+    };
+
+    const getAgendaActivities = (): Activity[] => {
+        return activities.filter((activity) => activity.conferenceId === currentConference?.id);
+    };
 
     const addImageNote = async (fromGallery: boolean): Promise<string | null> => {
         if (!activeTalk) {
@@ -998,6 +1135,14 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         saveEvaluation,
         shouldShowEvaluationModal,
         refreshActiveTalk,
+
+        // Activity Management
+        activities,
+        createActivity,
+        getAllActivities,
+        toggleActivitySelection,
+        getUserSelectedActivities,
+        getAgendaActivities,
 
         // Note Management
         notes,

@@ -46,18 +46,19 @@ const roundToNearestFiveMinutes = (date: Date): Date => {
     return rounded;
 };
 
-export default function NewAgendaTalkModal() {
+export default function NewAgendaItemModal() {
+    const [isNotTalk, setIsNotTalk] = useState(false);
     const [title, setTitle] = useState("");
     const [selectedDay, setSelectedDay] = useState(0); // Index of selected conference day
     const [startTime, setStartTime] = useState(roundToNearestFiveMinutes(new Date()));
     const [duration, setDuration] = useState(45); // Duration in minutes
     const [speakers, setSpeakers] = useState<Speaker[]>([]);
-    const [stage, setStage] = useState("");
+    const [location, setLocation] = useState("");
     const [description, setDescription] = useState("");
     const [isCreating, setIsCreating] = useState(false);
     const [showTimePicker, setShowTimePicker] = useState(false);
 
-    const { createAgendaTalk, currentConference } = useApp();
+    const { createAgendaTalk, createActivity, currentConference } = useApp();
     const { t, locale } = useI18n();
 
     // Get appropriate date-fns locale based on current i18n locale
@@ -73,6 +74,7 @@ export default function NewAgendaTalkModal() {
     const textColor = useThemeColor({}, "text");
     const tintColor = useThemeColor({}, "tint");
     const tintContentColor = useThemeColor({}, "tintContent");
+    const iconColor = useThemeColor({}, "icon");
     const errorColor = useThemeColor({}, "error");
     const borderColor = useThemeColor({}, "border");
     const borderLightColor = useThemeColor({}, "borderLight");
@@ -125,19 +127,31 @@ export default function NewAgendaTalkModal() {
                 startTime.getMinutes()
             );
 
-            await createAgendaTalk(
-                title.trim(),
-                startDateTime,
-                duration,
-                speakers.length > 0 ? speakers : undefined,
-                stage.trim() || undefined,
-                description.trim() || undefined
-            );
+            if (!isNotTalk) {
+                await createAgendaTalk(
+                    title.trim(),
+                    startDateTime,
+                    duration,
+                    speakers.length > 0 ? speakers : undefined,
+                    location.trim() || undefined,
+                    description.trim() || undefined
+                );
+            } else {
+                await createActivity(
+                    title.trim(),
+                    startDateTime,
+                    duration,
+                    location.trim() || undefined,
+                    description.trim() || undefined
+                );
+            }
             router.back();
         } catch (error) {
-            console.error("Error creating agenda talk:", error);
+            console.error(`Error creating agenda ${isNotTalk ? "activity" : "talk"}:`, error);
             const errorMessage =
-                error instanceof Error ? error.message : "Failed to create agenda talk. Please try again.";
+                error instanceof Error
+                    ? error.message
+                    : `Failed to create agenda ${isNotTalk ? "activity" : "talk"}. Please try again.`;
             toast.error(errorMessage);
         } finally {
             setIsCreating(false);
@@ -185,7 +199,9 @@ export default function NewAgendaTalkModal() {
                         <ThemedText style={styles.cancelText}>{t("common.cancel")}</ThemedText>
                     </TouchableOpacity>
 
-                    <ThemedText style={styles.title}>{t("modals.newAgendaTalk")}</ThemedText>
+                    <ThemedText style={styles.title}>
+                        {isNotTalk ? t("modals.newActivity") : t("modals.newAgendaTalk")}
+                    </ThemedText>
 
                     <TouchableOpacity
                         style={[
@@ -212,7 +228,9 @@ export default function NewAgendaTalkModal() {
                     keyboardShouldPersistTaps="handled"
                     showsVerticalScrollIndicator={false}
                 >
-                    <ThemedText style={styles.helpText}>{t("help.createScheduledTalk")}</ThemedText>
+                    <ThemedText style={styles.helpText}>
+                        {!isNotTalk ? t("help.createScheduledTalk") : t("help.createScheduledActivity")}
+                    </ThemedText>
 
                     <View style={[styles.inputContainer, { borderColor: borderColor }]}>
                         <IconSymbol name="mic.fill" size={22} color={textColor + "80"} style={styles.inputIcon} />
@@ -227,6 +245,26 @@ export default function NewAgendaTalkModal() {
                             returnKeyType="done"
                         />
                     </View>
+
+                    {/* Checkbox for "This is no talk" */}
+                    <TouchableOpacity
+                        style={styles.checkboxContainer}
+                        onPress={() => setIsNotTalk(!isNotTalk)}
+                        activeOpacity={0.7}
+                    >
+                        <View
+                            style={[
+                                styles.checkbox,
+                                { borderColor: borderColor },
+                                isNotTalk && { backgroundColor: tintColor, borderColor: tintColor },
+                            ]}
+                        >
+                            {isNotTalk && (
+                                <IconSymbol name="checkmark" size={14} color={tintContentColor} weight="bold" />
+                            )}
+                        </View>
+                        <ThemedText style={styles.checkboxLabel}>{t("modals.thisIsNoTalk")}</ThemedText>
+                    </TouchableOpacity>
 
                     <View style={styles.dateContainer}>
                         <View style={styles.dayContainer}>
@@ -353,15 +391,15 @@ export default function NewAgendaTalkModal() {
                         </View>
                     </View>
 
-                    {/* Stage Field */}
+                    {/* Stage/Location Field */}
                     <View style={[styles.inputContainer, { borderColor: borderColor }]}>
                         <IconSymbol name="location" size={22} color={textColor + "80"} style={styles.inputIcon} />
                         <TextInput
                             style={[styles.input, { color: textColor }]}
-                            placeholder={t("forms.talk.stageOptional")}
+                            placeholder={t("forms.talk.locationOptional")}
                             placeholderTextColor={textColor + "60"}
-                            value={stage}
-                            onChangeText={setStage}
+                            value={location}
+                            onChangeText={setLocation}
                             maxLength={50}
                             returnKeyType="done"
                         />
@@ -383,95 +421,97 @@ export default function NewAgendaTalkModal() {
                         />
                     </View>
 
-                    {/* Speakers Section */}
-                    <View style={styles.speakersSection}>
-                        <View style={styles.speakersHeader}>
-                            <ThemedText style={styles.sectionTitle}>{t("forms.speakers.title")}</ThemedText>
-                            <TouchableOpacity style={styles.addButton} onPress={addSpeaker}>
-                                <IconSymbol name="plus.circle" size={24} color={tintContentColor} />
-                            </TouchableOpacity>
-                        </View>
-
-                        {speakers.map((speaker, index) => (
-                            <View key={index} style={[styles.speakerContainer, { borderColor: borderColor }]}>
-                                <View style={styles.speakerHeader}>
-                                    <ThemedText style={styles.speakerLabel}>
-                                        {t("talks.speaker")} {index + 1}
-                                    </ThemedText>
-                                    <TouchableOpacity onPress={() => removeSpeaker(index)}>
-                                        <IconSymbol name="minus.circle.fill" size={20} color={errorColor} />
-                                    </TouchableOpacity>
-                                </View>
-
-                                <View style={styles.speakerInputContainer}>
-                                    <IconSymbol
-                                        name="person"
-                                        size={18}
-                                        color={textColor + "80"}
-                                        style={styles.speakerInputIcon}
-                                    />
-                                    <TextInput
-                                        style={[
-                                            styles.speakerInput,
-                                            { color: textColor, borderColor: borderLightColor },
-                                        ]}
-                                        placeholder={t("forms.speakers.namePlaceholder")}
-                                        placeholderTextColor={textColor + "60"}
-                                        value={speaker.name}
-                                        onChangeText={(text) => updateSpeaker(index, "name", text)}
-                                        maxLength={100}
-                                    />
-                                </View>
-
-                                <View style={styles.speakerInputContainer}>
-                                    <IconSymbol
-                                        name="photo"
-                                        size={18}
-                                        color={textColor + "80"}
-                                        style={styles.speakerInputIcon}
-                                    />
-                                    <TextInput
-                                        style={[
-                                            styles.speakerInput,
-                                            { color: textColor, borderColor: borderLightColor },
-                                        ]}
-                                        placeholder={t("forms.speakers.photoUrlOptional")}
-                                        placeholderTextColor={textColor + "60"}
-                                        value={speaker.photo || ""}
-                                        onChangeText={(text) => updateSpeaker(index, "photo", text)}
-                                        maxLength={500}
-                                        keyboardType="url"
-                                        autoCapitalize="none"
-                                        autoCorrect={false}
-                                    />
-                                </View>
-
-                                <View style={styles.speakerInputContainer}>
-                                    <IconSymbol
-                                        name="doc.text"
-                                        size={18}
-                                        color={textColor + "80"}
-                                        style={styles.speakerInputIcon}
-                                    />
-                                    <TextInput
-                                        style={[
-                                            styles.speakerInput,
-                                            styles.bioInput,
-                                            { color: textColor, borderColor: borderLightColor },
-                                        ]}
-                                        placeholder={t("forms.speakers.bioOptional")}
-                                        placeholderTextColor={textColor + "60"}
-                                        value={speaker.bio || ""}
-                                        onChangeText={(text) => updateSpeaker(index, "bio", text)}
-                                        multiline
-                                        numberOfLines={2}
-                                        maxLength={200}
-                                        textAlignVertical="top"
-                                    />
-                                </View>
+                    {/* Speakers Section - Only for talks */}
+                    {!isNotTalk && (
+                        <View style={styles.speakersSection}>
+                            <View style={styles.speakersHeader}>
+                                <ThemedText style={styles.sectionTitle}>{t("forms.speakers.title")}</ThemedText>
+                                <TouchableOpacity style={styles.addButton} onPress={addSpeaker}>
+                                    <IconSymbol name="plus.circle" size={24} color={iconColor} />
+                                </TouchableOpacity>
                             </View>
-                        ))}
-                    </View>
+
+                            {speakers.map((speaker, index) => (
+                                <View key={index} style={[styles.speakerContainer, { borderColor: borderColor }]}>
+                                    <View style={styles.speakerHeader}>
+                                        <ThemedText style={styles.speakerLabel}>
+                                            {t("talks.speaker")} {index + 1}
+                                        </ThemedText>
+                                        <TouchableOpacity onPress={() => removeSpeaker(index)}>
+                                            <IconSymbol name="minus.circle.fill" size={20} color={errorColor} />
+                                        </TouchableOpacity>
+                                    </View>
+
+                                    <View style={styles.speakerInputContainer}>
+                                        <IconSymbol
+                                            name="person"
+                                            size={18}
+                                            color={textColor + "80"}
+                                            style={styles.speakerInputIcon}
+                                        />
+                                        <TextInput
+                                            style={[
+                                                styles.speakerInput,
+                                                { color: textColor, borderColor: borderLightColor },
+                                            ]}
+                                            placeholder={t("forms.speakers.namePlaceholder")}
+                                            placeholderTextColor={textColor + "60"}
+                                            value={speaker.name}
+                                            onChangeText={(text) => updateSpeaker(index, "name", text)}
+                                            maxLength={100}
+                                        />
+                                    </View>
+
+                                    <View style={styles.speakerInputContainer}>
+                                        <IconSymbol
+                                            name="photo"
+                                            size={18}
+                                            color={textColor + "80"}
+                                            style={styles.speakerInputIcon}
+                                        />
+                                        <TextInput
+                                            style={[
+                                                styles.speakerInput,
+                                                { color: textColor, borderColor: borderLightColor },
+                                            ]}
+                                            placeholder={t("forms.speakers.photoUrlOptional")}
+                                            placeholderTextColor={textColor + "60"}
+                                            value={speaker.photo || ""}
+                                            onChangeText={(text) => updateSpeaker(index, "photo", text)}
+                                            maxLength={500}
+                                            keyboardType="url"
+                                            autoCapitalize="none"
+                                            autoCorrect={false}
+                                        />
+                                    </View>
+
+                                    <View style={styles.speakerInputContainer}>
+                                        <IconSymbol
+                                            name="doc.text"
+                                            size={18}
+                                            color={textColor + "80"}
+                                            style={styles.speakerInputIcon}
+                                        />
+                                        <TextInput
+                                            style={[
+                                                styles.speakerInput,
+                                                styles.bioInput,
+                                                { color: textColor, borderColor: borderLightColor },
+                                            ]}
+                                            placeholder={t("forms.speakers.bioOptional")}
+                                            placeholderTextColor={textColor + "60"}
+                                            value={speaker.bio || ""}
+                                            onChangeText={(text) => updateSpeaker(index, "bio", text)}
+                                            multiline
+                                            numberOfLines={2}
+                                            maxLength={200}
+                                            textAlignVertical="top"
+                                        />
+                                    </View>
+                                </View>
+                            ))}
+                        </View>
+                    )}
                 </ScrollView>
             </ModalView>
         </MyKeyboardAvoidingView>
@@ -525,7 +565,7 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderRadius: 8,
         paddingHorizontal: 12,
-        marginBottom: 24,
+        marginBottom: 8,
     },
     inputIcon: {
         marginRight: 8,
@@ -664,5 +704,23 @@ const styles = StyleSheet.create({
         height: 60,
         textAlignVertical: "top",
         paddingTop: 8,
+    },
+    checkboxContainer: {
+        flexDirection: "row",
+        alignItems: "center",
+        marginBottom: 24,
+    },
+    checkbox: {
+        width: 20,
+        height: 20,
+        borderWidth: 2,
+        borderRadius: 4,
+        marginRight: 12,
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    checkboxLabel: {
+        fontSize: 16,
+        opacity: 0.6,
     },
 });

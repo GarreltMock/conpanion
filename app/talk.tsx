@@ -214,7 +214,7 @@ export default function TalkDetailScreen() {
                 </View>
 
                 {/* Talk Details Section - Collapsible only if user selected */}
-                {(talk.speakers?.length || talk.stage || talk.description || talk.summary) && (
+                {(talk.speakers?.length || talk.location || talk.description || talk.summary) && (
                     <View
                         style={[
                             styles.detailsSection,
@@ -340,7 +340,7 @@ export default function TalkDetailScreen() {
                                 )}
 
                                 {/* Stage/Location */}
-                                {talk.stage && (
+                                {talk.location && (
                                     <View style={styles.talkDetailItem}>
                                         <View style={styles.talkDetailHeader}>
                                             <IconSymbol
@@ -353,7 +353,7 @@ export default function TalkDetailScreen() {
                                                 {t("talks.location")}
                                             </ThemedText>
                                         </View>
-                                        <ThemedText style={styles.talkDetailValue}>{talk.stage}</ThemedText>
+                                        <ThemedText style={styles.talkDetailValue}>{talk.location}</ThemedText>
                                     </View>
                                 )}
 

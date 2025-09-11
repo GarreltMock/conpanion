@@ -1,5 +1,6 @@
 export interface ApiAgendaResponse {
     talks: ApiTalk[];
+    activities?: ApiActivity[];
     lastModified?: string;
     version?: string;
     conference?: {
@@ -18,12 +19,23 @@ export interface ApiTalk {
     endTime?: string | Date;
     duration?: number; // Duration in minutes
     speakers?: ApiSpeaker[];
-    stage?: string;
+    location?: string;
     description?: string;
     category?: string;
     tags?: string[];
     level?: string; // beginner, intermediate, advanced
     type?: string; // talk, workshop, keynote, etc.
+}
+
+export interface ApiActivity {
+    id: string; // External API ID
+    title: string;
+    startTime: string | Date;
+    endTime?: string | Date;
+    duration?: number; // Duration in minutes
+    location?: string;
+    description?: string;
+    type?: string; // break, meal, registration, networking, other
 }
 
 export interface ApiSpeaker {

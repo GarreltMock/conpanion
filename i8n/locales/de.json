@@ -154,7 +154,7 @@
         "talk": {
             "titleRequired": "Bitte geben Sie einen Vortragstitel ein",
             "titlePlaceholder": "Vortrag Titel eingeben",
-            "stageOptional": "Bühne (optional)",
+            "locationOptional": "Ort (optional)",
             "descriptionOptional": "Beschreibung (optional)",
             "startTime": "Startzeit",
             "duration": "Dauer",
@@ -198,6 +198,8 @@
         "newConference": "Neue Konferenz",
         "newTalk": "Neuer Vortrag",
         "newAgendaTalk": "Neuer Vortrag",
+        "newActivity": "Neue Aktivität",
+        "thisIsNoTalk": "Das ist kein Vortrag",
         "editImage": "Bild bearbeiten"
     },
     "onboarding": {
@@ -216,6 +218,7 @@
     },
     "help": {
         "createScheduledTalk": "Erstellen Sie einen geplanten Vortrag für Ihre Agenda. Der Vortrag wird aktiv, wenn seine Startzeit erreicht ist.",
+        "createScheduledActivity": "Erstellen Sie eine geplante Aktivität wie Mittagessen, Registrierung oder Networking.",
         "dragCorners": "Ziehen Sie die Ecken, um die Dokumentgrenzen anzupassen",
         "keepTakingNotes": "Dies erstellt einen neuen Vortrag und setzt ihn als aktiven Vortrag für Notizen."
     },

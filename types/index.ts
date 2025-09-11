@@ -18,7 +18,7 @@ export interface Speaker {
     bio?: string;
 }
 
-export interface Talk {
+export interface AgendaItem {
     id: string;
     conferenceId: string;
     apiId?: string; // External ID from the API (for matching during updates)
@@ -27,12 +27,18 @@ export interface Talk {
     startTime: Date;
     duration?: number; // Duration in minutes
     isUserSelected?: boolean;
-    speakers?: Speaker[];
-    stage?: string;
+    location?: string;
     description?: string;
+}
+
+export interface Talk extends AgendaItem {
+    speakers?: Speaker[];
     rating?: number; // 1-5 stars for talk evaluation
     summary?: string;
     feedback?: string;
+}
+
+export interface Activity extends AgendaItem {
 }
 
 export interface NoteImage {

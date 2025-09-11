@@ -1,6 +1,7 @@
 import {
     ApiAgendaResponse,
     ApiTalk,
+    ApiActivity,
     ApiSpeaker,
     ApiTransformerConfig,
     ApiTransformerFunction,
@@ -62,6 +63,7 @@ const passthroughTransformer: ApiTransformerFunction = (data: any): ApiAgendaRes
 
     return {
         talks: data.talks,
+        activities: data.activities, // Pass through activities if present
         lastModified: data.lastModified,
         version: data.version,
         conference: data.conference,
@@ -91,7 +93,7 @@ const sessionizeTransformer: ApiTransformerFunction = (data: any): ApiAgendaResp
             startTime: session.startsAt,
             endTime: session.endsAt,
             speakers,
-            stage: session.roomName || session.room,
+            location: session.roomName || session.room,
             category: session.categoryItems?.[0]?.name,
             level: session.levelItems?.[0]?.name,
         };
@@ -125,7 +127,7 @@ const pretalxTransformer: ApiTransformerFunction = (data: any): ApiAgendaRespons
             startTime: talk.slot?.start,
             endTime: talk.slot?.end,
             speakers,
-            stage: talk.slot?.room?.name,
+            location: talk.slot?.room?.name,
             type: talk.submission_type?.name,
             level: talk.track?.name,
         };
@@ -213,7 +215,7 @@ const programmierconTransformer: ApiTransformerFunction = (data: any): ApiAgenda
             endTime: agendaItem.end,
             duration,
             speakers: mappedSpeakers.length > 0 ? mappedSpeakers : undefined,
-            stage: agendaItem.track,
+            location: agendaItem.track,
             type: agendaItem.subtitle, // Use subtitle as type (e.g., "Talk 1", "Special Talk")
         };
     });
@@ -278,7 +280,7 @@ const genericTransformer: ApiTransformerFunction = (data: any): ApiAgendaRespons
             endTime: talk.endTime || talk.end,
             duration: talk.duration,
             speakers,
-            stage: talk.stage || talk.room || talk.location || talk.venue,
+            location: talk.stage || talk.room || talk.location || talk.venue,
             category: talk.category || talk.track || talk.type,
             level: talk.level || talk.difficulty,
         };

@@ -1,12 +1,13 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as FileSystem from "expo-file-system";
 import { zip } from "react-native-zip-archive";
-import { Conference, Talk, Note, ExportOptions } from "../types";
+import { Conference, Talk, Note, ExportOptions, Activity } from "../types";
 import { getAbsolutePath, generateId } from "./helper";
 
 // Storage keys
 const CONFERENCES_KEY = "conpanion_conferences";
 const TALKS_KEY = "conpanion_talks";
+const ACTIVITIES_KEY = "conpanion_activities";
 const NOTES_KEY = "conpanion_notes";
 const ACTIVE_CONFERENCE_KEY = "conpanion_active_conference";
 const EXPORT_OPTIONS_KEY = "conpanion_export_options";
@@ -384,6 +385,54 @@ export const deleteTalk = async (talkId: string): Promise<void> => {
     }
 };
 
+// Activity storage functions
+export const getActivities = async (): Promise<Activity[]> => {
+    try {
+        const activitiesJson = await AsyncStorage.getItem(ACTIVITIES_KEY);
+        if (activitiesJson) {
+            // Parse stored JSON and convert date strings back to Date objects
+            const parsedActivities = JSON.parse(activitiesJson);
+            return parsedActivities.map((activity: any) => ({
+                ...activity,
+                startTime: new Date(activity.startTime),
+                duration: activity.duration,
+                source: activity.source || "user", // Default to 'user' for existing activities
+            }));
+        }
+        return [];
+    } catch (error) {
+        console.error("Error getting activities:", error);
+        return [];
+    }
+};
+
+export const saveActivity = async (activity: Activity): Promise<void> => {
+    try {
+        const activities = await getActivities();
+        const index = activities.findIndex((a) => a.id === activity.id);
+
+        if (index !== -1) {
+            activities[index] = activity;
+        } else {
+            activities.push(activity);
+        }
+
+        await AsyncStorage.setItem(ACTIVITIES_KEY, JSON.stringify(activities));
+    } catch (error) {
+        console.error("Error saving activity:", error);
+    }
+};
+
+export const deleteActivity = async (activityId: string): Promise<void> => {
+    try {
+        const activities = await getActivities();
+        const updatedActivities = activities.filter((activity) => activity.id !== activityId);
+        await AsyncStorage.setItem(ACTIVITIES_KEY, JSON.stringify(updatedActivities));
+    } catch (error) {
+        console.error("Error deleting activity:", error);
+    }
+};
+
 // Note storage functions
 export const getNotes = async (): Promise<Note[]> => {
     try {
@@ -586,8 +635,8 @@ export const generateMarkdown = async (
         }
         markdown += `\n`;
 
-        if (talk.stage) {
-            markdown += `**Stage:** ${talk.stage}\n`;
+        if (talk.location) {
+            markdown += `**Location:** ${talk.location}\n`;
         }
 
         if (talk.description) {
