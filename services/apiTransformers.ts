@@ -70,75 +70,6 @@ const passthroughTransformer: ApiTransformerFunction = (data: any): ApiAgendaRes
     };
 };
 
-// Sessionize transformer (popular conference platform)
-const sessionizeTransformer: ApiTransformerFunction = (data: any): ApiAgendaResponse => {
-    if (!Array.isArray(data)) {
-        throw new Error("Invalid Sessionize response: expected array of sessions");
-    }
-
-    const talks: ApiTalk[] = data.map((session: any) => {
-        // Handle speakers
-        const speakers: ApiSpeaker[] = (session.speakers || []).map((speaker: any) => ({
-            id: speaker.id?.toString(),
-            name: speaker.fullName || `${speaker.firstName || ""} ${speaker.lastName || ""}`.trim(),
-            photo: speaker.profilePicture,
-            bio: speaker.bio,
-            company: speaker.tagLine,
-        }));
-
-        return {
-            id: session.id?.toString(),
-            title: session.title,
-            description: session.description,
-            startTime: session.startsAt,
-            endTime: session.endsAt,
-            speakers,
-            location: session.roomName || session.room,
-            category: session.categoryItems?.[0]?.name,
-            level: session.levelItems?.[0]?.name,
-        };
-    });
-
-    return {
-        talks,
-        lastModified: new Date().toISOString(),
-    };
-};
-
-// Pretalx transformer (open-source conference management)
-const pretalxTransformer: ApiTransformerFunction = (data: any): ApiAgendaResponse => {
-    if (!data.results || !Array.isArray(data.results)) {
-        throw new Error("Invalid Pretalx response: expected results array");
-    }
-
-    const talks: ApiTalk[] = data.results.map((talk: any) => {
-        // Handle speakers
-        const speakers: ApiSpeaker[] = (talk.speakers || []).map((speaker: any) => ({
-            id: speaker.code,
-            name: speaker.name,
-            bio: speaker.biography,
-            photo: speaker.avatar,
-        }));
-
-        return {
-            id: talk.code,
-            title: talk.title,
-            description: talk.abstract,
-            startTime: talk.slot?.start,
-            endTime: talk.slot?.end,
-            speakers,
-            location: talk.slot?.room?.name,
-            type: talk.submission_type?.name,
-            level: talk.track?.name,
-        };
-    });
-
-    return {
-        talks,
-        lastModified: data.last_modified,
-    };
-};
-
 // Custom conference API transformer (for example-api.json format)
 const programmierconTransformer: ApiTransformerFunction = (data: any): ApiAgendaResponse => {
     if (!data.conference || !data.conference.agenda || !Array.isArray(data.conference.agenda)) {
@@ -299,18 +230,6 @@ const transformerRegistry: Record<string, ApiTransformerConfig> = {
         name: "Passthrough",
         description: "For APIs that already match our expected format",
         transformer: passthroughTransformer,
-    },
-    sessionize: {
-        id: "sessionize",
-        name: "Sessionize",
-        description: "For Sessionize conference platform APIs",
-        transformer: sessionizeTransformer,
-    },
-    pretalx: {
-        id: "pretalx",
-        name: "Pretalx",
-        description: "For Pretalx conference management APIs",
-        transformer: pretalxTransformer,
     },
     programmiercon: {
         id: "programmiercon",
