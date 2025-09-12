@@ -76,10 +76,11 @@ const programmierconTransformer: ApiTransformerFunction = (data: any): ApiAgenda
         throw new Error("Invalid custom conference response: expected conference.agenda array");
     }
 
-    // Filter out agenda items that don't have talk_object or where talk_object is null
-    const validAgendaItems = data.conference.agenda.filter((item: any) => item.talk_object !== null);
+    // Separate agenda items into talks (with talk_object) and activities (without talk_object)
+    const talkItems = data.conference.agenda.filter((item: any) => item.talk_object !== null);
+    const activityItems = data.conference.agenda.filter((item: any) => item.talk_object === null);
 
-    const talks: ApiTalk[] = validAgendaItems.map((agendaItem: any) => {
+    const talks: ApiTalk[] = talkItems.map((agendaItem: any) => {
         const talkObject = agendaItem.talk_object;
 
         // Combine speakers from both 'speakers' and 'members' arrays
@@ -151,8 +152,29 @@ const programmierconTransformer: ApiTransformerFunction = (data: any): ApiAgenda
         };
     });
 
+    // Transform activities (items without talk_object)
+    const activities: ApiActivity[] = activityItems.map((agendaItem: any, index: number) => {
+        // Calculate duration from start and end times if both are available
+        let duration: number | undefined;
+        if (agendaItem.start && agendaItem.end) {
+            const startTime = new Date(agendaItem.start);
+            const endTime = new Date(agendaItem.end);
+            duration = Math.round((endTime.getTime() - startTime.getTime()) / (1000 * 60)); // Convert to minutes
+        }
+
+        return {
+            id: agendaItem.id?.toString() || `activity-${index}`,
+            title: agendaItem.title,
+            startTime: agendaItem.start,
+            endTime: agendaItem.end,
+            duration,
+            location: agendaItem.track,
+        };
+    });
+
     return {
         talks,
+        activities,
         lastModified: data.conference.date_created || new Date().toISOString(),
         conference: {
             name: data.conference.title,

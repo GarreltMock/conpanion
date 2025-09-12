@@ -267,39 +267,39 @@ export default function NewAgendaItemModal() {
                     </TouchableOpacity>
 
                     <View style={styles.dateContainer}>
-                        <View style={styles.dayContainer}>
-                            <ScrollView
-                                horizontal
-                                style={styles.dayButtonsContainer}
-                                showsHorizontalScrollIndicator={false}
-                            >
-                                {conferenceDays.map((day) => (
-                                    <TouchableOpacity
-                                        key={day.index}
-                                        style={[
-                                            styles.dayButton,
-                                            { borderColor: borderColor },
-                                            selectedDay === day.index && { backgroundColor: tintColor },
-                                        ]}
-                                        onPress={() => setSelectedDay(day.index)}
-                                    >
-                                        <Text
+                        {conferenceDays.length > 1 && (
+                            <View style={styles.dayContainer}>
+                                <ScrollView
+                                    horizontal
+                                    style={styles.dayButtonsContainer}
+                                    showsHorizontalScrollIndicator={false}
+                                >
+                                    {conferenceDays.map((day) => (
+                                        <TouchableOpacity
+                                            key={day.index}
                                             style={[
-                                                styles.dayButtonText,
-                                                { color: selectedDay === day.index ? tintContentColor : textColor },
+                                                styles.dayButton,
+                                                { borderColor: borderColor },
+                                                selectedDay === day.index && { backgroundColor: tintColor },
                                             ]}
+                                            onPress={() => setSelectedDay(day.index)}
                                         >
-                                            {format(day.date, "EEE d", { locale: dateFnsLocale })}
-                                        </Text>
-                                    </TouchableOpacity>
-                                ))}
-                            </ScrollView>
-                            {conferenceDays.length > 0 && (
+                                            <Text
+                                                style={[
+                                                    styles.dayButtonText,
+                                                    { color: selectedDay === day.index ? tintContentColor : textColor },
+                                                ]}
+                                            >
+                                                {format(day.date, "EEE d", { locale: dateFnsLocale })}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    ))}
+                                </ScrollView>
                                 <ThemedText style={styles.selectedDayText}>
                                     {conferenceDays[selectedDay]?.label}
                                 </ThemedText>
-                            )}
-                        </View>
+                            </View>
+                        )}
 
                         <View style={[styles.timePickerContainer, { borderColor: borderColor }]}>
                             {Platform.OS === "ios" ? (

@@ -182,23 +182,29 @@ export default function TalksScreen() {
         router.push(`/talk?id=${talkId}`);
     };
 
-    const renderTalkItem = (talk: Talk) => {
-        const isActive = activeTalk?.id === talk.id;
+    const renderAgendaItemContent = (item: AgendaItem) => {
+        const isTalk = item.itemType === "talk";
+        const talk = isTalk ? (item as Talk) : null;
+        const isActive = isTalk && activeTalk?.id === item.id;
 
         const handleBookmarkPress = async (e: any) => {
             e.stopPropagation();
             try {
-                const wasSelected = talk.isUserSelected;
-                await toggleTalkSelection(talk.id);
+                if (isTalk) {
+                    const wasSelected = item.isUserSelected;
+                    await toggleTalkSelection(item.id);
 
-                // Track the agenda action
-                if (wasSelected) {
-                    await trackTalkRemovedFromAgenda(talk.id);
+                    // Track the agenda action
+                    if (wasSelected) {
+                        await trackTalkRemovedFromAgenda(item.id);
+                    } else {
+                        await trackTalkAddedToAgenda(item.id);
+                    }
                 } else {
-                    await trackTalkAddedToAgenda(talk.id);
+                    await toggleActivitySelection(item.id);
                 }
             } catch (error) {
-                console.error("Error toggling talk selection:", error);
+                console.error(`Error toggling ${isTalk ? "talk" : "activity"} selection:`, error);
             }
         };
 
@@ -207,32 +213,54 @@ export default function TalksScreen() {
                 style={[
                     styles.talkItem,
                     { borderColor: borderLight },
+                    !isTalk && { backgroundColor: borderLight },
                     isActive && { borderColor: tintColor, borderWidth: 2 },
                 ]}
-                onPress={() => handleTalkPress(talk.id)}
+                onPress={isTalk ? () => handleTalkPress(item.id) : undefined}
                 activeOpacity={0.7}
+                disabled={!isTalk}
             >
                 <View style={styles.talkItemContent}>
-                    <View style={styles.leftCol}>
+                    <View style={[styles.leftCol, !isTalk && { paddingVertical: 6 }]}>
                         <View style={styles.titleRow}>
-                            <ThemedText style={styles.talkTitle}>{talk.title}</ThemedText>
+                            <ThemedText style={styles.talkTitle}>{item.title}</ThemedText>
                         </View>
-                        <ThemedText style={styles.talkDate}>
-                            {`${format(talk.startTime, "MMM d, yyyy • HH:mm", { locale: dateFnsLocale })}${
-                                talk.duration ? ` (${talk.duration} min)` : ""
-                            }`}
-                        </ThemedText>
-                    </View>
-
-                    <View style={styles.middleCol}>
-                        {isActive && (
-                            <View style={[styles.activeIndicator, { backgroundColor: tintColor }]}>
-                                <ThemedText style={[styles.activeText, { color: tintContentColor }]}>
-                                    {t("status.active")}
+                        <View style={[styles.metaContainer, !isTalk && { marginTop: 0 }]}>
+                            <View style={styles.timeRow}>
+                                <IconSymbol name="clock" size={14} color={iconColor} style={styles.timeIcon} />
+                                <ThemedText style={styles.talkDate}>
+                                    {`${format(
+                                        item.startTime,
+                                        conferenceDays[selectedDay]?.isOtherDay ? "MMM d, yyyy • HH:mm" : "HH:mm",
+                                        { locale: dateFnsLocale }
+                                    )}${item.duration ? ` (${item.duration} min)` : ""}`}
                                 </ThemedText>
                             </View>
-                        )}
+                            {item.location && (
+                                <View style={styles.locationRow}>
+                                    <IconSymbol
+                                        name="location"
+                                        size={14}
+                                        color={iconColor}
+                                        style={styles.locationIcon}
+                                    />
+                                    <ThemedText style={styles.locationText}>{item.location}</ThemedText>
+                                </View>
+                            )}
+                        </View>
                     </View>
+
+                    {isTalk && (
+                        <View style={styles.middleCol}>
+                            {isActive && (
+                                <View style={[styles.activeIndicator, { backgroundColor: tintColor }]}>
+                                    <ThemedText style={[styles.activeText, { color: tintContentColor }]}>
+                                        {t("status.active")}
+                                    </ThemedText>
+                                </View>
+                            )}
+                        </View>
+                    )}
 
                     <View style={styles.rightCol}>
                         <TouchableOpacity
@@ -242,12 +270,12 @@ export default function TalksScreen() {
                         >
                             <IconSymbol
                                 size={20}
-                                name={talk.isUserSelected ? "bookmark.fill" : "bookmark"}
+                                name={item.isUserSelected ? "bookmark.fill" : "bookmark"}
                                 color={iconHighlightColor}
                             />
                         </TouchableOpacity>
 
-                        {!!talk.rating && (
+                        {isTalk && !!talk?.rating && (
                             <View style={styles.ratingContainer}>
                                 <ThemedText style={styles.ratingText}>{talk.rating}/5</ThemedText>
                                 <IconSymbol name="star.fill" size={12} color="#FFD700" />
@@ -259,72 +287,8 @@ export default function TalksScreen() {
         );
     };
 
-    const renderActivityItem = (activity: Activity) => {
-        const handleBookmarkPress = async (e: any) => {
-            e.stopPropagation();
-            try {
-                await toggleActivitySelection(activity.id);
-            } catch (error) {
-                console.error("Error toggling activity selection:", error);
-            }
-        };
-
-        return (
-            <TouchableOpacity
-                style={[styles.talkItem, { borderColor: borderLight, backgroundColor: borderLight }]}
-                activeOpacity={0.7}
-                disabled
-            >
-                <View style={styles.talkItemContent}>
-                    <View style={[styles.leftCol, { paddingVertical: 6 }]}>
-                        <View style={styles.titleRow}>
-                            {/* <IconSymbol name="clock" size={18} color={iconHighlightColor} style={styles.itemTypeIcon} /> */}
-                            <ThemedText style={styles.talkTitle}>{activity.title}</ThemedText>
-                        </View>
-                        <View style={styles.metaContainer}>
-                            <ThemedText style={styles.talkDate}>
-                                {`${format(activity.startTime, "MMM d, yyyy • HH:mm", { locale: dateFnsLocale })}${
-                                    activity.duration ? ` (${activity.duration} min)` : ""
-                                }`}
-                            </ThemedText>
-                            {activity.location && (
-                                <View style={styles.locationRow}>
-                                    <IconSymbol
-                                        name="location"
-                                        size={14}
-                                        color={iconColor}
-                                        style={styles.locationIcon}
-                                    />
-                                    <ThemedText style={styles.locationText}>{activity.location}</ThemedText>
-                                </View>
-                            )}
-                        </View>
-                    </View>
-
-                    <View style={styles.rightCol}>
-                        <TouchableOpacity
-                            style={styles.bookmarkButton}
-                            onPress={handleBookmarkPress}
-                            activeOpacity={0.7}
-                        >
-                            <IconSymbol
-                                size={20}
-                                name={activity.isUserSelected ? "bookmark.fill" : "bookmark"}
-                                color={iconHighlightColor}
-                            />
-                        </TouchableOpacity>
-                    </View>
-                </View>
-            </TouchableOpacity>
-        );
-    };
-
     const renderAgendaItem = ({ item }: { item: AgendaItem }) => {
-        if (item.itemType === "talk") {
-            return renderTalkItem(item as Talk);
-        } else {
-            return renderActivityItem(item as Activity);
-        }
+        return renderAgendaItemContent(item);
     };
 
     const renderAgendaList = (agendaData: AgendaItem[], emptyTitle: string, emptyDescription?: string) => (
@@ -470,7 +434,7 @@ export default function TalksScreen() {
             </View>
 
             {/* Sticky Day Selection - Between tabs and content */}
-            {conferenceDays.length > 0 && (
+            {conferenceDays.length > 1 && (
                 <View style={[styles.stickyDaySelectionContainer]}>
                     <ScrollView
                         horizontal
@@ -533,7 +497,6 @@ const styles = StyleSheet.create({
         alignItems: "center",
         paddingHorizontal: 10,
         paddingBottom: 8,
-        marginBottom: 6,
         borderBottomWidth: 1,
     },
     conferenceLabel: {
@@ -598,6 +561,7 @@ const styles = StyleSheet.create({
     talkDate: {
         fontSize: 14,
         opacity: 0.7,
+        lineHeight: 20,
     },
     activeIndicator: {
         paddingHorizontal: 8,
@@ -651,7 +615,7 @@ const styles = StyleSheet.create({
     },
     dayButtonsContainer: {
         flexDirection: "row",
-        marginBottom: 4,
+        marginVertical: 4,
         paddingHorizontal: 16,
     },
     dayButtonsContent: {
@@ -675,11 +639,13 @@ const styles = StyleSheet.create({
         fontStyle: "italic",
     },
     metaContainer: {
+        marginTop: 6,
         flexDirection: "column",
     },
     locationText: {
-        fontSize: 12,
+        fontSize: 14,
         opacity: 0.7,
+        lineHeight: 20,
     },
     itemTypeIcon: {
         width: 16,
@@ -692,6 +658,15 @@ const styles = StyleSheet.create({
         alignItems: "center",
     },
     locationIcon: {
+        width: 14,
+        height: 14,
+        marginRight: 4,
+    },
+    timeRow: {
+        flexDirection: "row",
+        alignItems: "center",
+    },
+    timeIcon: {
         width: 14,
         height: 14,
         marginRight: 4,

@@ -16,8 +16,8 @@ export interface ApiTalk {
     id: string; // External API ID
     title: string;
     startTime: string | Date;
-    endTime?: string | Date;
-    duration?: number; // Duration in minutes
+    endTime: string | Date;
+    duration: number; // Duration in minutes
     speakers?: ApiSpeaker[];
     location?: string;
     description?: string;
