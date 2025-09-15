@@ -463,10 +463,16 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         const staleTalks = currentApiTalks.filter((talk) => talk.apiId && !apiTalkIds.has(talk.apiId));
 
         for (const staleTalk of staleTalks) {
-            // TODO: In future, we might want to ask user before deleting
-            // For now, we'll remove them as they're no longer in the API
-            // Note: We need to add a deleteTalk method to storage, for now just remove from state
             console.log(`Removing stale API talk: ${staleTalk.title} (ID: ${staleTalk.id})`);
+
+            // TODO: In future, we might want to ask user before deleting
+            // For now we keep the talk, to prevent deleting some notes from the user on accident
+            // With this we can probably restore the talk if needed
+            // try {
+            //     await deleteTalkFromStorage(staleTalk.id);
+            // } catch (error) {
+            //     console.error(`Error deleting stale talk ${staleTalk.id}:`, error);
+            // }
         }
 
         // Update state with combined talks (user + api)
@@ -514,7 +520,11 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
         for (const staleActivity of staleActivities) {
             console.log(`Removing stale API activity: ${staleActivity.title} (ID: ${staleActivity.id})`);
-            // TODO: Add deleteActivity method to storage if needed
+            try {
+                await deleteActivity(staleActivity.id);
+            } catch (error) {
+                console.error(`Error deleting stale activity ${staleActivity.id}:`, error);
+            }
         }
 
         // Update state with combined activities (user + api)
