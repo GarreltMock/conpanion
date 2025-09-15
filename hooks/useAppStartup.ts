@@ -7,7 +7,7 @@ import { trackAppStart } from "@/utils/analytics";
  * Ensures startup tasks only run once when the app loads
  */
 export function useAppStartup() {
-    const { runAutoUpdates, isLoading } = useApp();
+    const { runAutoUpdates, isLoading, activeTalk } = useApp();
     const hasRunStartup = useRef(false);
 
     useEffect(() => {
@@ -36,5 +36,5 @@ export function useAppStartup() {
         };
 
         runStartupTasks();
-    }, [runAutoUpdates, isLoading]);
+    }, [runAutoUpdates, isLoading, activeTalk]);
 }
