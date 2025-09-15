@@ -1,4 +1,4 @@
-package com.anonymous.conpanion
+package com.mock.conpanion
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build

@@ -86,9 +86,9 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace 'com.anonymous.conpanion'
+    namespace 'com.mock.conpanion'
     defaultConfig {
-        applicationId 'com.anonymous.conpanion'
+        applicationId 'com.mock.conpanion'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

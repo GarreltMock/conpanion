@@ -1,9 +1,7 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from "@react-navigation/native";
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
-import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
-import { useEffect } from "react";
 import "react-native-reanimated";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -14,9 +12,6 @@ import { useColorScheme } from "@/hooks/useColorScheme";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { AppProvider } from "@/context/AppContext";
 import { useAppStartup } from "@/hooks/useAppStartup";
-
-// Prevent the splash screen from auto-hiding before asset loading is complete.
-SplashScreen.preventAutoHideAsync();
 
 function AppContent() {
     const colorScheme = useColorScheme();
@@ -167,12 +162,6 @@ export default function RootLayout() {
         "MuseoSans-Black": require("../assets/fonts/MuseoSans-Black.ttf"),
         "MuseoSans-BlackItalic": require("../assets/fonts/MuseoSans-BlackItalic.ttf"),
     });
-
-    useEffect(() => {
-        if (loaded) {
-            SplashScreen.hideAsync().catch(console.error);
-        }
-    }, [loaded]);
 
     if (!loaded) {
         return null;

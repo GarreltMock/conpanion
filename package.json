@@ -5,8 +5,8 @@
     "scripts": {
         "start": "expo start",
         "android": "expo run:android",
-        "ios": "expo run:ios --device  00008110-000414A03ED0201E",
-        "web": "expo start --web",
+        "ios": "expo run:ios --device 00008110-000414A03ED0201E",
+        "build:ios": "expo run:ios --configuration Release --device 00008110-000414A03ED0201E",
         "test": "jest --config jest.config.js",
         "lint": "expo lint",
         "postinstall": "patch-package"
@@ -36,7 +36,6 @@
         "expo-linking": "~7.0.5",
         "expo-localization": "~16.0.1",
         "expo-router": "~4.0.20",
-        "expo-splash-screen": "~0.29.24",
         "expo-status-bar": "~2.0.1",
         "expo-symbols": "~0.2.2",
         "expo-system-ui": "~4.0.9",
