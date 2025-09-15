@@ -4,6 +4,7 @@ import { Audio } from "expo-av";
 import { Conference, Talk, Note, ExportOptions, NoteImage, Speaker, Activity } from "../types";
 import { ApiTalk, ApiActivity } from "../types/apiSchemas";
 import conferenceApiService from "../services/conferenceApiService";
+import autoUpdateService from "../services/autoUpdateService";
 import {
     getTalks,
     getNotes,
@@ -49,6 +50,7 @@ interface AppContextType {
     hasConferences: () => Promise<boolean>;
     syncConferenceAgenda: (conferenceId: string) => Promise<void>;
     testApiEndpoint: (apiUrl: string, transformerId?: string) => Promise<{ success: boolean; error?: string }>;
+    runAutoUpdates: () => Promise<void>;
 
     // Talk Management
     talks: Talk[];
@@ -395,10 +397,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
             throw new Error("Conference not found or no API URL configured");
         }
 
-        const result = await conferenceApiService.fetchConferenceAgenda(
-            conference.apiUrl,
-            conference.apiTransformer
-        );
+        const result = await conferenceApiService.fetchConferenceAgenda(conference.apiUrl, conference.apiTransformer);
 
         if (!result.success || !result.data) {
             throw new Error(result.error || "Failed to fetch agenda data");
@@ -542,6 +541,18 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
                 success: false,
                 error: error.message || "Failed to test API endpoint",
             };
+        }
+    };
+
+    const runAutoUpdates = async (): Promise<void> => {
+        try {
+            console.log("Running automatic conference updates on app startup");
+            await autoUpdateService.updateConferences(conferences, async (conferenceId: string) => {
+                await syncConferenceAgenda(conferenceId);
+            });
+        } catch (autoUpdateError) {
+            console.error("Error during auto-update:", autoUpdateError);
+            // Don't throw - auto-update failures shouldn't crash the app
         }
     };
 
@@ -1120,6 +1131,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         hasConferences: hasConferencesInStorage,
         syncConferenceAgenda,
         testApiEndpoint,
+        runAutoUpdates,
 
         // Talk Management
         talks,
