@@ -484,7 +484,6 @@ export default function TalksScreen() {
                 renderTabBar={renderTabBar}
                 onIndexChange={setIndex}
                 initialLayout={{ width: layout.width }}
-                swipeEnabled={false}
             />
         </ThemedView>
     );
