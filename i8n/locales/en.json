@@ -118,7 +118,10 @@
         "shareHint": "will be shared with us",
         "keepTakingNotes": "Keep taking notes",
         "addTalk": "Add Talk",
-        "otherDay": "Other"
+        "otherDay": "Other",
+        "deleteWarning": "This will delete the talk and all its notes. This cannot be undone.",
+        "deleteSuccess": "Talk deleted successfully",
+        "deleteFailed": "Failed to delete talk"
     },
     "conferences": {
         "title": "Conferences",

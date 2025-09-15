@@ -11,6 +11,7 @@ import {
     saveTalk,
     saveNote,
     deleteNote as deleteNoteFromStorage,
+    deleteTalk as deleteTalkFromStorage,
     initializeDefaultConference,
     saveImage,
     saveAudio,
@@ -64,6 +65,7 @@ interface AppContextType {
         location?: string,
         description?: string
     ) => Promise<Talk>;
+    deleteTalk: (talkId: string) => Promise<void>;
     endTalk: (talk: Talk) => Promise<void>;
     endCurrentTalk: () => Promise<void>;
     getAllTalks: () => Promise<Talk[]>;
@@ -623,6 +625,30 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         return newTalk;
     };
 
+    const deleteTalkById = async (talkId: string): Promise<void> => {
+        if (!talkId) {
+            throw new Error("Talk ID is required");
+        }
+
+        // Check if this is the active talk and clear it if so
+        if (activeTalk && activeTalk.id === talkId) {
+            setActiveTalk(null);
+        }
+
+        // Get all notes for this talk and delete them
+        const talkNotes = notes.filter((note) => note.talkId === talkId);
+        for (const note of talkNotes) {
+            await deleteNoteFromStorage(note.id);
+        }
+
+        // Delete the talk from storage
+        await deleteTalkFromStorage(talkId);
+
+        // Update state - remove the talk and its notes
+        setTalks((prevTalks) => prevTalks.filter((talk) => talk.id !== talkId));
+        setNotes((prevNotes) => prevNotes.filter((note) => note.talkId !== talkId));
+    };
+
     const endCurrentTalk = async (): Promise<void> => {
         if (!activeTalk) return;
         await endTalk(activeTalk);
@@ -1138,6 +1164,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         activeTalk,
         createTalk,
         createAgendaTalk,
+        deleteTalk: deleteTalkById,
         endTalk,
         endCurrentTalk,
         getAllTalks,

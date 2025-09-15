@@ -118,7 +118,10 @@
         "shareHint": "wird mit uns geteilt",
         "keepTakingNotes": "Fortsetzen",
         "addTalk": "Neuer Vortrag",
-        "otherDay": "Andere"
+        "otherDay": "Andere",
+        "deleteWarning": "Dies wird den Vortrag und alle Notizen löschen. Dies kann nicht rückgängig gemacht werden.",
+        "deleteSuccess": "Vortrag erfolgreich gelöscht",
+        "deleteFailed": "Fehler beim Löschen des Vortrags"
     },
     "conferences": {
         "title": "Konferenzen",
