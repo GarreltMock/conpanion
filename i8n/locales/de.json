@@ -155,7 +155,7 @@
             "apiUrlPlaceholder": "https://api.example.com/agenda",
             "dataFormat": "Datenformat",
             "apiConfigurationHelp": "Konfigurieren Sie einen API-Endpunkt, um die Konferenz-Agenda automatisch zu synchronisieren. Das System wird die Vortragsinformationen von der angegebenen URL abrufen.",
-            "saveChanges": "Änderungen speichern",
+            "saveChanges": "Speichern",
             "conferenceNameRequired": "Konferenz Name ist erforderlich",
             "conferenceIdMissing": "Konferenz ID fehlt",
             "updateFailed": "Konferenz konnte nicht aktualisiert werden"
@@ -205,7 +205,7 @@
     },
     "modals": {
         "newConference": "Neue Konferenz",
-        "editConference": "Konferenz bearbeiten",
+        "editConference": "Bearbeiten",
         "newTalk": "Neuer Vortrag",
         "newAgendaTalk": "Neuer Vortrag",
         "newActivity": "Neue Aktivität",

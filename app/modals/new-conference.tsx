@@ -18,6 +18,7 @@ import { ThemedView } from "../../components/ThemedView";
 import { format } from "date-fns";
 import { useThemeColor } from "../../hooks/useThemeColor";
 import { useRouter } from "expo-router";
+import { useI18n } from "../../hooks/useI18n";
 
 export default function NewConferenceModal() {
     const { createConference } = useApp();
@@ -32,6 +33,7 @@ export default function NewConferenceModal() {
     const [error, setError] = useState("");
 
     const router = useRouter();
+    const { t } = useI18n();
     const backgroundColor = useThemeColor({}, "background");
     const tintColor = useThemeColor({}, "tint");
     const tintContentColor = useThemeColor({}, "tintContent");
@@ -44,7 +46,7 @@ export default function NewConferenceModal() {
 
     const handleCreateConference = async () => {
         if (!name.trim()) {
-            setError("Conference name is required");
+            setError(t("forms.conference.conferenceNameRequired"));
             return;
         }
 
@@ -53,7 +55,7 @@ export default function NewConferenceModal() {
             await createConference(name, startDate, endDate, location, description);
             router.back();
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Failed to create conference");
+            setError(err instanceof Error ? err.message : t("errors.conferenceCreationFailed"));
         } finally {
             setIsSubmitting(false);
         }
@@ -76,10 +78,10 @@ export default function NewConferenceModal() {
             <ThemedView style={styles.container}>
                 <View style={[styles.header, { borderBottomColor: borderLightColor }]}>
                     <TouchableOpacity style={styles.cancelButton} onPress={handleCancel} disabled={isSubmitting}>
-                        <ThemedText style={styles.cancelText}>Cancel</ThemedText>
+                        <ThemedText style={styles.cancelText}>{t("common.cancel")}</ThemedText>
                     </TouchableOpacity>
 
-                    <ThemedText style={styles.title}>New Conference</ThemedText>
+                    <ThemedText style={styles.title}>{t("modals.newConference")}</ThemedText>
 
                     <TouchableOpacity
                         style={[
@@ -93,7 +95,7 @@ export default function NewConferenceModal() {
                         {isSubmitting ? (
                             <ActivityIndicator size="small" color={tintContentColor} />
                         ) : (
-                            <Text style={[styles.createText, { color: tintContentColor }]}>Create</Text>
+                            <Text style={[styles.createText, { color: tintContentColor }]}>{t("common.actions.create")}</Text>
                         )}
                     </TouchableOpacity>
                 </View>
@@ -115,7 +117,7 @@ export default function NewConferenceModal() {
                             ]}
                             value={name}
                             onChangeText={setName}
-                            placeholder="Conference name"
+                            placeholder={t("forms.conference.namePlaceholder")}
                             placeholderTextColor={placeholderColor}
                         />
 
@@ -130,7 +132,7 @@ export default function NewConferenceModal() {
                             ]}
                             value={location}
                             onChangeText={setLocation}
-                            placeholder="Location (optional)"
+                            placeholder={t("forms.conference.locationPlaceholder")}
                             placeholderTextColor={placeholderColor}
                         />
 
@@ -145,14 +147,14 @@ export default function NewConferenceModal() {
                             ]}
                             value={description}
                             onChangeText={setDescription}
-                            placeholder="Description (optional)"
+                            placeholder={t("forms.conference.descriptionPlaceholder")}
                             placeholderTextColor={placeholderColor}
                             multiline
                             numberOfLines={4}
                             textAlignVertical="top"
                         />
 
-                        <ThemedText style={styles.label}>Date Range *</ThemedText>
+                        <ThemedText style={styles.label}>{t("forms.conference.dateRangeRequired")}</ThemedText>
 
                         <TouchableOpacity
                             style={[styles.dateButton, { backgroundColor: backgroundColor, borderColor: borderColor }]}
@@ -161,7 +163,7 @@ export default function NewConferenceModal() {
                                 setShowEndCalendar(false);
                             }}
                         >
-                            <ThemedText>Start: {formatDisplayDate(startDate)}</ThemedText>
+                            <ThemedText>{t("common.dateRange.start")} {formatDisplayDate(startDate)}</ThemedText>
                             <Ionicons name="calendar-outline" size={20} color={textColor} />
                         </TouchableOpacity>
 
@@ -204,7 +206,7 @@ export default function NewConferenceModal() {
                                 setShowStartCalendar(false);
                             }}
                         >
-                            <ThemedText>End: {formatDisplayDate(endDate)}</ThemedText>
+                            <ThemedText>{t("common.dateRange.end")} {formatDisplayDate(endDate)}</ThemedText>
                             <Ionicons name="calendar-outline" size={20} color={textColor} />
                         </TouchableOpacity>
 
