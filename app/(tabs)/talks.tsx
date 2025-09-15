@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useMemo, useEffect } from "react";
 import {
     StyleSheet,
     FlatList,
@@ -131,7 +131,7 @@ export default function TalksScreen() {
     }, [currentConference, dateFnsLocale, getUserSelectedTalks, getUserSelectedActivities, t, combineAgendaItems]);
 
     // Set current day as default when conference days change
-    useMemo(() => {
+    useEffect(() => {
         if (conferenceDays.length > 0) {
             const today = new Date();
             const currentDayIndex = conferenceDays.findIndex((day) => day.date && isSameDay(day.date, today));
