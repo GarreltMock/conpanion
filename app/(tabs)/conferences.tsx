@@ -117,6 +117,7 @@ export default function ConferencesScreen() {
                         borderBottomColor: borderLight,
                         backgroundColor: headerBackgroundColor,
                         paddingTop: insets.top + 10,
+                        height: insets.top + 64,
                     },
                 ]}
             >
@@ -176,7 +177,7 @@ const styles = StyleSheet.create({
         justifyContent: "space-between",
         alignItems: "center",
         paddingHorizontal: 16,
-        paddingBottom: 10,
+        paddingBottom: 8,
         marginBottom: 6,
         borderBottomWidth: 1,
     },

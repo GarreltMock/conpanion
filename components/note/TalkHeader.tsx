@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { View, StyleSheet, Pressable, Text } from "react-native";
 import { format } from "date-fns";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
@@ -17,6 +18,7 @@ interface TalkHeaderProps {
 
 export const TalkHeader: React.FC<TalkHeaderProps> = ({ conferenceName, talk, onDone }) => {
     const { t } = useI18n();
+    const insets = useSafeAreaInsets();
     const tintColor = useThemeColor({}, "tint");
     const tintContentColor = useThemeColor({}, "tintContent");
     const headerBackgroundColor = useThemeColor({}, "headerBackground");
@@ -58,7 +60,15 @@ export const TalkHeader: React.FC<TalkHeaderProps> = ({ conferenceName, talk, on
 
     return (
         <ThemedView
-            style={[styles.container, { borderBottomColor: borderLightColor, backgroundColor: headerBackgroundColor }]}
+            style={[
+                styles.container,
+                {
+                    borderBottomColor: borderLightColor,
+                    backgroundColor: headerBackgroundColor,
+                    paddingTop: insets.top + 10,
+                    height: insets.top + 64,
+                },
+            ]}
         >
             <View style={styles.headerContent}>
                 <View style={styles.titleContainer}>
@@ -131,7 +141,6 @@ export const TalkHeader: React.FC<TalkHeaderProps> = ({ conferenceName, talk, on
 const styles = StyleSheet.create({
     container: {
         paddingHorizontal: 16,
-        paddingTop: 60,
         paddingBottom: 8,
         borderBottomWidth: 1,
     },

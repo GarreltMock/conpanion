@@ -411,6 +411,7 @@ export default function TalksScreen() {
                         borderBottomColor: borderLight,
                         backgroundColor: headerBackgroundColor,
                         paddingTop: insets.top + 10,
+                        height: insets.top + 64,
                     },
                 ]}
             >
@@ -427,9 +428,7 @@ export default function TalksScreen() {
                     activeOpacity={0.8}
                 >
                     <IconSymbol name="plus" size={18} color={tintContentColor} />
-                    <ThemedText style={[styles.buttonText, { color: tintContentColor }]}>
-                        {t("talks.addTalk")}
-                    </ThemedText>
+                    <Text style={[styles.buttonText, { color: tintContentColor }]}>{t("talks.addTalk")}</Text>
                 </TouchableOpacity>
             </View>
 
@@ -495,11 +494,12 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         justifyContent: "space-between",
         alignItems: "center",
-        paddingHorizontal: 10,
+        paddingHorizontal: 16,
         paddingBottom: 8,
         borderBottomWidth: 1,
     },
     conferenceLabel: {
+        marginTop: -10,
         fontSize: 12,
         opacity: 0.7,
     },
