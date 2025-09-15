@@ -118,6 +118,7 @@ export default function RootLayout() {
                                 options={{
                                     presentation: "modal",
                                     title: "Edit Conference",
+                                    headerShown: false,
                                 }}
                             />
                             <Stack.Screen

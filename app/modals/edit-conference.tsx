@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, StyleSheet, TouchableOpacity, Platform, ScrollView, TextInput } from "react-native";
+import { View, StyleSheet, TouchableOpacity, Platform, ScrollView, TextInput, Text, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { Calendar } from "react-native-calendars";
@@ -35,10 +35,12 @@ export default function EditConferenceModal() {
     const { t } = useI18n();
     const backgroundColor = useThemeColor({}, "background");
     const tintColor = useThemeColor({}, "tint");
+    const tintContentColor = useThemeColor({}, "tintContent");
     const textColor = useThemeColor({}, "text");
     const placeholderColor = useThemeColor({}, "muted");
     const errorColor = useThemeColor({}, "error");
     const borderColor = useThemeColor({}, "border");
+    const borderLightColor = useThemeColor({}, "borderLight");
 
     useEffect(() => {
         if (id) {
@@ -110,10 +112,38 @@ export default function EditConferenceModal() {
 
     return (
         <SafeAreaView style={styles.safeArea}>
-            <ScrollView showsVerticalScrollIndicator={false}>
-                <ThemedView style={styles.container}>
-                    {/* <ThemedText style={styles.title}>Edit Conference</ThemedText> */}
+            <ThemedView style={styles.container}>
+                <View style={[styles.header, { borderBottomColor: borderLightColor }]}>
+                    <TouchableOpacity style={styles.cancelButton} onPress={handleCancel} disabled={isSubmitting}>
+                        <ThemedText style={styles.cancelText}>{t("common.cancel")}</ThemedText>
+                    </TouchableOpacity>
 
+                    <ThemedText style={styles.title}>{t("modals.editConference")}</ThemedText>
+
+                    <TouchableOpacity
+                        style={[
+                            styles.saveButton,
+                            { backgroundColor: tintColor },
+                            !name.trim() && styles.disabledButton,
+                        ]}
+                        onPress={handleUpdateConference}
+                        disabled={!name.trim() || isSubmitting}
+                    >
+                        {isSubmitting ? (
+                            <ActivityIndicator size="small" color={tintContentColor} />
+                        ) : (
+                            <Text style={[styles.saveText, { color: tintContentColor }]}>
+                                {t("forms.conference.saveChanges")}
+                            </Text>
+                        )}
+                    </TouchableOpacity>
+                </View>
+
+                <ScrollView
+                    style={styles.scrollContainer}
+                    showsVerticalScrollIndicator={false}
+                    contentContainerStyle={styles.formContainer}
+                >
                     <ThemedView style={styles.formSection}>
                         <ThemedText style={styles.label}>{t("forms.conference.nameRequired")}</ThemedText>
                         <TextInput
@@ -325,36 +355,9 @@ export default function EditConferenceModal() {
                         {error ? (
                             <ThemedText style={[styles.errorText, { color: errorColor }]}>{error}</ThemedText>
                         ) : null}
-
-                        <View style={styles.buttonRow}>
-                            <TouchableOpacity
-                                style={[styles.button, styles.cancelButton, { borderColor: borderColor }]}
-                                onPress={handleCancel}
-                                disabled={isSubmitting}
-                            >
-                                <ThemedText style={styles.cancelButtonText}>{t("common.cancel")}</ThemedText>
-                            </TouchableOpacity>
-
-                            <TouchableOpacity
-                                style={[
-                                    styles.button,
-                                    styles.saveButton,
-                                    {
-                                        backgroundColor: tintColor,
-                                        opacity: isSubmitting ? 0.7 : 1,
-                                    },
-                                ]}
-                                onPress={handleUpdateConference}
-                                disabled={isSubmitting}
-                            >
-                                <ThemedText style={[styles.saveButtonText, { color: "white" }]}>
-                                    {isSubmitting ? t("common.states.saving") : t("forms.conference.saveChanges")}
-                                </ThemedText>
-                            </TouchableOpacity>
-                        </View>
                     </ThemedView>
-                </ThemedView>
-            </ScrollView>
+                </ScrollView>
+            </ThemedView>
         </SafeAreaView>
     );
 }
@@ -364,13 +367,43 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     container: {
+        flex: 1,
+    },
+    header: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
         padding: 16,
+        borderBottomWidth: 1,
     },
     title: {
-        fontSize: 24,
-        fontWeight: "bold",
-        marginBottom: 24,
-        textAlign: "center",
+        fontSize: 17,
+        fontWeight: "600",
+    },
+    cancelButton: {
+        padding: 8,
+    },
+    cancelText: {
+        fontSize: 17,
+    },
+    saveButton: {
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        borderRadius: 8,
+    },
+    saveText: {
+        fontSize: 17,
+        fontWeight: "600",
+    },
+    disabledButton: {
+        opacity: 0.5,
+    },
+    scrollContainer: {
+        flex: 1,
+    },
+    formContainer: {
+        padding: 16,
+        paddingBottom: 32,
     },
     formSection: {
         marginBottom: 24,
@@ -429,31 +462,6 @@ const styles = StyleSheet.create({
     },
     errorText: {
         marginTop: 16,
-    },
-    buttonRow: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        marginTop: 24,
-    },
-    button: {
-        flex: 1,
-        borderRadius: 8,
-        padding: 16,
-        alignItems: "center",
-    },
-    cancelButton: {
-        marginRight: 8,
-        borderWidth: 1,
-    },
-    saveButton: {
-        marginLeft: 8,
-    },
-    cancelButtonText: {
-        fontSize: 16,
-    },
-    saveButtonText: {
-        fontSize: 16,
-        fontWeight: "bold",
     },
     advancedToggle: {
         flexDirection: "row",
