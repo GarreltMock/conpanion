@@ -10,7 +10,6 @@ const TALKS_KEY = "conpanion_talks";
 const ACTIVITIES_KEY = "conpanion_activities";
 const NOTES_KEY = "conpanion_notes";
 const ACTIVE_CONFERENCE_KEY = "conpanion_active_conference";
-const EXPORT_OPTIONS_KEY = "conpanion_export_options";
 
 // File system directories
 export const IMAGES_DIRECTORY = FileSystem.documentDirectory + "images/";
@@ -522,28 +521,6 @@ export const deleteNote = async (noteId: string): Promise<void> => {
         }
     } catch (error) {
         console.error("Error deleting note:", error);
-    }
-};
-
-// Export options storage functions
-export const getExportOptions = async (): Promise<ExportOptions | null> => {
-    try {
-        const optionsJson = await AsyncStorage.getItem(EXPORT_OPTIONS_KEY);
-        if (optionsJson) {
-            return JSON.parse(optionsJson);
-        }
-        return null;
-    } catch (error) {
-        console.error("Error getting export options:", error);
-        return null;
-    }
-};
-
-export const saveExportOptions = async (options: ExportOptions): Promise<void> => {
-    try {
-        await AsyncStorage.setItem(EXPORT_OPTIONS_KEY, JSON.stringify(options));
-    } catch (error) {
-        console.error("Error saving export options:", error);
     }
 };
 

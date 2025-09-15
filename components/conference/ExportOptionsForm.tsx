@@ -26,7 +26,7 @@ interface ExportOptionsFormProps {
 }
 
 export const ExportOptionsForm: React.FC<ExportOptionsFormProps> = ({ conferenceId, onCancel, onExport }) => {
-    const { conferences, talks, saveExportOptions, getExportOptions, exportToPDF, exportToMarkdown } = useApp();
+    const { conferences, talks, exportToPDF, exportToMarkdown } = useApp();
     const { t } = useI18n();
 
     const conference = useMemo(() => conferences.find((conf) => conf.id === conferenceId), [conferences, conferenceId]);
@@ -111,13 +111,6 @@ export const ExportOptionsForm: React.FC<ExportOptionsFormProps> = ({ conference
         try {
             setIsSubmitting(true);
             setError("");
-
-            // Save the export options for future use
-            await saveExportOptions({
-                ...options,
-                // Don't save the specific talk IDs or filename
-                includeTalkIds: [],
-            });
 
             // Generate the export
             const exportPath =

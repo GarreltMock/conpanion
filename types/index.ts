@@ -38,8 +38,7 @@ export interface Talk extends AgendaItem {
     feedback?: string;
 }
 
-export interface Activity extends AgendaItem {
-}
+export interface Activity extends AgendaItem {}
 
 export interface NoteImage {
     uri: string;

@@ -20,8 +20,6 @@ import {
     saveConference as saveConferenceToStorage,
     deleteConference as deleteConferenceFromStorage,
     setActiveConferenceId,
-    getExportOptions as getExportOptionsFromStorage,
-    saveExportOptions as saveExportOptionsToStorage,
     generatePDF,
     generateMarkdown,
     initializeConferenceDirectories,
@@ -111,8 +109,6 @@ interface AppContextType {
     // Export Functionality
     exportToPDF: (conferenceId: string, options: ExportOptions) => Promise<string>;
     exportToMarkdown: (conferenceId: string, options: ExportOptions) => Promise<string>;
-    saveExportOptions: (options: ExportOptions) => Promise<void>;
-    getExportOptions: () => Promise<ExportOptions | null>;
 
     // States
     isLoading: boolean;
@@ -1046,14 +1042,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         return markdownPath;
     };
 
-    const saveExportOptionsToContext = async (options: ExportOptions): Promise<void> => {
-        await saveExportOptionsToStorage(options);
-    };
-
-    const getExportOptionsFromContext = async (): Promise<ExportOptions | null> => {
-        return await getExportOptionsFromStorage();
-    };
-
     // Talk Selection Functions
     const toggleTalkSelection = async (talkId: string): Promise<void> => {
         const talk = talks.find((t) => t.id === talkId);
@@ -1198,8 +1186,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         // Export Functionality
         exportToPDF,
         exportToMarkdown,
-        saveExportOptions: saveExportOptionsToContext,
-        getExportOptions: getExportOptionsFromContext,
 
         // States
         isLoading,
