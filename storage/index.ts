@@ -270,18 +270,7 @@ export const initializeDefaultConference = async (): Promise<Conference> => {
     const conferences = await getConferences();
 
     if (conferences.length === 0) {
-        const now = new Date();
-        const endDate = new Date();
-        endDate.setDate(now.getDate() + 3); // Default 3-day conference
-
-        const defaultConference: Conference = {
-            id: generateId(),
-            name: "My Conference",
-            startDate: now,
-            endDate: endDate,
-            createdAt: now,
-            updatedAt: now,
-        };
+        const defaultConference = getDefaultConference();
 
         // Create conference directories first
         await initializeConferenceDirectories(defaultConference.id);
@@ -318,11 +307,20 @@ export const initializeDefaultConference = async (): Promise<Conference> => {
     }
 
     // This should never happen, but just in case, create a fresh default
+    const defaultConference = getDefaultConference();
+
+    await initializeConferenceDirectories(defaultConference.id);
+    await saveConference(defaultConference);
+    await setActiveConferenceId(defaultConference.id);
+    return defaultConference;
+};
+
+const getDefaultConference = (): Conference => {
     const now = new Date();
     const endDate = new Date();
     endDate.setDate(now.getDate() + 3);
 
-    const defaultConference: Conference = {
+    return {
         id: generateId(),
         name: "Default Conference",
         startDate: now,
@@ -330,11 +328,6 @@ export const initializeDefaultConference = async (): Promise<Conference> => {
         createdAt: now,
         updatedAt: now,
     };
-
-    await initializeConferenceDirectories(defaultConference.id);
-    await saveConference(defaultConference);
-    await setActiveConferenceId(defaultConference.id);
-    return defaultConference;
 };
 
 // Talk storage functions

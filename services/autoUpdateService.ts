@@ -36,17 +36,14 @@ class AutoUpdateService {
         const isActive = now >= conferenceStart && now <= conferenceEnd;
         const isPast = now > conferenceEnd;
 
-        // Past conferences don't get updated
         if (isPast && !policy.past) {
             return false;
         }
 
-        // Active conferences update on every startup
         if (isActive && policy.active) {
             return true;
         }
 
-        // Upcoming conferences update weekly
         if (isUpcoming) {
             if (!conference.lastApiSync) {
                 return true; // Never synced, should sync
