@@ -11,6 +11,7 @@ import { useThemeColor } from "../../hooks/useThemeColor";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { getAvailableTransformers } from "../../services/apiTransformers";
 import RNPickerSelect from "react-native-picker-select";
+import { useI18n } from "../../hooks/useI18n";
 
 export default function EditConferenceModal() {
     const { id } = useLocalSearchParams<{ id: string }>();
@@ -31,6 +32,7 @@ export default function EditConferenceModal() {
     const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
 
     const router = useRouter();
+    const { t } = useI18n();
     const backgroundColor = useThemeColor({}, "background");
     const tintColor = useThemeColor({}, "tint");
     const textColor = useThemeColor({}, "text");
@@ -57,12 +59,12 @@ export default function EditConferenceModal() {
 
     const handleUpdateConference = async () => {
         if (!name.trim()) {
-            setError("Conference name is required");
+            setError(t("forms.conference.conferenceNameRequired"));
             return;
         }
 
         if (!id) {
-            setError("Conference ID is missing");
+            setError(t("forms.conference.conferenceIdMissing"));
             return;
         }
 
@@ -88,7 +90,7 @@ export default function EditConferenceModal() {
             await updateConference(updatedConference);
             router.back();
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Failed to update conference");
+            setError(err instanceof Error ? err.message : t("forms.conference.updateFailed"));
         } finally {
             setIsSubmitting(false);
         }
@@ -113,7 +115,7 @@ export default function EditConferenceModal() {
                     {/* <ThemedText style={styles.title}>Edit Conference</ThemedText> */}
 
                     <ThemedView style={styles.formSection}>
-                        <ThemedText style={styles.label}>Conference Name *</ThemedText>
+                        <ThemedText style={styles.label}>{t("forms.conference.nameRequired")}</ThemedText>
                         <TextInput
                             style={[
                                 styles.input,
@@ -125,11 +127,11 @@ export default function EditConferenceModal() {
                             ]}
                             value={name}
                             onChangeText={setName}
-                            placeholder="Enter conference name"
+                            placeholder={t("forms.conference.namePlaceholder")}
                             placeholderTextColor={placeholderColor}
                         />
 
-                        <ThemedText style={styles.label}>Location (Optional)</ThemedText>
+                        <ThemedText style={styles.label}>{t("forms.conference.locationOptional")}</ThemedText>
                         <TextInput
                             style={[
                                 styles.input,
@@ -141,11 +143,11 @@ export default function EditConferenceModal() {
                             ]}
                             value={location}
                             onChangeText={setLocation}
-                            placeholder="Enter conference location"
+                            placeholder={t("forms.conference.locationPlaceholder")}
                             placeholderTextColor={placeholderColor}
                         />
 
-                        <ThemedText style={styles.label}>Description (Optional)</ThemedText>
+                        <ThemedText style={styles.label}>{t("forms.conference.descriptionOptional")}</ThemedText>
                         <TextInput
                             style={[
                                 styles.textArea,
@@ -157,7 +159,7 @@ export default function EditConferenceModal() {
                             ]}
                             value={description}
                             onChangeText={setDescription}
-                            placeholder="Enter conference description"
+                            placeholder={t("forms.conference.descriptionPlaceholder")}
                             placeholderTextColor={placeholderColor}
                             multiline
                             numberOfLines={4}
@@ -169,7 +171,7 @@ export default function EditConferenceModal() {
                             style={styles.advancedToggle}
                             onPress={() => setShowAdvancedOptions(!showAdvancedOptions)}
                         >
-                            <ThemedText style={styles.advancedToggleText}>API Configuration (Optional)</ThemedText>
+                            <ThemedText style={styles.advancedToggleText}>{t("forms.conference.apiConfiguration")}</ThemedText>
                             <Ionicons
                                 name={showAdvancedOptions ? "chevron-up" : "chevron-down"}
                                 size={20}
@@ -179,7 +181,7 @@ export default function EditConferenceModal() {
 
                         {showAdvancedOptions && (
                             <View style={styles.advancedSection}>
-                                <ThemedText style={styles.label}>API URL</ThemedText>
+                                <ThemedText style={styles.label}>{t("forms.conference.apiUrl")}</ThemedText>
                                 <TextInput
                                     style={[
                                         styles.input,
@@ -191,13 +193,13 @@ export default function EditConferenceModal() {
                                     ]}
                                     value={apiUrl}
                                     onChangeText={setApiUrl}
-                                    placeholder="https://api.example.com/agenda"
+                                    placeholder={t("forms.conference.apiUrlPlaceholder")}
                                     placeholderTextColor={placeholderColor}
                                     autoCapitalize="none"
                                     autoCorrect={false}
                                 />
 
-                                <ThemedText style={styles.label}>Data Format</ThemedText>
+                                <ThemedText style={styles.label}>{t("forms.conference.dataFormat")}</ThemedText>
                                 <RNPickerSelect
                                     onValueChange={setApiTransformer}
                                     items={getAvailableTransformers().map((transformer) => ({
@@ -236,13 +238,12 @@ export default function EditConferenceModal() {
                                 </RNPickerSelect>
 
                                 <ThemedText style={styles.helpText}>
-                                    Configure an API endpoint to automatically sync conference agenda. The system will
-                                    fetch talk information from the provided URL.
+                                    {t("forms.conference.apiConfigurationHelp")}
                                 </ThemedText>
                             </View>
                         )}
 
-                        <ThemedText style={styles.label}>Date Range *</ThemedText>
+                        <ThemedText style={styles.label}>{t("forms.conference.dateRangeRequired")}</ThemedText>
 
                         <TouchableOpacity
                             style={[styles.dateButton, { backgroundColor: backgroundColor, borderColor: borderColor }]}
@@ -251,7 +252,7 @@ export default function EditConferenceModal() {
                                 setShowEndCalendar(false);
                             }}
                         >
-                            <ThemedText>Start: {formatDisplayDate(startDate)}</ThemedText>
+                            <ThemedText>{t("common.dateRange.start")} {formatDisplayDate(startDate)}</ThemedText>
                             <Ionicons name="calendar-outline" size={20} color={textColor} />
                         </TouchableOpacity>
 
@@ -294,7 +295,7 @@ export default function EditConferenceModal() {
                                 setShowStartCalendar(false);
                             }}
                         >
-                            <ThemedText>End: {formatDisplayDate(endDate)}</ThemedText>
+                            <ThemedText>{t("common.dateRange.end")} {formatDisplayDate(endDate)}</ThemedText>
                             <Ionicons name="calendar-outline" size={20} color={textColor} />
                         </TouchableOpacity>
 
@@ -331,7 +332,7 @@ export default function EditConferenceModal() {
                                 onPress={handleCancel}
                                 disabled={isSubmitting}
                             >
-                                <ThemedText style={styles.cancelButtonText}>Cancel</ThemedText>
+                                <ThemedText style={styles.cancelButtonText}>{t("common.cancel")}</ThemedText>
                             </TouchableOpacity>
 
                             <TouchableOpacity
@@ -347,7 +348,7 @@ export default function EditConferenceModal() {
                                 disabled={isSubmitting}
                             >
                                 <ThemedText style={[styles.saveButtonText, { color: "white" }]}>
-                                    {isSubmitting ? "Saving..." : "Save Changes"}
+                                    {isSubmitting ? t("common.states.saving") : t("forms.conference.saveChanges")}
                                 </ThemedText>
                             </TouchableOpacity>
                         </View>

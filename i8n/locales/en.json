@@ -149,7 +149,16 @@
             "descriptionOptional": "Description (Optional)",
             "descriptionPlaceholder": "Enter conference description",
             "dateRangeRequired": "Date Range *",
-            "status": "Status"
+            "status": "Status",
+            "apiConfiguration": "API Configuration (Optional)",
+            "apiUrl": "API URL",
+            "apiUrlPlaceholder": "https://api.example.com/agenda",
+            "dataFormat": "Data Format",
+            "apiConfigurationHelp": "Configure an API endpoint to automatically sync conference agenda. The system will fetch talk information from the provided URL.",
+            "saveChanges": "Save Changes",
+            "conferenceNameRequired": "Conference name is required",
+            "conferenceIdMissing": "Conference ID is missing",
+            "updateFailed": "Failed to update conference"
         },
         "talk": {
             "titleRequired": "Please enter a talk title",
@@ -196,6 +205,7 @@
     },
     "modals": {
         "newConference": "New Conference",
+        "editConference": "Edit Conference",
         "newTalk": "New Talk",
         "newAgendaTalk": "New Agenda Talk",
         "newActivity": "New Activity",
