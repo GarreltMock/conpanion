@@ -270,7 +270,7 @@ export const initializeDefaultConference = async (): Promise<Conference> => {
     const conferences = await getConferences();
 
     if (conferences.length === 0) {
-        const defaultConference = getDefaultConference();
+        const defaultConference = getProgrammiercon();
 
         // Create conference directories first
         await initializeConferenceDirectories(defaultConference.id);
@@ -307,7 +307,7 @@ export const initializeDefaultConference = async (): Promise<Conference> => {
     }
 
     // This should never happen, but just in case, create a fresh default
-    const defaultConference = getDefaultConference();
+    const defaultConference = getProgrammiercon();
 
     await initializeConferenceDirectories(defaultConference.id);
     await saveConference(defaultConference);
@@ -315,18 +315,35 @@ export const initializeDefaultConference = async (): Promise<Conference> => {
     return defaultConference;
 };
 
-const getDefaultConference = (): Conference => {
+// // keep here for after the conference
+// const getDefaultConference = (): Conference => {
+//     const now = new Date();
+//     const endDate = new Date();
+//     endDate.setDate(now.getDate() + 3);
+
+//     return {
+//         id: generateId(),
+//         name: "Default Conference",
+//         startDate: now,
+//         endDate: endDate,
+//         createdAt: now,
+//         updatedAt: now,
+//     };
+// };
+
+const getProgrammiercon = (): Conference => {
     const now = new Date();
-    const endDate = new Date();
-    endDate.setDate(now.getDate() + 3);
 
     return {
         id: generateId(),
-        name: "Default Conference",
-        startDate: now,
-        endDate: endDate,
+        name: "programmier.con",
+        startDate: new Date("2025-10-29T00:00:00"),
+        endDate: new Date("2025-10-30T23:59:59"),
+        location: "Bad Nauheim",
         createdAt: now,
         updatedAt: now,
+        apiTransformer: "programmiercon",
+        apiUrl: "https://admin.programmier.bar/conference/1fc1201a-7b8e-4313-b1b6-2c41471a69c7",
     };
 };
 
