@@ -93,7 +93,7 @@ export default function NotesScreen() {
         }
     }, [talkNotes.length]);
 
-    const handleTalkDone = async () => {
+    const handleHeaderButtonPress = async () => {
         if (!activeTalk) {
             router.push("/modals/new-talk");
             return;
@@ -177,7 +177,7 @@ export default function NotesScreen() {
                 <TalkHeader
                     conferenceName={currentConference?.name || "My Conference"}
                     talk={activeTalk}
-                    onDone={handleTalkDone}
+                    onPress={handleHeaderButtonPress}
                 />
 
                 {activeTalk ? (
@@ -185,7 +185,9 @@ export default function NotesScreen() {
                         ref={flatListRef}
                         data={talkNotes}
                         keyExtractor={(item) => item.id}
-                        renderItem={({ item }) => <NoteItem note={item} onDelete={handleDeleteNote} onRestore={handleRestoreNote} />}
+                        renderItem={({ item }) => (
+                            <NoteItem note={item} onDelete={handleDeleteNote} onRestore={handleRestoreNote} />
+                        )}
                         contentContainerStyle={styles.notesList}
                         keyboardShouldPersistTaps="handled"
                         ListEmptyComponent={() => (

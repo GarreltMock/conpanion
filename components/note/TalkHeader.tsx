@@ -13,10 +13,10 @@ import { Talk } from "@/types";
 interface TalkHeaderProps {
     conferenceName: string;
     talk: Talk | null;
-    onDone: () => void;
+    onPress: () => void;
 }
 
-export const TalkHeader: React.FC<TalkHeaderProps> = ({ conferenceName, talk, onDone }) => {
+export const TalkHeader: React.FC<TalkHeaderProps> = ({ conferenceName, talk, onPress }) => {
     const { t } = useI18n();
     const insets = useSafeAreaInsets();
     const tintColor = useThemeColor({}, "tint");
@@ -48,8 +48,8 @@ export const TalkHeader: React.FC<TalkHeaderProps> = ({ conferenceName, talk, on
         setCurrentTime(new Date());
     }, [talk]);
 
-    const handleDone = () => {
-        onDone();
+    const handlePress = () => {
+        onPress();
     };
 
     // Calculate talk state once
@@ -96,7 +96,7 @@ export const TalkHeader: React.FC<TalkHeaderProps> = ({ conferenceName, talk, on
                                 opacity: pressed ? 0.8 : 1,
                             },
                         ]}
-                        onPress={handleDone}
+                        onPress={handlePress}
                     >
                         <IconSymbol name="plus" size={18} color={tintContentColor} />
                         <Text style={[styles.buttonText, { color: tintContentColor }]}>{t("talks.actions.new")}</Text>
@@ -112,7 +112,7 @@ export const TalkHeader: React.FC<TalkHeaderProps> = ({ conferenceName, talk, on
                                 opacity: pressed ? 0.8 : 1,
                             },
                         ]}
-                        onPress={handleDone}
+                        onPress={handlePress}
                     >
                         <IconSymbol name="plus" size={18} color={textColor} />
                         <Text style={[styles.buttonText, { color: textColor }]}>{t("talks.actions.switch")}</Text>
@@ -123,11 +123,10 @@ export const TalkHeader: React.FC<TalkHeaderProps> = ({ conferenceName, talk, on
                             styles.newTalkButton,
                             {
                                 backgroundColor: tintColor,
-                                borderColor: "transparent",
                                 opacity: pressed ? 0.8 : 1,
                             },
                         ]}
-                        onPress={handleDone}
+                        onPress={handlePress}
                     >
                         <IconSymbol name="checkmark" size={18} color={tintContentColor} />
                         <Text style={[styles.buttonText, { color: tintContentColor }]}>{t("common.done")}</Text>
