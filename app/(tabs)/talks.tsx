@@ -291,7 +291,7 @@ export default function TalksScreen() {
         return renderAgendaItemContent(item);
     };
 
-    const renderAgendaList = (agendaData: AgendaItem[], emptyTitle: string, emptyDescription?: string) => (
+    const renderAgendaList = (agendaData: AgendaItem[], emptyTitle: string, emptyAction?: React.ReactNode) => (
         <FlatList
             data={agendaData}
             keyExtractor={(item) => `${item.itemType}-${item.id}`}
@@ -302,7 +302,7 @@ export default function TalksScreen() {
             ListEmptyComponent={() => (
                 <View style={styles.emptyContainer}>
                     <ThemedText style={styles.emptyTitle}>{emptyTitle}</ThemedText>
-                    {emptyDescription && <ThemedText style={styles.emptyDescription}>{emptyDescription}</ThemedText>}
+                    {emptyAction}
                 </View>
             )}
         />
@@ -342,7 +342,16 @@ export default function TalksScreen() {
             return combinedItems.filter((item) => isSameDay(item.startTime, selectedDate));
         }, [allUserSelectedTalks, allUserSelectedActivities]); // eslint-disable-line react-hooks/exhaustive-deps
 
-        return renderAgendaList(filteredItems, t("talks.noTalksSelected"), t("talks.browseTalks"));
+        const exploreAgendaButton = (
+            <TouchableOpacity style={styles.exploreAgendaButton} onPress={() => setIndex(1)} activeOpacity={0.7}>
+                <ThemedText style={[styles.exploreAgendaText, { color: tintColor }]}>
+                    {t("talks.exploreAgenda")}
+                </ThemedText>
+                <IconSymbol name="arrow.right" size={16} color={tintColor} style={styles.exploreArrow} />
+            </TouchableOpacity>
+        );
+
+        return renderAgendaList(filteredItems, t("talks.noTalksSelected"), exploreAgendaButton);
     };
 
     const AgendaRoute = () => {
@@ -604,6 +613,20 @@ const styles = StyleSheet.create({
         fontSize: 16,
         textAlign: "center",
         opacity: 0.7,
+    },
+    exploreAgendaButton: {
+        paddingHorizontal: 20,
+        paddingVertical: 12,
+        flexDirection: "row",
+        alignItems: "center",
+        alignSelf: "center",
+    },
+    exploreAgendaText: {
+        fontSize: 16,
+        fontWeight: "600",
+    },
+    exploreArrow: {
+        marginLeft: 8,
     },
     daySelectionContainer: {
         backgroundColor: "transparent",
