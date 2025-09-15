@@ -247,6 +247,12 @@ const genericTransformer: ApiTransformerFunction = (data: any): ApiAgendaRespons
 
 // Registry of available transformers
 const transformerRegistry: Record<string, ApiTransformerConfig> = {
+    generic: {
+        id: "generic",
+        name: "Generic",
+        description: "Auto-detect format for simple JSON structures",
+        transformer: genericTransformer,
+    },
     passthrough: {
         id: "passthrough",
         name: "Passthrough",
@@ -258,12 +264,6 @@ const transformerRegistry: Record<string, ApiTransformerConfig> = {
         name: "programmier.con",
         description: "For custom conference APIs with agenda structure",
         transformer: programmierconTransformer,
-    },
-    generic: {
-        id: "generic",
-        name: "Generic",
-        description: "Auto-detect format for simple JSON structures",
-        transformer: genericTransformer,
     },
 };
 

@@ -10,7 +10,7 @@ import { format } from "date-fns";
 import { useThemeColor } from "../../hooks/useThemeColor";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { getAvailableTransformers } from "../../services/apiTransformers";
-import { Picker } from "@react-native-picker/picker";
+import RNPickerSelect from "react-native-picker-select";
 
 export default function EditConferenceModal() {
     const { id } = useLocalSearchParams<{ id: string }>();
@@ -198,27 +198,42 @@ export default function EditConferenceModal() {
                                 />
 
                                 <ThemedText style={styles.label}>Data Format</ThemedText>
-                                <View
-                                    style={[
-                                        styles.pickerContainer,
-                                        { borderColor: borderColor, backgroundColor: backgroundColor },
-                                    ]}
+                                <RNPickerSelect
+                                    onValueChange={setApiTransformer}
+                                    items={getAvailableTransformers().map((transformer) => ({
+                                        label: transformer.name,
+                                        value: transformer.id,
+                                    }))}
+                                    value={apiTransformer}
+                                    style={{
+                                        inputIOS: {
+                                            fontFamily: "MuseoSans-Medium",
+                                            fontSize: 16,
+                                            fontWeight: "500",
+                                            color: textColor,
+                                        },
+                                        inputAndroid: {
+                                            fontFamily: "MuseoSans-Medium",
+                                            fontSize: 16,
+                                            fontWeight: "500",
+                                            color: textColor,
+                                        },
+                                    }}
+                                    useNativeAndroidPickerStyle={false}
+                                    darkTheme={true}
                                 >
-                                    <Picker
-                                        selectedValue={apiTransformer}
-                                        onValueChange={setApiTransformer}
-                                        style={[styles.picker, { color: textColor }]}
-                                        itemStyle={{ color: textColor }}
+                                    <View
+                                        style={[
+                                            styles.pickerContainer,
+                                            { borderColor: borderColor, backgroundColor: backgroundColor },
+                                        ]}
                                     >
-                                        {getAvailableTransformers().map((transformer) => (
-                                            <Picker.Item
-                                                key={transformer.id}
-                                                label={`${transformer.name} - ${transformer.description}`}
-                                                value={transformer.id}
-                                            />
-                                        ))}
-                                    </Picker>
-                                </View>
+                                        <ThemedText style={styles.pickerText}>
+                                            {getAvailableTransformers().find((t) => t.id === apiTransformer)?.name}
+                                        </ThemedText>
+                                        <Ionicons name="chevron-down" size={20} color={textColor} />
+                                    </View>
+                                </RNPickerSelect>
 
                                 <ThemedText style={styles.helpText}>
                                     Configure an API endpoint to automatically sync conference agenda. The system will
@@ -451,18 +466,25 @@ const styles = StyleSheet.create({
         fontWeight: "600",
     },
     advancedSection: {
-        marginTop: 12,
         padding: 16,
+        paddingTop: 0,
         backgroundColor: "rgba(0,0,0,0.02)",
         borderRadius: 8,
     },
     pickerContainer: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
         borderWidth: 1,
         borderRadius: 8,
         marginBottom: 8,
+        paddingHorizontal: 12,
+        paddingVertical: 12,
     },
-    picker: {
-        height: 50,
+    pickerText: {
+        fontSize: 16,
+        fontWeight: "500",
+        flex: 1,
     },
     helpText: {
         fontSize: 14,
