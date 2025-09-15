@@ -179,7 +179,7 @@
         },
         "export": {
             "defaultFilename": "konferenz-export",
-            "title": "{{name}} exportieren",
+            "title": "Export",
             "format": {
                 "title": "Export Format",
                 "pdf": "PDF",

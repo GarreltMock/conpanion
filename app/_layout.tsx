@@ -94,6 +94,7 @@ function AppContent() {
                     options={{
                         presentation: "modal",
                         title: "Export Conference",
+                        headerShown: false,
                     }}
                 />
                 <Stack.Screen

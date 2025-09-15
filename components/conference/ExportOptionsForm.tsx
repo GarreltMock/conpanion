@@ -1,5 +1,14 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { View, StyleSheet, TouchableOpacity, Platform, ScrollView, Switch } from "react-native";
+import {
+    View,
+    StyleSheet,
+    TouchableOpacity,
+    Platform,
+    ScrollView,
+    Switch,
+    Text,
+    ActivityIndicator,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useApp } from "../../context/AppContext";
 import { ThemedText } from "../ThemedText";
@@ -33,9 +42,7 @@ export const ExportOptionsForm: React.FC<ExportOptionsFormProps> = ({ conference
         format: "md",
         includeImages: true,
         includeTalkIds: conferenceTalks.map((talk) => talk.id),
-        filename: conference
-            ? `${conference.name.replace(/\s+/g, "-")}-${Date.now()}`
-            : t("forms.export.defaultFilename"),
+        filename: "",
     });
 
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -52,29 +59,16 @@ export const ExportOptionsForm: React.FC<ExportOptionsFormProps> = ({ conference
     const borderLightColor = useThemeColor({}, "borderLight");
 
     useEffect(() => {
-        const loadSavedOptions = async () => {
-            try {
-                console.log("Loading saved export options...");
-                const savedOptions = await getExportOptions();
-                if (savedOptions) {
-                    // Use saved options but always update the talks list and filename
-                    setOptions({
-                        ...savedOptions,
-                        includeTalkIds: conferenceTalks.map((talk) => talk.id),
-                        filename: conference
-                            ? `${conference.name.replace(/\s+/g, "-")}-${Date.now()}`
-                            : t("forms.export.defaultFilename"),
-                    });
-                }
-            } catch (error) {
-                console.error("Error loading saved export options:", error);
-            }
-        };
-
         if (conference && conferenceTalks.length > 0) {
-            loadSavedOptions();
+            const defaultFilename = `${conference.name.replace(/\s+/g, "-")}-${Date.now()}`;
+
+            setOptions((prev) => ({
+                ...prev,
+                includeTalkIds: conferenceTalks.map((talk) => talk.id),
+                filename: prev.filename || defaultFilename, // Only set filename if not already set
+            }));
         }
-    }, [conference, conferenceTalks, getExportOptions]);
+    }, [conference, conferenceTalks]);
 
     const toggleTalkSelection = (talkId: string) => {
         setOptions((prevOptions) => {
@@ -154,10 +148,40 @@ export const ExportOptionsForm: React.FC<ExportOptionsFormProps> = ({ conference
     }
 
     return (
-        <ScrollView showsVerticalScrollIndicator={false}>
-            <ThemedView style={styles.container}>
-                <ThemedText style={styles.title}>{t("forms.export.title", { name: conference.name })}</ThemedText>
+        <ThemedView style={styles.container}>
+            <View style={[styles.header, { borderBottomColor: borderLightColor }]}>
+                {onCancel && (
+                    <TouchableOpacity style={styles.cancelButton} onPress={onCancel} disabled={isSubmitting}>
+                        <ThemedText style={styles.cancelText}>{t("common.cancel")}</ThemedText>
+                    </TouchableOpacity>
+                )}
 
+                <ThemedText style={styles.title}>{t("forms.export.title")}</ThemedText>
+
+                <TouchableOpacity
+                    style={[
+                        styles.exportButton,
+                        { backgroundColor: tintColor },
+                        (isSubmitting || options.includeTalkIds.length === 0) && styles.disabledButton,
+                    ]}
+                    onPress={handleExport}
+                    disabled={isSubmitting || options.includeTalkIds.length === 0}
+                >
+                    {isSubmitting ? (
+                        <ActivityIndicator size="small" color={tintContentColor} />
+                    ) : (
+                        <Text style={[styles.exportButtonText, { color: tintContentColor }]}>
+                            {t("common.actions.export")}
+                        </Text>
+                    )}
+                </TouchableOpacity>
+            </View>
+
+            <ScrollView
+                style={styles.scrollContainer}
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={styles.formContainer}
+            >
                 <ThemedView style={styles.formSection}>
                     <ThemedText style={styles.sectionTitle}>{t("forms.export.format.title")}</ThemedText>
 
@@ -301,50 +325,39 @@ export const ExportOptionsForm: React.FC<ExportOptionsFormProps> = ({ conference
                     {error ? (
                         <ThemedText style={[styles.errorMessage, { color: errorColor }]}>{error}</ThemedText>
                     ) : null}
-
-                    <View style={styles.buttonRow}>
-                        {onCancel && (
-                            <TouchableOpacity
-                                style={[styles.button, styles.cancelButton, { borderColor: borderColor }]}
-                                onPress={onCancel}
-                                disabled={isSubmitting}
-                            >
-                                <ThemedText style={styles.cancelButtonText}>{t("common.cancel")}</ThemedText>
-                            </TouchableOpacity>
-                        )}
-
-                        <TouchableOpacity
-                            style={[
-                                styles.button,
-                                styles.exportButton,
-                                {
-                                    backgroundColor: tintColor,
-                                    opacity: isSubmitting ? 0.7 : 1,
-                                },
-                            ]}
-                            onPress={handleExport}
-                            disabled={isSubmitting || options.includeTalkIds.length === 0}
-                        >
-                            <ThemedText style={[styles.exportButtonText, { color: tintContentColor }]}>
-                                {isSubmitting ? t("forms.export.exporting") : t("common.actions.export")}
-                            </ThemedText>
-                        </TouchableOpacity>
-                    </View>
                 </ThemedView>
-            </ThemedView>
-        </ScrollView>
+            </ScrollView>
+        </ThemedView>
     );
 };
 
 const styles = StyleSheet.create({
     container: {
+        flex: 1,
+    },
+    header: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
         padding: 16,
+        borderBottomWidth: 1,
     },
     title: {
-        fontSize: 24,
-        fontWeight: "bold",
-        marginBottom: 16,
-        textAlign: "center",
+        fontSize: 17,
+        fontWeight: "600",
+    },
+    cancelButton: {
+        padding: 8,
+    },
+    cancelText: {
+        fontSize: 17,
+    },
+    scrollContainer: {
+        flex: 1,
+    },
+    formContainer: {
+        padding: 16,
+        paddingBottom: 32,
     },
     formSection: {
         marginBottom: 20,
@@ -435,6 +448,18 @@ const styles = StyleSheet.create({
     talkTime: {
         fontSize: 14,
     },
+    exportButton: {
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        borderRadius: 8,
+    },
+    exportButtonText: {
+        fontSize: 17,
+        fontWeight: "600",
+    },
+    disabledButton: {
+        opacity: 0.5,
+    },
     errorMessage: {
         marginBottom: 16,
     },
@@ -442,31 +467,6 @@ const styles = StyleSheet.create({
         fontStyle: "italic",
         textAlign: "center",
         marginVertical: 16,
-    },
-    buttonRow: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        marginTop: 16,
-    },
-    button: {
-        flex: 1,
-        borderRadius: 8,
-        padding: 16,
-        alignItems: "center",
-    },
-    cancelButton: {
-        marginRight: 8,
-        borderWidth: 1,
-    },
-    cancelButtonText: {
-        fontSize: 16,
-    },
-    exportButton: {
-        marginLeft: 8,
-    },
-    exportButtonText: {
-        fontSize: 16,
-        fontWeight: "bold",
     },
     errorContainer: {
         padding: 20,
