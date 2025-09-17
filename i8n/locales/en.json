@@ -95,10 +95,10 @@
         "actions": {
             "new": "New Talk",
             "switch": "Switch Talk",
-            "addToMyTalks": "Add to My Talks",
+            "addToUserAgenda": "Add to your Agenda",
             "rateTalk": "Rate Talk"
         },
-        "myTalks": "My Talks",
+        "userAgenda": "Your Talks",
         "fullAgenda": "Full Agenda",
         "noTalksSelected": "No talks selected",
         "browseTalks": "Browse the agenda to bookmark talks",

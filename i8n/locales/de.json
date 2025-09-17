@@ -95,10 +95,10 @@
         "actions": {
             "new": "Neuer Vortrag",
             "switch": "Vortrag wechseln",
-            "addToMyTalks": "Zu meinen Vorträgen hinzufügen",
+            "addToUserAgenda": "Zu deiner Agenda hinzufügen",
             "rateTalk": "Vortrag bewerten"
         },
-        "myTalks": "Meine Vorträge",
+        "userAgenda": "Deine Vorträge",
         "fullAgenda": "Vollständige Agenda",
         "noTalksSelected": "Keine Vorträge ausgewählt",
         "browseTalks": "Durchsuch die Agenda, um Vorträge zu markieren",

@@ -58,7 +58,7 @@ export default function TalksScreen() {
     const [index, setIndex] = useState(0);
     const [selectedDay, setSelectedDay] = useState(0); // Index of selected conference day
     const [routes] = useState([
-        { key: "myTalks", title: t("talks.myTalks") },
+        { key: "userAgenda", title: t("talks.userAgenda") },
         { key: "agenda", title: t("talks.fullAgenda") },
     ]);
 
@@ -308,7 +308,7 @@ export default function TalksScreen() {
         />
     );
 
-    const MyTalksRoute = () => {
+    const UserAgendaRoute = () => {
         const allUserSelectedTalks = getUserSelectedTalks().filter(
             (talk) => talk.conferenceId === currentConference?.id
         );
@@ -388,7 +388,7 @@ export default function TalksScreen() {
     };
 
     const renderScene = SceneMap({
-        myTalks: MyTalksRoute,
+        userAgenda: UserAgendaRoute,
         agenda: AgendaRoute,
     });
 

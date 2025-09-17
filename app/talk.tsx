@@ -1,7 +1,17 @@
 import { format } from "date-fns";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, FlatList, StyleSheet, TouchableOpacity, View, Image, Text, ScrollView, Modal } from "react-native";
+import {
+    ActivityIndicator,
+    FlatList,
+    StyleSheet,
+    TouchableOpacity,
+    View,
+    Image,
+    Text,
+    ScrollView,
+    Modal,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { toast } from "sonner-native";
@@ -177,7 +187,6 @@ export default function TalkDetailScreen() {
             },
         });
     };
-
 
     if (isLoading || !talk) {
         return (
@@ -466,7 +475,7 @@ export default function TalkDetailScreen() {
                             >
                                 <IconSymbol name="bookmark.fill" size={20} color={backgroundColor} />
                                 <Text style={[styles.addToUserTalksText, { color: backgroundColor }]}>
-                                    {t("talks.actions.addToMyTalks")}
+                                    {t("talks.actions.addToUserAgenda")}
                                 </Text>
                             </TouchableOpacity>
                         </View>
