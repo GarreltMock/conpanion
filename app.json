@@ -1,7 +1,7 @@
 {
     "expo": {
-        "name": "conpanion",
-        "slug": "conpanion",
+        "name": "programmier.con",
+        "slug": "programmier.con",
         "version": "1.0.0",
         "orientation": "portrait",
         "icon": "./assets/images/icon.png",
@@ -10,15 +10,10 @@
         "newArchEnabled": true,
         "ios": {
             "supportsTablet": false,
-            "bundleIdentifier": "com.mock.conpanion"
+            "bundleIdentifier": "de.programmierbar.conference"
         },
         "android": {
-            "package": "com.mock.conpanion"
-        },
-        "web": {
-            "bundler": "metro",
-            "output": "static",
-            "favicon": "./assets/images/favicon.png"
+            "package": "de.programmierbar.conference"
         },
         "plugins": ["expo-router", "expo-localization"],
         "experiments": {
