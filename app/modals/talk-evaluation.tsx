@@ -1,14 +1,6 @@
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
-import {
-    ActivityIndicator,
-    StyleSheet,
-    View,
-    Text,
-    TouchableOpacity,
-    TextInput,
-    ScrollView,
-} from "react-native";
+import { ActivityIndicator, StyleSheet, View, Text, TouchableOpacity, TextInput, ScrollView } from "react-native";
 
 import { MyKeyboardAvoidingView } from "@/components/MyKeyboardAvoidingView";
 import { ThemedView } from "@/components/ThemedView";
@@ -173,14 +165,10 @@ export default function TalkEvaluationModal() {
             {nextTalk && (
                 <View style={styles.nextTalkContainer}>
                     <View style={styles.nextTalkRow}>
-                        <IconSymbol
-                            name="arrow.right.circle"
-                            size={16}
-                            color={textColor + "80"}
-                            style={styles.nextTalkIcon}
-                        />
-                        <ThemedText style={[styles.nextTalkText, { color: textColor + "80" }]}>
-                            Next Talk: {nextTalk.title}
+                        <ThemedText style={[styles.nextTalkText, { color: textColor }]}>Next Talk</ThemedText>
+                        <IconSymbol name="arrow.right.circle" size={16} color={textColor} style={styles.nextTalkIcon} />
+                        <ThemedText style={[styles.nextTalkText, { color: textColor, opacity: 0.5 }]}>
+                            {nextTalk.title}
                         </ThemedText>
                     </View>
                 </View>
@@ -307,15 +295,18 @@ const styles = StyleSheet.create({
         alignItems: "center",
     },
     nextTalkRow: {
+        maxWidth: "80%",
         flexDirection: "row",
         alignItems: "center",
     },
     nextTalkIcon: {
-        marginRight: 6,
+        marginHorizontal: 6,
+        opacity: 0.7,
     },
     nextTalkText: {
         fontSize: 13,
-        fontWeight: "500",
+        lineHeight: 16,
+        opacity: 0.7,
     },
     container: {
         borderTopLeftRadius: 16,
