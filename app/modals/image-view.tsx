@@ -1,19 +1,8 @@
 import { router, useLocalSearchParams } from "expo-router";
 import React from "react";
-import {
-    Dimensions,
-    StyleSheet,
-    TouchableOpacity,
-    View,
-} from "react-native";
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Dimensions, StyleSheet, TouchableOpacity, View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
-import Animated, {
-    runOnJS,
-    useAnimatedStyle,
-    useSharedValue,
-    withTiming,
-} from "react-native-reanimated";
+import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 
 import { ThemedView } from "@/components/ThemedView";
 import { IconSymbol } from "@/components/ui/IconSymbol";
@@ -25,7 +14,6 @@ export default function ImageViewModal() {
     }>();
 
     const decodedUri = decodeURIComponent(imageUri as string);
-    const insets = useSafeAreaInsets();
 
     // Theme colors
     const whiteColor = useThemeColor({}, "white");
@@ -136,22 +124,22 @@ export default function ImageViewModal() {
     });
 
     return (
-        <ThemedView style={[styles.container, { paddingTop: insets.top }]}>
-                <View style={styles.header}>
-                    <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
-                        <IconSymbol name="xmark" size={24} color={whiteColor} />
-                    </TouchableOpacity>
-                </View>
+        <ThemedView style={[styles.container]}>
+            <View style={styles.header}>
+                <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
+                    <IconSymbol name="xmark" size={24} color={whiteColor} />
+                </TouchableOpacity>
+            </View>
 
-                <GestureDetector gesture={combinedGestures}>
-                    <Animated.View style={styles.imageContainer}>
-                        <Animated.Image
-                            source={{ uri: decodedUri }}
-                            style={[styles.image, animatedImageStyle]}
-                            resizeMode="contain"
-                        />
-                    </Animated.View>
-                </GestureDetector>
+            <GestureDetector gesture={combinedGestures}>
+                <Animated.View style={styles.imageContainer}>
+                    <Animated.Image
+                        source={{ uri: decodedUri }}
+                        style={[styles.image, animatedImageStyle]}
+                        resizeMode="contain"
+                    />
+                </Animated.View>
+            </GestureDetector>
         </ThemedView>
     );
 }

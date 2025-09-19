@@ -69,7 +69,6 @@ function AppContent() {
                     options={{
                         presentation: "modal",
                         headerShown: false,
-                        animation: "fade",
                     }}
                 />
                 <Stack.Screen

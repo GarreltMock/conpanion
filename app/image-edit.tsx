@@ -9,7 +9,6 @@ import {
     View,
     DeviceEventEmitter,
 } from "react-native";
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, { runOnJS, useAnimatedRef, useAnimatedStyle, useSharedValue } from "react-native-reanimated";
 import Svg, { Polygon } from "react-native-svg";
@@ -31,8 +30,6 @@ export default function ImageEditScreen() {
         existingCorners?: string;
     }>();
 
-    const insets = useSafeAreaInsets();
-
     const decodedUri = decodeURIComponent(imageUri as string);
     const decodedExistingCorners = existingCorners ? JSON.parse(decodeURIComponent(existingCorners as string)) : null;
 
@@ -47,6 +44,7 @@ export default function ImageEditScreen() {
 
     // Theme colors
     const tintColor = useThemeColor({}, "tint");
+    const tintContentColor = useThemeColor({}, "tintContent");
     const whiteColor = useThemeColor({}, "white");
     const backgroundOverlayColor = useThemeColor({}, "backgroundOverlay");
     const backgroundColor = useThemeColor({}, "background");
@@ -362,58 +360,58 @@ export default function ImageEditScreen() {
     };
 
     return (
-        <ThemedView style={[styles.container, { backgroundColor, paddingTop: insets.top }]}>
-                <View style={styles.header}>
-                    <TouchableOpacity style={styles.cancelButton} onPress={handleCancel} disabled={loading}>
-                        <IconSymbol name="xmark" size={24} color={whiteColor} />
-                    </TouchableOpacity>
+        <ThemedView style={[styles.container, { backgroundColor }]}>
+            <View style={styles.header}>
+                <TouchableOpacity style={styles.cancelButton} onPress={handleCancel} disabled={loading}>
+                    <IconSymbol name="xmark" size={24} color={whiteColor} />
+                </TouchableOpacity>
 
-                    <ThemedText style={styles.headerTitle}>Edit Image</ThemedText>
+                <ThemedText style={styles.headerTitle}>Edit Image</ThemedText>
 
-                    <View style={{ width: 40 }} />
+                <View style={{ width: 40 }} />
+            </View>
+
+            {loading ? (
+                <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="large" color={tintColor} />
+                    <ThemedText style={[styles.loadingText, { color: whiteColor }]}>Processing image...</ThemedText>
                 </View>
+            ) : (
+                <View style={styles.imageContainer}>
+                    <Animated.Image
+                        ref={imageRef}
+                        source={{ uri: decodedUri }}
+                        style={styles.image}
+                        resizeMode="contain"
+                        onLayout={(event) => {
+                            let layout = event.nativeEvent.layout;
+                            setImageLayout(layout);
+                            initCorners(layout);
+                        }}
+                    />
+                    {renderCornerEditor()}
 
-                {loading ? (
-                    <View style={styles.loadingContainer}>
-                        <ActivityIndicator size="large" color={tintColor} />
-                        <ThemedText style={[styles.loadingText, { color: whiteColor }]}>Processing image...</ThemedText>
+                    <View style={styles.editActions}>
+                        <TouchableOpacity
+                            style={[styles.actionButton, { backgroundColor: backgroundOverlayColor }]}
+                            onPress={handleCancel}
+                            disabled={loading}
+                        >
+                            <ThemedText style={[styles.actionButtonText, { color: whiteColor }]}>Cancel</ThemedText>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={[styles.actionButton, styles.saveButton, { backgroundColor: tintColor }]}
+                            onPress={handleSaveCorners}
+                            disabled={!corners || loading}
+                        >
+                            <ThemedText style={[styles.actionButtonText, { color: tintContentColor }]}>
+                                Transform
+                            </ThemedText>
+                        </TouchableOpacity>
                     </View>
-                ) : (
-                    <View style={styles.imageContainer}>
-                        <Animated.Image
-                            ref={imageRef}
-                            source={{ uri: decodedUri }}
-                            style={styles.image}
-                            resizeMode="contain"
-                            onLayout={(event) => {
-                                let layout = event.nativeEvent.layout;
-                                setImageLayout(layout);
-                                initCorners(layout);
-                            }}
-                        />
-                        {renderCornerEditor()}
-
-                        <View style={styles.editActions}>
-                            <TouchableOpacity
-                                style={[styles.actionButton, { backgroundColor: backgroundOverlayColor }]}
-                                onPress={handleCancel}
-                                disabled={loading}
-                            >
-                                <ThemedText style={[styles.actionButtonText, { color: whiteColor }]}>Cancel</ThemedText>
-                            </TouchableOpacity>
-
-                            <TouchableOpacity
-                                style={[styles.actionButton, styles.saveButton, { backgroundColor: tintColor + "CC" }]}
-                                onPress={handleSaveCorners}
-                                disabled={!corners || loading}
-                            >
-                                <ThemedText style={[styles.actionButtonText, { color: whiteColor }]}>
-                                    Transform
-                                </ThemedText>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-                )}
+                </View>
+            )}
         </ThemedView>
     );
 }
@@ -501,14 +499,13 @@ const styles = StyleSheet.create({
         fontSize: 14,
     },
     editActions: {
-        position: "absolute",
         bottom: 40,
         left: 0,
         right: 0,
         flexDirection: "row",
         justifyContent: "center",
         paddingHorizontal: 20,
-        zIndex: 20,
+        zIndex: 30,
     },
     actionButton: {
         paddingVertical: 12,
