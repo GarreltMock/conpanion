@@ -48,7 +48,7 @@ export const NoteItem: React.FC<NoteItemProps> = ({ note, onDelete, onRestore, r
     // Format stored relative time for display
     const formatRelativeTime = () => {
         if (note.relativeTime === undefined) {
-            return format(note.timestamp, "HH:mm");
+            return format(note.timestamp, "dd.MM.yy - HH:mm");
         }
 
         const totalSeconds = note.relativeTime;

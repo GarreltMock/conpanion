@@ -935,11 +935,17 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
             })
         );
 
-        // Create the new note with all content
+        // add relativeTimeSeconds if the talk is currently active
         const currentTime = new Date();
-        const relativeTimeSeconds = targetTalk
-            ? Math.max(0, Math.floor((currentTime.getTime() - targetTalk.startTime.getTime()) / 1000))
-            : 0;
+        let relativeTimeSeconds = undefined;
+        if (targetTalk) {
+            const startMs = targetTalk.startTime.getTime();
+            const durationMs = targetTalk.duration ? targetTalk.duration * 60_000 : Infinity; // duration in ms
+            const endMs = startMs + durationMs;
+            if (currentTime.getTime() >= startMs && currentTime.getTime() <= endMs) {
+                relativeTimeSeconds = Math.max(0, Math.floor((currentTime.getTime() - startMs) / 1000));
+            }
+        }
 
         const newNote: Note = {
             id: generateId(),
