@@ -246,7 +246,6 @@ export default function NewAgendaItemModal() {
                         />
                     </View>
 
-                    {/* Checkbox for "This is no talk" */}
                     <TouchableOpacity
                         style={styles.checkboxContainer}
                         onPress={() => setIsNotTalk(!isNotTalk)}

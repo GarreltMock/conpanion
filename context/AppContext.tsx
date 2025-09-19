@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
 import * as ImagePicker from "expo-image-picker";
 import { Audio } from "expo-av";
-import { Conference, Talk, Note, ExportOptions, NoteImage, Speaker, Activity } from "../types";
+import { Conference, Talk, Note, ExportOptions, NoteImage, Speaker, Activity, ProgrammierConFeedback } from "../types";
 import { ApiTalk, ApiActivity } from "../types/apiSchemas";
 import conferenceApiService from "../services/conferenceApiService";
 import autoUpdateService from "../services/autoUpdateService";
@@ -74,8 +74,7 @@ interface AppContextType {
         talkId: string,
         rating: number,
         summary: string,
-        feedback: string,
-        markAsEvaluated?: boolean
+        feedback?: ProgrammierConFeedback
     ) => Promise<void>;
     shouldShowEvaluationModal: () => boolean;
     refreshActiveTalk: () => Promise<void>;
@@ -449,7 +448,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
                 // Preserve user-added evaluation data
                 rating: existingTalk?.rating,
                 summary: existingTalk?.summary,
-                feedback: existingTalk?.feedback,
             };
         });
 
@@ -1112,7 +1110,12 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     };
 
     // Evaluation Functions
-    const saveEvaluation = async (talkId: string, rating: number, summary: string, feedback: string): Promise<void> => {
+    const saveEvaluation = async (
+        talkId: string,
+        rating: number,
+        summary?: string,
+        feedback?: ProgrammierConFeedback
+    ): Promise<void> => {
         const talk = talks.find((t) => t.id === talkId);
         if (!talk) {
             throw new Error("Talk not found");

@@ -270,7 +270,7 @@ export default function TalkDetailScreen() {
                 </View>
 
                 {/* Talk Details Section - Collapsible only if user selected */}
-                {(talk.speakers?.length || talk.location || talk.description || talk.summary) && (
+                {(talk.speakers?.length || talk.location || talk.description) && ( // TODO: after programmiercon // || talk.summary) && (
                     <View
                         style={[
                             styles.detailsSection,
@@ -302,7 +302,8 @@ export default function TalkDetailScreen() {
                                 showsVerticalScrollIndicator={true}
                             >
                                 {/* Evaluation Summary */}
-                                {talk.summary ? (
+                                {/* TODO: after programmiercon */}
+                                {/* {talk.summary ? (
                                     <TouchableOpacity
                                         style={[styles.talkDetailItem, isTalkInPast(talk) && styles.clickableSummary]}
                                         onPress={isTalkInPast(talk) ? handleEditEvaluation : undefined}
@@ -348,7 +349,7 @@ export default function TalkDetailScreen() {
                                             </ThemedText>
                                         </View>
                                     </TouchableOpacity>
-                                ) : null}
+                                ) : null} */}
 
                                 {/* Speakers */}
                                 {talk.speakers && talk.speakers.length > 0 && (

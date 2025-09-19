@@ -3,6 +3,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Platform } from "react-native";
 import { generateId } from "@/storage/helper";
 import Constants from "expo-constants";
+import { ProgrammierConFeedback } from "@/types";
 
 // Check if we're in development mode
 const isDevelopment = (): boolean => {
@@ -121,12 +122,7 @@ export const trackTalkRemovedFromAgenda = async (talkId: string): Promise<void> 
 };
 
 // Track talk rating and summary
-export const trackTalkRated = async (params: {
-    talkId: string;
-    rating?: number;
-    feedback?: string;
-    hasSummary?: boolean;
-}): Promise<void> => {
+export const trackTalkRated = async (params: { talkId: string } & ProgrammierConFeedback): Promise<void> => {
     await trackEvent("talk_rated", params);
 };
 

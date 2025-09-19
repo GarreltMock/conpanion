@@ -46,7 +46,7 @@ export default function ImageEditScreen() {
     const tintColor = useThemeColor({}, "tint");
     const tintContentColor = useThemeColor({}, "tintContent");
     const whiteColor = useThemeColor({}, "white");
-    const backgroundOverlayColor = useThemeColor({}, "backgroundOverlay");
+    const borderLightColor = useThemeColor({}, "borderLight");
     const backgroundColor = useThemeColor({}, "background");
 
     // Get original image dimensions
@@ -393,7 +393,7 @@ export default function ImageEditScreen() {
 
                     <View style={styles.editActions}>
                         <TouchableOpacity
-                            style={[styles.actionButton, { backgroundColor: backgroundOverlayColor }]}
+                            style={[styles.actionButton, { borderColor: borderLightColor, borderWidth: 1 }]}
                             onPress={handleCancel}
                             disabled={loading}
                         >

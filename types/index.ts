@@ -35,7 +35,15 @@ export interface Talk extends AgendaItem {
     speakers?: Speaker[];
     rating?: number; // 1-5 stars for talk evaluation
     summary?: string;
+    feedback?: ProgrammierConFeedback;
+}
+
+export interface ProgrammierConFeedback {
+    ratingOverall?: number; // 1-5 stars
+    ratingContent?: number; // 1-5 stars
+    ratingSpeaker?: number; // 1-5 stars
     feedback?: string;
+    shareConsent?: boolean; // Whether the user consents to share feedback with organizers
 }
 
 export interface Activity extends AgendaItem {}

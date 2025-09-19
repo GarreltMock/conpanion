@@ -9,16 +9,18 @@ import { IconSymbol } from "@/components/ui/IconSymbol";
 import { useApp } from "@/context/AppContext";
 import { useI18n } from "@/hooks/useI18n";
 import { useThemeColor } from "@/hooks/useThemeColor";
-import { Talk } from "@/types";
+import { ProgrammierConFeedback, Talk } from "@/types";
 import { trackTalkRated } from "@/utils/analytics";
 import { toast } from "sonner-native";
 
 export default function TalkEvaluationModal() {
     const { talkId, source } = useLocalSearchParams<{ talkId: string; source?: string }>();
     const [talk, setTalk] = useState<Talk | null>(null);
-    const [rating, setRating] = useState<number>(0);
+    const [ratingOverall, setOverallRating] = useState<number>(0);
+    const [ratingSpeaker, setSpeakerRating] = useState<number>(0);
+    const [ratingContent, setContentRating] = useState<number>(0);
     const [summary, setSummary] = useState<string>("");
-    const [feedback, setFeedback] = useState<string>("");
+    const [shareAllowed, setShareAllowed] = useState<boolean>(false);
     const [isLoading, setIsLoading] = useState(true);
 
     const { talks, saveEvaluation, endTalk, currentConference } = useApp();
@@ -27,6 +29,7 @@ export default function TalkEvaluationModal() {
     const tintColor = useThemeColor({}, "tint");
     const tintContentColor = useThemeColor({}, "tintContent");
     const textColor = useThemeColor({}, "text");
+    const borderColor = useThemeColor({}, "border");
     const borderLightColor = useThemeColor({}, "borderLight");
     const backgroundOverlayLightColor = useThemeColor({}, "backgroundOverlayLight");
 
@@ -61,9 +64,12 @@ export default function TalkEvaluationModal() {
             if (foundTalk) {
                 setTalk(foundTalk);
                 // Prefill existing evaluation data
-                setRating(foundTalk.rating || 0);
                 setSummary(foundTalk.summary || "");
-                setFeedback(foundTalk.feedback || "");
+                setOverallRating(foundTalk.rating || 0);
+
+                setSpeakerRating(foundTalk.feedback?.ratingSpeaker || 0);
+                setContentRating(foundTalk.feedback?.ratingContent || 0);
+                setShareAllowed(foundTalk.feedback?.shareConsent || false);
             } else {
                 toast.error("Talk not found");
                 router.back();
@@ -72,11 +78,23 @@ export default function TalkEvaluationModal() {
         setIsLoading(false);
     }, [talkId, talks]);
 
+    const getProgrammierConFeedback = (): ProgrammierConFeedback | undefined => {
+        if (!talk) return undefined;
+
+        return {
+            ratingOverall,
+            ratingSpeaker,
+            ratingContent,
+            shareConsent: shareAllowed,
+            feedback: summary,
+        };
+    };
+
     const handleKeepTakingNotes = async () => {
         if (!talk) return;
 
         try {
-            await saveEvaluation(talk.id, rating, summary, feedback);
+            await saveEvaluation(talk.id, ratingOverall, summary, getProgrammierConFeedback());
             await trackEvaluation();
 
             router.back();
@@ -90,7 +108,7 @@ export default function TalkEvaluationModal() {
         if (!talk) return;
 
         try {
-            await saveEvaluation(talk.id, rating, summary, feedback);
+            await saveEvaluation(talk.id, ratingOverall, summary, getProgrammierConFeedback());
             await trackEvaluation();
             await endTalk(talk);
 
@@ -105,7 +123,7 @@ export default function TalkEvaluationModal() {
         if (!talk) return;
 
         try {
-            await saveEvaluation(talk.id, rating, summary, feedback);
+            await saveEvaluation(talk.id, ratingOverall, summary, getProgrammierConFeedback());
             await trackEvaluation();
 
             router.back();
@@ -118,8 +136,8 @@ export default function TalkEvaluationModal() {
     const trackEvaluation = async () => {
         if (!talk) return;
 
-        if (rating > 0 || feedback.length > 0) {
-            await trackTalkRated({ talkId: talk.id, rating, feedback, hasSummary: summary.trim().length > 0 });
+        if (shareAllowed) {
+            await trackTalkRated({ talkId: talk.id, ratingOverall, ratingContent, ratingSpeaker, feedback: summary });
         }
     };
 
@@ -130,11 +148,11 @@ export default function TalkEvaluationModal() {
     // Check if this modal was opened from the talk detail view
     const isFromTalkDetail = source === "talk-detail";
 
-    const renderStars = () => {
+    const renderStars = (rating: number, setter: (value: number) => void) => {
         const stars = [];
         for (let i = 1; i <= 5; i++) {
             stars.push(
-                <TouchableOpacity key={i} onPress={() => setRating(i)} style={styles.starButton}>
+                <TouchableOpacity key={i} onPress={() => setter(i)} style={styles.starButton}>
                     <IconSymbol
                         name={i <= rating ? "star.fill" : "star"}
                         size={28}
@@ -162,12 +180,14 @@ export default function TalkEvaluationModal() {
     return (
         <MyKeyboardAvoidingView style={styles.backdrop}>
             <View style={styles.spacer} />
-            {nextTalk && (
+            {nextTalk && !isFromTalkDetail && (
                 <View style={styles.nextTalkContainer}>
                     <View style={styles.nextTalkRow}>
-                        <ThemedText style={[styles.nextTalkText, { color: textColor }]}>Next Talk</ThemedText>
+                        <ThemedText style={[styles.nextTalkText, { color: textColor }]}>
+                            {t("talks.evaluation.nextTalk")}
+                        </ThemedText>
                         <IconSymbol name="arrow.right.circle" size={16} color={textColor} style={styles.nextTalkIcon} />
-                        <ThemedText style={[styles.nextTalkText, { color: textColor, opacity: 0.5 }]}>
+                        <ThemedText style={[styles.nextTalkText, { color: textColor, opacity: 0.5, flex: 1 }]}>
                             {nextTalk.title}
                         </ThemedText>
                     </View>
@@ -178,7 +198,7 @@ export default function TalkEvaluationModal() {
                     <View style={styles.content}>
                         <View style={styles.header}>
                             <View>
-                                <ThemedText style={styles.subtitle}>Evaluation</ThemedText>
+                                <ThemedText style={styles.subtitle}>{t("talks.evaluation.title")}</ThemedText>
                                 <ThemedText style={styles.title}>{talk.title}</ThemedText>
                             </View>
                             {isFromTalkDetail && (
@@ -198,7 +218,7 @@ export default function TalkEvaluationModal() {
                                         color: textColor,
                                     },
                                 ]}
-                                placeholder={t("talks.summary")}
+                                placeholder={t("talks.evaluation.summary")}
                                 placeholderTextColor={textColor + "60"}
                                 multiline
                                 value={summary}
@@ -207,35 +227,45 @@ export default function TalkEvaluationModal() {
                             />
                         </View>
 
-                        <View style={styles.feedbackSection}>
-                            <TextInput
-                                style={[
-                                    styles.feedbackInput,
-                                    {
-                                        borderColor: borderLightColor,
-                                        backgroundColor: backgroundOverlayLightColor,
-                                        color: textColor,
-                                    },
-                                ]}
-                                placeholder={t("talks.feedback") + "*"}
-                                placeholderTextColor={textColor + "60"}
-                                multiline
-                                value={feedback}
-                                onChangeText={setFeedback}
-                                textAlignVertical="top"
-                            />
-                        </View>
-
                         <View style={styles.ratingSection}>
                             <View style={styles.starsRow}>
-                                <View style={styles.starsContainer}>{renderStars()}</View>
-                                <ThemedText style={[styles.ratingAsterisk, { color: textColor + "60" }]}>*</ThemedText>
+                                <ThemedText style={styles.starsLabel}>Inhalt</ThemedText>
+                                <View style={styles.starsContainer}>
+                                    {renderStars(ratingContent, setContentRating)}
+                                </View>
+                            </View>
+                            <View style={styles.starsRow}>
+                                <ThemedText style={styles.starsLabel}>Sprecher</ThemedText>
+                                <View style={styles.starsContainer}>
+                                    {renderStars(ratingSpeaker, setSpeakerRating)}
+                                </View>
+                            </View>
+                            <View style={styles.starsRow}>
+                                <ThemedText style={styles.starsLabel}>Gesamt</ThemedText>
+                                <View style={styles.starsContainer}>
+                                    {renderStars(ratingOverall, setOverallRating)}
+                                </View>
                             </View>
                         </View>
 
-                        <ThemedText style={[styles.feedbackNote, { color: textColor + "60" }]}>
-                            * {t("talks.shareHint")}
-                        </ThemedText>
+                        <TouchableOpacity
+                            style={styles.checkboxContainer}
+                            onPress={() => setShareAllowed(!shareAllowed)}
+                            activeOpacity={0.7}
+                        >
+                            <View
+                                style={[
+                                    styles.checkbox,
+                                    { borderColor: borderColor },
+                                    shareAllowed && { backgroundColor: tintColor, borderColor: tintColor },
+                                ]}
+                            >
+                                {shareAllowed && (
+                                    <IconSymbol name="checkmark" size={14} color={tintContentColor} weight="bold" />
+                                )}
+                            </View>
+                            <ThemedText style={styles.checkboxLabel}>{t("talks.evaluation.shareConsent")}</ThemedText>
+                        </TouchableOpacity>
 
                         <View style={styles.buttonsContainer}>
                             {isFromTalkDetail ? (
@@ -244,7 +274,9 @@ export default function TalkEvaluationModal() {
                                     style={[styles.button, styles.saveButton, { backgroundColor: tintColor }]}
                                     onPress={handleSave}
                                 >
-                                    <Text style={[styles.buttonText, { color: tintContentColor }]}>Save</Text>
+                                    <Text style={[styles.buttonText, { color: tintContentColor }]}>
+                                        {t("common.save")}
+                                    </Text>
                                 </TouchableOpacity>
                             ) : (
                                 // When opened from normal flow - show original buttons
@@ -258,7 +290,7 @@ export default function TalkEvaluationModal() {
                                         onPress={handleKeepTakingNotes}
                                     >
                                         <Text style={[styles.buttonText, { color: textColor }]}>
-                                            {t("talks.keepTakingNotes")}
+                                            {t("talks.evaluation.keepTakingNotes")}
                                         </Text>
                                     </TouchableOpacity>
 
@@ -295,7 +327,6 @@ const styles = StyleSheet.create({
         alignItems: "center",
     },
     nextTalkRow: {
-        maxWidth: "80%",
         flexDirection: "row",
         alignItems: "center",
     },
@@ -354,22 +385,6 @@ const styles = StyleSheet.create({
         minHeight: 80,
         maxHeight: 120,
     },
-    feedbackSection: {
-        marginBottom: 24,
-    },
-    feedbackInput: {
-        borderWidth: 1,
-        borderRadius: 8,
-        padding: 12,
-        fontSize: 15,
-        minHeight: 80,
-        maxHeight: 120,
-    },
-    feedbackNote: {
-        fontSize: 12,
-        marginTop: 2,
-        fontStyle: "italic",
-    },
     ratingSection: {
         alignItems: "center",
         marginBottom: 12,
@@ -377,23 +392,42 @@ const styles = StyleSheet.create({
     starsRow: {
         flexDirection: "row",
         alignItems: "center",
-        justifyContent: "center",
+        justifyContent: "space-between",
+        width: "100%",
         gap: 8,
+        marginBottom: 12,
+    },
+    starsLabel: {
+        fontSize: 15,
+        fontWeight: "500",
     },
     starsContainer: {
         flexDirection: "row",
-        justifyContent: "center",
+        alignItems: "center",
         gap: 6,
-    },
-    ratingAsterisk: {
-        position: "relative",
-        top: -8,
-        left: -10,
-        fontSize: 16,
-        fontWeight: "500",
     },
     starButton: {
         padding: 2,
+    },
+    checkboxContainer: {
+        flexDirection: "row",
+        alignItems: "center",
+        marginBottom: 24,
+    },
+    checkbox: {
+        width: 20,
+        height: 20,
+        borderWidth: 2,
+        borderRadius: 4,
+        marginRight: 12,
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    checkboxLabel: {
+        fontSize: 14,
+        opacity: 0.6,
+        lineHeight: 16,
+        flex: 1,
     },
     buttonsContainer: {
         flexDirection: "row",
