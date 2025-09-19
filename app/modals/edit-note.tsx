@@ -79,7 +79,8 @@ export default function EditNoteModal() {
 
     const handleTakePhoto = async (fromGallery: boolean): Promise<string | null> => {
         try {
-            return await addImageNote(fromGallery);
+            if (!note) return null;
+            return await addImageNote(note.talkId, fromGallery);
         } catch (error) {
             console.error("Error taking photo:", error);
             throw error;
@@ -91,11 +92,13 @@ export default function EditNoteModal() {
         try {
             if (isRecording) {
                 // When stopping, return the URI of the recorded audio
-                const audioUri = await stopAudioRecording();
+                if (!note) return null;
+                const audioUri = await stopAudioRecording(note.talkId);
                 return audioUri;
             } else {
                 // Start recording
-                await addAudioNote();
+                if (!note) return null;
+                await addAudioNote(note.talkId);
                 return null;
             }
         } catch (error) {

@@ -91,13 +91,14 @@ export default function TalkDetailScreen() {
     const handleSubmitNote = async (text: string, images: NoteImage[], audioRecordings: string[]) => {
         if (!text.trim() && images.length === 0 && audioRecordings.length === 0) return;
         if (!talk?.id) return;
-        await addNote(text, images, audioRecordings, talk.id);
+        await addNote(talk.id, text, images, audioRecordings);
     };
 
     // Handle taking a photo
     const handleTakePhoto = async (fromGallery: boolean): Promise<string | null> => {
         try {
-            return await addImageNote(fromGallery);
+            if (!talk?.id) return null;
+            return await addImageNote(talk.id, fromGallery);
         } catch (error) {
             console.error("Error taking photo:", error);
             throw error;
@@ -109,12 +110,14 @@ export default function TalkDetailScreen() {
         try {
             if (isRecording) {
                 // When stopping, return the URI of the recorded audio
-                const audioUri = await stopAudioRecording();
+                if (!talk?.id) return null;
+                const audioUri = await stopAudioRecording(talk.id);
                 console.log("Audio recording stopped, URI:", audioUri);
                 return audioUri;
             } else {
                 // Start recording
-                await addAudioNote();
+                if (!talk?.id) return null;
+                await addAudioNote(talk.id);
                 return null;
             }
         } catch (error) {

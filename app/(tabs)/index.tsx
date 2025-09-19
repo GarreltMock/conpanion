@@ -116,13 +116,15 @@ export default function NotesScreen() {
     // Handle combined note submission (text, images, audio)
     const handleSubmitNote = async (text: string, images: NoteImage[], audioRecordings: string[]) => {
         if (!text.trim() && images.length === 0 && audioRecordings.length === 0) return;
-        await addNote(text, images, audioRecordings);
+        if (!activeTalk?.id) return;
+        await addNote(activeTalk.id, text, images, audioRecordings);
     };
 
     // Handle taking a photo
     const handleTakePhoto = async (fromGallery: boolean): Promise<string | null> => {
         try {
-            return await addImageNote(fromGallery);
+            if (!activeTalk?.id) return null;
+            return await addImageNote(activeTalk.id, fromGallery);
         } catch (error) {
             console.error("Error taking photo:", error);
             throw error;
@@ -134,12 +136,14 @@ export default function NotesScreen() {
         try {
             if (isRecording) {
                 // When stopping, return the URI of the recorded audio
-                const audioUri = await stopAudioRecording();
+                if (!activeTalk?.id) return null;
+                const audioUri = await stopAudioRecording(activeTalk.id);
                 console.log("Audio recording stopped, URI:", audioUri);
                 return audioUri;
             } else {
                 // Start recording
-                await addAudioNote();
+                if (!activeTalk?.id) return null;
+                await addAudioNote(activeTalk.id);
                 return null;
             }
         } catch (error) {

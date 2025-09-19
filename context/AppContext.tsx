@@ -96,10 +96,10 @@ interface AppContextType {
 
     // Note Management
     notes: Note[];
-    addImageNote: (fromGallery: boolean) => Promise<string | null>; // Returns image URI instead of creating note
-    addAudioNote: () => Promise<Note | null>;
-    stopAudioRecording: () => Promise<string | null>; // Returns audio URI instead of creating note
-    addNote: (text: string, images: NoteImage[], audioRecordings: string[], talkId?: string) => Promise<Note>;
+    addImageNote: (talkId: string, fromGallery: boolean) => Promise<string | null>; // Returns image URI instead of creating note
+    addAudioNote: (talkId: string) => Promise<void>;
+    stopAudioRecording: (talkId: string) => Promise<string | null>; // Returns audio URI instead of creating note
+    addNote: (talkId: string, text: string, images: NoteImage[], audioRecordings: string[]) => Promise<Note>;
     updateNote: (note: Note) => Promise<void>;
     deleteNote: (noteId: string) => Promise<void>;
     restoreNote: (note: Note) => Promise<void>;
@@ -750,9 +750,15 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         return activities.filter((activity) => activity.conferenceId === currentConference?.id);
     };
 
-    const addImageNote = async (fromGallery: boolean): Promise<string | null> => {
-        if (!activeTalk) {
-            throw new Error("No active talk to add note to");
+    const addImageNote = async (talkId: string, fromGallery: boolean): Promise<string | null> => {
+        if (!talkId) {
+            throw new Error("Talk ID is required to add an image");
+        }
+
+        // Validate talk exists
+        const talkExists = talks.some((t) => t.id === talkId);
+        if (!talkExists) {
+            throw new Error("Talk not found");
         }
 
         let result: ImagePicker.ImagePickerResult | null = null;
@@ -796,16 +802,22 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         return savedImagePath;
     };
 
-    const addAudioNote = async (): Promise<Note | null> => {
-        if (!activeTalk) {
-            throw new Error("No active talk to add note to");
+    const addAudioNote = async (talkId: string): Promise<void> => {
+        if (!talkId) {
+            throw new Error("Talk ID is required to start audio recording");
+        }
+
+        // Validate talk exists
+        const talkExists = talks.some((t) => t.id === talkId);
+        if (!talkExists) {
+            throw new Error("Talk not found");
         }
 
         // Request audio recording permissions
         const { status } = await Audio.requestPermissionsAsync();
         if (status !== "granted") {
             console.error("Audio recording permission not granted");
-            return null;
+            return;
         }
 
         try {
@@ -816,16 +828,26 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
             setIsRecording(true);
 
             // Wait for stop recording action (this will be handled externally)
-            return null;
+            return;
         } catch (error) {
             console.error("Error starting audio recording:", error);
-            return null;
+            return;
         }
     };
 
     // Function to stop audio recording and return the URI
-    const stopAudioRecording = async (): Promise<string | null> => {
-        if (!recording || !isRecording || !activeTalk) {
+    const stopAudioRecording = async (talkId: string): Promise<string | null> => {
+        if (!talkId) {
+            throw new Error("Talk ID is required to stop audio recording");
+        }
+
+        // Validate talk exists
+        const talkExists = talks.some((t) => t.id === talkId);
+        if (!talkExists) {
+            throw new Error("Talk not found");
+        }
+
+        if (!recording || !isRecording) {
             return null;
         }
 
@@ -862,14 +884,20 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
     // Function to create a note with combined content (text, images, audio)
     const addNote = async (
+        talkId: string,
         text: string,
         images: NoteImage[],
-        audioRecordings: string[],
-        talkId?: string
+        audioRecordings: string[]
     ): Promise<Note> => {
-        const targetTalkId = talkId || activeTalk?.id;
+        const targetTalkId = talkId;
         if (!targetTalkId) {
-            throw new Error("No talk to add note to");
+            throw new Error("Talk ID is required to add note");
+        }
+
+        // Validate talk exists
+        const targetTalk = talks.find((t) => t.id === targetTalkId);
+        if (!targetTalk) {
+            throw new Error("Talk not found");
         }
 
         // Process images to ensure they're saved to document directory (not cache)
@@ -909,7 +937,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
         // Create the new note with all content
         const currentTime = new Date();
-        const targetTalk = activeTalk?.id === targetTalkId ? activeTalk : talks.find((t) => t.id === targetTalkId);
         const relativeTimeSeconds = targetTalk
             ? Math.max(0, Math.floor((currentTime.getTime() - targetTalk.startTime.getTime()) / 1000))
             : 0;
