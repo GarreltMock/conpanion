@@ -365,7 +365,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = conpanion/conpanion.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 28CT428BQH;
+				DEVELOPMENT_TEAM = A2RM7VZUX2;
 				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -390,7 +390,7 @@
 					"-lc++",
 				);
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
-				PRODUCT_BUNDLE_IDENTIFIER = de.programmierbar.conference;
+				PRODUCT_BUNDLE_IDENTIFIER = de.mock.conpanion;
 				PRODUCT_NAME = programmiercon;
 				SWIFT_OBJC_BRIDGING_HEADER = "conpanion/conpanion-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
