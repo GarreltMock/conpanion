@@ -118,6 +118,14 @@ function AppContent() {
                         animation: "fade_from_bottom",
                     }}
                 />
+                <Stack.Screen
+                    name="modals/webview"
+                    options={{
+                        presentation: "modal",
+                        headerShown: false,
+                        title: "Web View",
+                    }}
+                />
             </Stack>
             <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
             <Toaster

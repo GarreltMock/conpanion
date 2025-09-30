@@ -1,5 +1,5 @@
 import React from "react";
-import { StyleSheet, ScrollView, View, Pressable, Switch } from "react-native";
+import { StyleSheet, ScrollView, View, Pressable, Switch, Linking } from "react-native";
 import { useRouter } from "expo-router";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
@@ -43,9 +43,17 @@ export default function SettingsModal() {
         changeLocale(locale === "en" ? "de" : "en");
     };
 
-    const handleExternalLink = (url: string) => {
-        // TODO: Open external link
-        console.log("Opening external link:", url);
+    const handleExternalLink = (url: string, title?: string) => {
+        router.push({
+            pathname: "/modals/webview",
+            params: { url, title },
+        });
+    };
+
+    const sendMail = (url: string) => {
+        Linking.openURL(url).catch((error) => {
+            console.error("Failed to open email app:", error);
+        });
     };
 
     return (
@@ -127,7 +135,9 @@ export default function SettingsModal() {
                                     opacity: pressed ? 0.7 : 1,
                                 },
                             ]}
-                            onPress={() => handleExternalLink("https://privacy.example.com")}
+                            onPress={() =>
+                                handleExternalLink("https://privacy.example.com", t("settings.legal.dataPrivacy"))
+                            }
                         >
                             <ThemedText style={styles.settingLabel}>{t("settings.legal.dataPrivacy")}</ThemedText>
                             <IconSymbol name="chevron.right" size={16} color={mutedColor} />
@@ -140,14 +150,16 @@ export default function SettingsModal() {
                                     opacity: pressed ? 0.7 : 1,
                                 },
                             ]}
-                            onPress={() => handleExternalLink("https://impressum.example.com")}
+                            onPress={() =>
+                                handleExternalLink("https://lotum.com/de/legal-info", t("settings.legal.impressum"))
+                            }
                         >
                             <ThemedText style={styles.settingLabel}>{t("settings.legal.impressum")}</ThemedText>
                             <IconSymbol name="chevron.right" size={16} color={mutedColor} />
                         </Pressable>
                         <Pressable
                             style={({ pressed }) => [styles.settingItemLast, { opacity: pressed ? 0.7 : 1 }]}
-                            onPress={() => handleExternalLink("mailto:support@example.com")}
+                            onPress={() => sendMail("mailto:support@example.com")}
                         >
                             <ThemedText style={styles.settingLabel}>{t("settings.legal.contactSupport")}</ThemedText>
                             <IconSymbol name="chevron.right" size={16} color={mutedColor} />
