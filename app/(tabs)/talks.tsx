@@ -66,7 +66,7 @@ export default function TalksScreen() {
     const tintColor = useThemeColor({}, "tint");
     const tintContentColor = useThemeColor({}, "tintContent");
     const iconColor = useThemeColor({}, "icon");
-    const iconHighlightColor = useThemeColor({}, "iconHighlight");
+    const highlightColor = useThemeColor({}, "highlight");
     const textColor = useThemeColor({}, "text");
     const backgroundColor = useThemeColor({}, "background");
     const headerBackgroundColor = useThemeColor({}, "headerBackground");
@@ -271,7 +271,7 @@ export default function TalksScreen() {
                             <IconSymbol
                                 size={20}
                                 name={item.isUserSelected ? "bookmark.fill" : "bookmark"}
-                                color={iconHighlightColor}
+                                color={highlightColor}
                             />
                         </TouchableOpacity>
 
@@ -344,10 +344,10 @@ export default function TalksScreen() {
 
         const exploreAgendaButton = (
             <TouchableOpacity style={styles.exploreAgendaButton} onPress={() => setIndex(1)} activeOpacity={0.7}>
-                <ThemedText style={[styles.exploreAgendaText, { color: tintColor }]}>
+                <ThemedText style={[styles.exploreAgendaText, { color: highlightColor }]}>
                     {t("talks.exploreAgenda")}
                 </ThemedText>
-                <IconSymbol name="arrow.right" size={16} color={tintColor} style={styles.exploreArrow} />
+                <IconSymbol name="arrow.right" size={16} color={highlightColor} style={styles.exploreArrow} />
             </TouchableOpacity>
         );
 

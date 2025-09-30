@@ -45,7 +45,7 @@
         "tabs": {
             "notes": "Notizen",
             "talks": "Vorträge",
-            "conferences": "Konferenzen"
+            "conference": "Konferenz"
         }
     },
     "errors": {
@@ -143,7 +143,23 @@
         "syncingDescription": "Lade die neueste Agenda von der API",
         "syncSuccess": "Konferenz-Agenda erfolgreich aktualisiert",
         "lastSync": "Zuletzt aktualisiert",
-        "neverSynced": "Nie"
+        "neverSynced": "Nie",
+        "allConferences": "Alle Konferenzen",
+        "dashboard": {
+            "title": "Konferenz",
+            "activeConference": "Aktive Konferenz",
+            "noActiveConference": "Keine aktive Konferenz ausgewählt",
+            "allConferences": "Alle Konferenzen",
+            "updates": {
+                "title": "Konferenz Updates"
+            },
+            "socials": {
+                "title": "Social Media",
+                "feedback": "Feedback",
+                "quiz": "Quiz",
+                "discord": "Discord"
+            }
+        }
     },
     "forms": {
         "conference": {
@@ -251,5 +267,19 @@
     "share": {
         "conferenceExport": "Konferenz Export",
         "shareMessage": "Hier ist Ihr Konferenz-Export von Conpanion"
+    },
+    "settings": {
+        "title": "Einstellungen",
+        "app": {
+            "title": "App",
+            "darkMode": "Dunkler Modus",
+            "language": "Sprache"
+        },
+        "legal": {
+            "title": "Legal",
+            "dataPrivacy": "Datenschutz",
+            "impressum": "Impressum",
+            "contactSupport": "Support kontaktieren"
+        }
     }
 }

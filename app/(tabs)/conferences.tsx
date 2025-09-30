@@ -1,115 +1,83 @@
-import React, { useEffect, useState } from "react";
-import { View, StyleSheet, FlatList, Text, Pressable } from "react-native";
+import React from "react";
+import { View, StyleSheet, ScrollView, Pressable, Linking } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useApp } from "@/context/AppContext";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { ConferenceItem } from "@/components/conference/ConferenceItem";
-import { FirstTimeConferencePrompt } from "@/components/conference/FirstTimeConferencePrompt";
-import { Ionicons } from "@expo/vector-icons";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { useRouter } from "expo-router";
-import { Conference } from "@/types";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { useI18n } from "@/hooks/useI18n";
+import { Ionicons } from "@expo/vector-icons";
+import { toast } from "sonner-native";
 
 export default function ConferencesScreen() {
-    const { conferences, currentConference, getConferences, hasConferences } = useApp();
+    const { currentConference } = useApp();
     const insets = useSafeAreaInsets();
-
-    const [loading, setLoading] = useState(true);
-    const [hasAnyConferences, setHasAnyConferences] = useState(true);
-    const [refreshing, setRefreshing] = useState(false);
-
     const router = useRouter();
     const { t } = useI18n();
+
     const tintColor = useThemeColor({}, "tint");
     const tintContentColor = useThemeColor({}, "tintContent");
     const headerBackgroundColor = useThemeColor({}, "headerBackground");
     const borderLight = useThemeColor({}, "borderLight");
+    const backgroundOverlayLight = useThemeColor({}, "backgroundOverlayLight");
+    const textColor = useThemeColor({}, "text");
+    const mutedColor = useThemeColor({}, "muted");
 
-    useEffect(() => {
-        const checkConferencesAndLoad = async () => {
-            setLoading(true);
-            try {
-                const hasConfs = await hasConferences();
-                setHasAnyConferences(hasConfs);
+    const handleAllConferences = () => {
+        router.push("/conference-list" as any);
+    };
 
-                // Always try to load conferences regardless of hasConfs
-                // This ensures we have the latest data
-                await getConferences();
-            } catch (error) {
-                console.error("Error loading conferences:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
+    const handleSettings = () => {
+        router.push("/modals/settings" as any);
+    };
 
-        checkConferencesAndLoad();
+    const handleConferenceDetails = () => {
+        if (currentConference?.id) {
+            router.push({
+                pathname: "/conference",
+                params: { id: currentConference.id },
+            });
+        }
+    };
 
-        // Only run this once on component mount by using empty dependency array
-    }, [getConferences, hasConferences]);
+    const handleEditConference = () => {
+        if (currentConference?.id) {
+            router.push({
+                pathname: "/modals/edit-conference",
+                params: { id: currentConference.id },
+            });
+        }
+    };
 
-    const handleRefresh = async () => {
-        setRefreshing(true);
+    const handleExportConference = () => {
+        if (currentConference?.id) {
+            router.push({
+                pathname: "/modals/export-options",
+                params: { id: currentConference.id },
+            });
+        }
+    };
+
+    const handleOpenLink = async (url: string) => {
         try {
-            const hasConfs = await hasConferences();
-            setHasAnyConferences(hasConfs);
-
-            // Always try to load conferences
-            await getConferences();
+            const canOpen = await Linking.canOpenURL(url);
+            if (canOpen) {
+                await Linking.openURL(url);
+            } else {
+                toast.error("Cannot open this URL");
+            }
         } catch (error) {
-            console.error("Error refreshing conferences:", error);
-        } finally {
-            setRefreshing(false);
+            console.error("Error opening URL:", error);
+            toast.error("Failed to open URL");
         }
     };
-
-    const handleCreateNewConference = () => {
-        router.push("/modals/new-conference");
-    };
-
-    const handleEditConference = (conference: Conference) => {
-        router.push({
-            pathname: "/modals/edit-conference",
-            params: { id: conference.id },
-        });
-    };
-
-    const handleExportConference = (conference: Conference) => {
-        router.push({
-            pathname: "/modals/export-options",
-            params: { id: conference.id },
-        });
-    };
-
-    const handleViewConferenceDetails = (conference: Conference) => {
-        // Make sure we have an ID to navigate with
-        if (!conference || !conference.id) {
-            console.error("Cannot navigate to conference details: Invalid conference");
-            return;
-        }
-
-        router.push({
-            pathname: "/conference",
-            params: { id: conference.id },
-        });
-    };
-
-    if (loading) {
-        return (
-            <View style={styles.centered}>
-                <ThemedText>{t("conferences.loading")}</ThemedText>
-            </View>
-        );
-    }
-
-    if (!hasAnyConferences) {
-        return <FirstTimeConferencePrompt />;
-    }
 
     return (
         <ThemedView style={styles.container}>
+            {/* Header */}
             <View
                 style={[
                     styles.header,
@@ -121,44 +89,120 @@ export default function ConferencesScreen() {
                     },
                 ]}
             >
-                <ThemedText style={styles.headerTitle}>{t("conferences.title")}</ThemedText>
+                <ThemedText style={styles.headerTitle}>{t("conferences.dashboard.title")}</ThemedText>
                 <Pressable
                     style={({ pressed }) => [
-                        styles.addButton,
+                        styles.settingsButton,
                         {
-                            backgroundColor: tintColor,
-                            opacity: pressed ? 0.8 : 1,
+                            opacity: pressed ? 0.7 : 1,
                         },
                     ]}
-                    onPress={handleCreateNewConference}
+                    onPress={handleSettings}
                 >
-                    <IconSymbol name="plus" size={18} color={tintContentColor} />
-                    <Text style={[styles.buttonText, { color: tintContentColor }]}>{t("common.actions.add")}</Text>
+                    <IconSymbol name="gearshape" size={24} color={textColor} />
                 </Pressable>
             </View>
-            <FlatList
-                data={conferences}
-                keyExtractor={(item) => item.id}
-                renderItem={({ item }) => (
-                    <ConferenceItem
-                        conference={item}
-                        isActive={currentConference?.id === item.id}
-                        onPress={() => handleViewConferenceDetails(item)}
-                        onExport={() => handleExportConference(item)}
-                        onEdit={() => handleEditConference(item)}
-                    />
-                )}
-                refreshing={refreshing}
-                onRefresh={handleRefresh}
-                ListEmptyComponent={
-                    <ThemedView style={styles.emptyContainer}>
-                        <Ionicons name="calendar-outline" size={64} color={tintColor} />
-                        <ThemedText style={styles.emptyText}>{t("conferences.noConferences")}</ThemedText>
-                        <ThemedText style={styles.emptySubtext}>{t("conferences.getStarted")}</ThemedText>
-                    </ThemedView>
-                }
-                contentContainerStyle={conferences.length === 0 ? { flex: 1 } : undefined}
-            />
+
+            <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+                {/* Active Conference Section */}
+                <View style={(styles.section, { marginBottom: 12 })}>
+                    <ThemedText style={styles.sectionTitle}>{t("conferences.dashboard.activeConference")}</ThemedText>
+                    {currentConference ? (
+                        <ConferenceItem
+                            conference={currentConference}
+                            isActive={true}
+                            onPress={handleConferenceDetails}
+                            onEdit={handleEditConference}
+                            onExport={handleExportConference}
+                        />
+                    ) : (
+                        <View style={[styles.emptyCard, { borderColor: borderLight }]}>
+                            <Ionicons name="calendar-outline" size={48} color={mutedColor} />
+                            <ThemedText style={[styles.emptyText, { color: mutedColor }]}>
+                                {t("conferences.dashboard.noActiveConference")}
+                            </ThemedText>
+                        </View>
+                    )}
+                </View>
+
+                {/* All Conferences Button */}
+                <View style={styles.section}>
+                    <View
+                        style={[
+                            styles.sectionContainer,
+                            { backgroundColor: backgroundOverlayLight, borderColor: borderLight },
+                        ]}
+                    >
+                        <Pressable
+                            style={({ pressed }) => [
+                                styles.linkItem,
+                                { borderBottomColor: borderLight, opacity: pressed ? 0.7 : 1 },
+                            ]}
+                            onPress={handleAllConferences}
+                        >
+                            <ThemedText style={styles.linkText}>{t("conferences.dashboard.allConferences")}</ThemedText>
+                            <IconSymbol name="chevron.right" size={16} color={mutedColor} />
+                        </Pressable>
+                        <Pressable
+                            style={({ pressed }) => [styles.linkItemLast, { opacity: pressed ? 0.7 : 1 }]}
+                            onPress={() => handleOpenLink("https://feedback.example.com")}
+                        >
+                            <View style={styles.sectionTitleRow}>
+                                <ThemedText style={styles.linkText}>
+                                    {t("conferences.dashboard.updates.title")}
+                                </ThemedText>
+                                <View style={[styles.badge, { backgroundColor: tintColor }]}>
+                                    <ThemedText style={[styles.badgeText, { color: tintContentColor }]}>1</ThemedText>
+                                </View>
+                            </View>
+                            <IconSymbol name="chevron.right" size={16} color={mutedColor} />
+                        </Pressable>
+                    </View>
+                </View>
+
+                {/* Links Section */}
+                <View style={styles.section}>
+                    <ThemedText style={styles.sectionTitle}>{t("conferences.dashboard.socials.title")}</ThemedText>
+                    <View
+                        style={[
+                            styles.sectionContainer,
+                            { backgroundColor: backgroundOverlayLight, borderColor: borderLight },
+                        ]}
+                    >
+                        <Pressable
+                            style={({ pressed }) => [
+                                styles.linkItem,
+                                { borderBottomColor: borderLight, opacity: pressed ? 0.7 : 1 },
+                            ]}
+                            onPress={() => handleOpenLink("https://feedback.example.com")}
+                        >
+                            <ThemedText style={styles.linkText}>
+                                {t("conferences.dashboard.socials.feedback")}
+                            </ThemedText>
+                            <IconSymbol name="arrow.up.right.square" size={16} color={mutedColor} />
+                        </Pressable>
+                        <Pressable
+                            style={({ pressed }) => [
+                                styles.linkItem,
+                                { borderBottomColor: borderLight, opacity: pressed ? 0.7 : 1 },
+                            ]}
+                            onPress={() => handleOpenLink("https://quiz.example.com")}
+                        >
+                            <ThemedText style={styles.linkText}>{t("conferences.dashboard.socials.quiz")}</ThemedText>
+                            <IconSymbol name="arrow.up.right.square" size={16} color={mutedColor} />
+                        </Pressable>
+                        <Pressable
+                            style={({ pressed }) => [styles.linkItemLast, { opacity: pressed ? 0.7 : 1 }]}
+                            onPress={() => handleOpenLink("https://discord.gg/SvkGpjxSMe")}
+                        >
+                            <ThemedText style={styles.linkText}>
+                                {t("conferences.dashboard.socials.discord")}
+                            </ThemedText>
+                            <IconSymbol name="arrow.up.right.square" size={16} color={mutedColor} />
+                        </Pressable>
+                    </View>
+                </View>
+            </ScrollView>
         </ThemedView>
     );
 }
@@ -166,11 +210,6 @@ export default function ConferencesScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-    },
-    centered: {
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
     },
     header: {
         flexDirection: "row",
@@ -185,33 +224,77 @@ const styles = StyleSheet.create({
         fontSize: 22,
         fontWeight: "bold",
     },
-    addButton: {
+    settingsButton: {
+        width: 40,
+        height: 40,
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    content: {
+        flex: 1,
+        paddingHorizontal: 16,
+    },
+    section: {
+        marginBottom: 24,
+    },
+    sectionTitle: {
+        fontSize: 12,
+        marginBottom: 4,
+        marginLeft: 18,
+        opacity: 0.7,
+        textTransform: "uppercase",
+    },
+    sectionTitleRow: {
         flexDirection: "row",
         alignItems: "center",
-        justifyContent: "center",
-        paddingHorizontal: 12,
-        paddingVertical: 8,
-        borderRadius: 20,
     },
-    buttonText: {
-        marginLeft: 6,
-        fontWeight: "600",
-    },
-    emptyContainer: {
-        flex: 1,
-        justifyContent: "center",
+    badge: {
+        minWidth: 20,
+        height: 20,
+        borderRadius: 10,
         alignItems: "center",
-        padding: 20,
+        justifyContent: "center",
+        marginLeft: 8,
+    },
+    badgeText: {
+        marginTop: -2,
+        fontSize: 12,
+        fontFamily: "MuseoSans-Black",
+    },
+    emptyCard: {
+        borderRadius: 12,
+        padding: 32,
+        alignItems: "center",
+        justifyContent: "center",
+        borderWidth: 1,
+        borderStyle: "dashed",
     },
     emptyText: {
-        fontSize: 18,
-        fontWeight: "bold",
-        marginTop: 16,
-        marginBottom: 8,
-    },
-    emptySubtext: {
+        marginTop: 12,
         fontSize: 16,
         textAlign: "center",
-        opacity: 0.7,
+    },
+    sectionContainer: {
+        borderRadius: 12,
+        borderWidth: 1,
+        overflow: "hidden",
+    },
+    linkItem: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        borderBottomWidth: 1,
+    },
+    linkItemLast: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+    },
+    linkText: {
+        fontSize: 16,
     },
 });

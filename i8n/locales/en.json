@@ -45,7 +45,7 @@
         "tabs": {
             "notes": "Notes",
             "talks": "Talks",
-            "conferences": "Conferences"
+            "conferenc": "Conference"
         }
     },
     "errors": {
@@ -143,7 +143,23 @@
         "syncingDescription": "Fetching the latest agenda from the API",
         "syncSuccess": "Conference agenda updated successfully",
         "lastSync": "Last Updated",
-        "neverSynced": "Never"
+        "neverSynced": "Never",
+        "allConferences": "All Conferences",
+        "dashboard": {
+            "title": "Conference",
+            "activeConference": "Active Conference",
+            "noActiveConference": "No active conference selected",
+            "allConferences": "All Conferences",
+            "updates": {
+                "title": "Conference Updates"
+            },
+            "socials": {
+                "title": "Social Media",
+                "feedback": "Feedback",
+                "quiz": "Quiz",
+                "discord": "Discord"
+            }
+        }
     },
     "forms": {
         "conference": {
@@ -251,5 +267,19 @@
     "share": {
         "conferenceExport": "Conference Export",
         "shareMessage": "Here is your conference export from Conpanion"
+    },
+    "settings": {
+        "title": "Settings",
+        "app": {
+            "title": "App",
+            "darkMode": "Dark Mode",
+            "language": "Language"
+        },
+        "legal": {
+            "title": "Legal",
+            "dataPrivacy": "Data Privacy",
+            "impressum": "Impressum",
+            "contactSupport": "Contact Support"
+        }
     }
 }

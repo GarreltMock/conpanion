@@ -3,13 +3,15 @@ export interface ApiAgendaResponse {
     activities?: ApiActivity[];
     lastModified?: string;
     version?: string;
-    conference?: {
-        name?: string;
-        description?: string;
-        location?: string;
-        startDate?: string | Date;
-        endDate?: string | Date;
-    };
+    conference?: ApiConference;
+}
+
+export interface ApiConference {
+    name?: string;
+    description?: string;
+    location?: string;
+    startDate?: string | Date;
+    endDate?: string | Date;
 }
 
 export interface ApiTalk {

@@ -17,6 +17,7 @@ export default function ImageViewModal() {
 
     // Theme colors
     const whiteColor = useThemeColor({}, "white");
+    const backgroundColor = useThemeColor({}, "background");
 
     // View mode state for zoom and pan
     const scale = useSharedValue(1);
@@ -124,7 +125,7 @@ export default function ImageViewModal() {
     });
 
     return (
-        <ThemedView style={[styles.container]}>
+        <ThemedView style={[styles.container, { backgroundColor: backgroundColor }]}>
             <View style={styles.header}>
                 <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
                     <IconSymbol name="xmark" size={24} color={whiteColor} />
@@ -149,7 +150,6 @@ const { width, height } = Dimensions.get("window");
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: "#000",
     },
     header: {
         flexDirection: "row",

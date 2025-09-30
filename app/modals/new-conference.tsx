@@ -9,7 +9,6 @@ import {
     Text,
     ActivityIndicator,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { Calendar } from "react-native-calendars";
 import { useApp } from "../../context/AppContext";
@@ -37,7 +36,7 @@ export default function NewConferenceModal() {
     const backgroundColor = useThemeColor({}, "background");
     const tintColor = useThemeColor({}, "tint");
     const tintContentColor = useThemeColor({}, "tintContent");
-    const iconHighlightColor = useThemeColor({}, "iconHighlight");
+    const highlightColor = useThemeColor({}, "highlight");
     const textColor = useThemeColor({}, "text");
     const placeholderColor = useThemeColor({}, "muted");
     const errorColor = useThemeColor({}, "error");
@@ -74,179 +73,174 @@ export default function NewConferenceModal() {
     };
 
     return (
-        <SafeAreaView style={styles.safeArea}>
-            <ThemedView style={styles.container}>
-                <View style={[styles.header, { borderBottomColor: borderLightColor }]}>
-                    <TouchableOpacity style={styles.cancelButton} onPress={handleCancel} disabled={isSubmitting}>
-                        <ThemedText style={styles.cancelText}>{t("common.cancel")}</ThemedText>
-                    </TouchableOpacity>
+        <ThemedView style={styles.container}>
+            <View style={[styles.header, { borderBottomColor: borderLightColor }]}>
+                <TouchableOpacity style={styles.cancelButton} onPress={handleCancel} disabled={isSubmitting}>
+                    <ThemedText style={styles.cancelText}>{t("common.cancel")}</ThemedText>
+                </TouchableOpacity>
 
-                    <ThemedText style={styles.title}>{t("modals.newConference")}</ThemedText>
+                <ThemedText style={styles.title}>{t("modals.newConference")}</ThemedText>
+
+                <TouchableOpacity
+                    style={[styles.createButton, { backgroundColor: tintColor }, !name.trim() && styles.disabledButton]}
+                    onPress={handleCreateConference}
+                    disabled={!name.trim() || isSubmitting}
+                >
+                    {isSubmitting ? (
+                        <ActivityIndicator size="small" color={tintContentColor} />
+                    ) : (
+                        <Text style={[styles.createText, { color: tintContentColor }]}>
+                            {t("common.actions.create")}
+                        </Text>
+                    )}
+                </TouchableOpacity>
+            </View>
+
+            <ScrollView
+                style={styles.scrollContainer}
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={styles.formContainer}
+            >
+                <ThemedView style={styles.formSection}>
+                    <TextInput
+                        style={[
+                            styles.input,
+                            {
+                                color: textColor,
+                                backgroundColor: backgroundColor,
+                                borderColor: borderColor,
+                            },
+                        ]}
+                        value={name}
+                        onChangeText={setName}
+                        placeholder={t("forms.conference.namePlaceholder")}
+                        placeholderTextColor={placeholderColor}
+                    />
+
+                    <TextInput
+                        style={[
+                            styles.input,
+                            {
+                                color: textColor,
+                                backgroundColor: backgroundColor,
+                                borderColor: borderColor,
+                            },
+                        ]}
+                        value={location}
+                        onChangeText={setLocation}
+                        placeholder={t("forms.conference.locationPlaceholder")}
+                        placeholderTextColor={placeholderColor}
+                    />
+
+                    <TextInput
+                        style={[
+                            styles.textArea,
+                            {
+                                color: textColor,
+                                backgroundColor: backgroundColor,
+                                borderColor: borderColor,
+                            },
+                        ]}
+                        value={description}
+                        onChangeText={setDescription}
+                        placeholder={t("forms.conference.descriptionPlaceholder")}
+                        placeholderTextColor={placeholderColor}
+                        multiline
+                        numberOfLines={4}
+                        textAlignVertical="top"
+                    />
+
+                    <ThemedText style={styles.label}>{t("forms.conference.dateRangeRequired")}</ThemedText>
 
                     <TouchableOpacity
-                        style={[
-                            styles.createButton,
-                            { backgroundColor: tintColor },
-                            !name.trim() && styles.disabledButton,
-                        ]}
-                        onPress={handleCreateConference}
-                        disabled={!name.trim() || isSubmitting}
+                        style={[styles.dateButton, { backgroundColor: backgroundColor, borderColor: borderColor }]}
+                        onPress={() => {
+                            setShowStartCalendar(!showStartCalendar);
+                            setShowEndCalendar(false);
+                        }}
                     >
-                        {isSubmitting ? (
-                            <ActivityIndicator size="small" color={tintContentColor} />
-                        ) : (
-                            <Text style={[styles.createText, { color: tintContentColor }]}>{t("common.actions.create")}</Text>
-                        )}
+                        <ThemedText>
+                            {t("common.dateRange.start")} {formatDisplayDate(startDate)}
+                        </ThemedText>
+                        <Ionicons name="calendar-outline" size={20} color={textColor} />
                     </TouchableOpacity>
-                </View>
 
-                <ScrollView
-                    style={styles.scrollContainer}
-                    showsVerticalScrollIndicator={false}
-                    contentContainerStyle={styles.formContainer}
-                >
-                    <ThemedView style={styles.formSection}>
-                        <TextInput
-                            style={[
-                                styles.input,
-                                {
-                                    color: textColor,
-                                    backgroundColor: backgroundColor,
-                                    borderColor: borderColor,
-                                },
-                            ]}
-                            value={name}
-                            onChangeText={setName}
-                            placeholder={t("forms.conference.namePlaceholder")}
-                            placeholderTextColor={placeholderColor}
-                        />
+                    {showStartCalendar && (
+                        <View style={[styles.calendarContainer, { borderColor: borderColor }]}>
+                            <Calendar
+                                onDayPress={(day: { timestamp: number }) => {
+                                    const selectedDate = new Date(day.timestamp);
+                                    setStartDate(selectedDate);
 
-                        <TextInput
-                            style={[
-                                styles.input,
-                                {
-                                    color: textColor,
-                                    backgroundColor: backgroundColor,
-                                    borderColor: borderColor,
-                                },
-                            ]}
-                            value={location}
-                            onChangeText={setLocation}
-                            placeholder={t("forms.conference.locationPlaceholder")}
-                            placeholderTextColor={placeholderColor}
-                        />
+                                    // If end date is before start date, adjust it
+                                    if (endDate < selectedDate) {
+                                        // Set end date to start date + 1 day
+                                        const newEndDate = new Date(selectedDate);
+                                        newEndDate.setDate(newEndDate.getDate() + 1);
+                                        setEndDate(newEndDate);
+                                    }
 
-                        <TextInput
-                            style={[
-                                styles.textArea,
-                                {
-                                    color: textColor,
-                                    backgroundColor: backgroundColor,
-                                    borderColor: borderColor,
-                                },
-                            ]}
-                            value={description}
-                            onChangeText={setDescription}
-                            placeholder={t("forms.conference.descriptionPlaceholder")}
-                            placeholderTextColor={placeholderColor}
-                            multiline
-                            numberOfLines={4}
-                            textAlignVertical="top"
-                        />
+                                    setShowStartCalendar(false);
+                                }}
+                                markedDates={{
+                                    [formatCalendarDate(startDate)]: {
+                                        selected: true,
+                                        selectedColor: highlightColor,
+                                    },
+                                }}
+                                theme={{
+                                    todayTextColor: tintColor,
+                                    selectedDayBackgroundColor: highlightColor,
+                                    arrowColor: tintContentColor,
+                                }}
+                            />
+                        </View>
+                    )}
 
-                        <ThemedText style={styles.label}>{t("forms.conference.dateRangeRequired")}</ThemedText>
+                    <TouchableOpacity
+                        style={[styles.dateButton, { backgroundColor: backgroundColor, borderColor: borderColor }]}
+                        onPress={() => {
+                            setShowEndCalendar(!showEndCalendar);
+                            setShowStartCalendar(false);
+                        }}
+                    >
+                        <ThemedText>
+                            {t("common.dateRange.end")} {formatDisplayDate(endDate)}
+                        </ThemedText>
+                        <Ionicons name="calendar-outline" size={20} color={textColor} />
+                    </TouchableOpacity>
 
-                        <TouchableOpacity
-                            style={[styles.dateButton, { backgroundColor: backgroundColor, borderColor: borderColor }]}
-                            onPress={() => {
-                                setShowStartCalendar(!showStartCalendar);
-                                setShowEndCalendar(false);
-                            }}
-                        >
-                            <ThemedText>{t("common.dateRange.start")} {formatDisplayDate(startDate)}</ThemedText>
-                            <Ionicons name="calendar-outline" size={20} color={textColor} />
-                        </TouchableOpacity>
+                    {showEndCalendar && (
+                        <View style={[styles.calendarContainer, { borderColor: borderColor }]}>
+                            <Calendar
+                                minDate={formatCalendarDate(startDate)}
+                                onDayPress={(day: { timestamp: number }) => {
+                                    setEndDate(new Date(day.timestamp));
+                                    setShowEndCalendar(false);
+                                }}
+                                markedDates={{
+                                    [formatCalendarDate(endDate)]: {
+                                        selected: true,
+                                        selectedColor: highlightColor,
+                                    },
+                                }}
+                                theme={{
+                                    todayTextColor: tintColor,
+                                    selectedDayBackgroundColor: highlightColor,
+                                    arrowColor: tintContentColor,
+                                }}
+                            />
+                        </View>
+                    )}
 
-                        {showStartCalendar && (
-                            <View style={[styles.calendarContainer, { borderColor: borderColor }]}>
-                                <Calendar
-                                    onDayPress={(day: { timestamp: number }) => {
-                                        const selectedDate = new Date(day.timestamp);
-                                        setStartDate(selectedDate);
-
-                                        // If end date is before start date, adjust it
-                                        if (endDate < selectedDate) {
-                                            // Set end date to start date + 1 day
-                                            const newEndDate = new Date(selectedDate);
-                                            newEndDate.setDate(newEndDate.getDate() + 1);
-                                            setEndDate(newEndDate);
-                                        }
-
-                                        setShowStartCalendar(false);
-                                    }}
-                                    markedDates={{
-                                        [formatCalendarDate(startDate)]: {
-                                            selected: true,
-                                            selectedColor: iconHighlightColor,
-                                        },
-                                    }}
-                                    theme={{
-                                        todayTextColor: tintColor,
-                                        selectedDayBackgroundColor: iconHighlightColor,
-                                        arrowColor: tintContentColor,
-                                    }}
-                                />
-                            </View>
-                        )}
-
-                        <TouchableOpacity
-                            style={[styles.dateButton, { backgroundColor: backgroundColor, borderColor: borderColor }]}
-                            onPress={() => {
-                                setShowEndCalendar(!showEndCalendar);
-                                setShowStartCalendar(false);
-                            }}
-                        >
-                            <ThemedText>{t("common.dateRange.end")} {formatDisplayDate(endDate)}</ThemedText>
-                            <Ionicons name="calendar-outline" size={20} color={textColor} />
-                        </TouchableOpacity>
-
-                        {showEndCalendar && (
-                            <View style={[styles.calendarContainer, { borderColor: borderColor }]}>
-                                <Calendar
-                                    minDate={formatCalendarDate(startDate)}
-                                    onDayPress={(day: { timestamp: number }) => {
-                                        setEndDate(new Date(day.timestamp));
-                                        setShowEndCalendar(false);
-                                    }}
-                                    markedDates={{
-                                        [formatCalendarDate(endDate)]: {
-                                            selected: true,
-                                            selectedColor: iconHighlightColor,
-                                        },
-                                    }}
-                                    theme={{
-                                        todayTextColor: tintColor,
-                                        selectedDayBackgroundColor: iconHighlightColor,
-                                        arrowColor: tintContentColor,
-                                    }}
-                                />
-                            </View>
-                        )}
-
-                        {error ? (
-                            <ThemedText style={[styles.errorText, { color: errorColor }]}>{error}</ThemedText>
-                        ) : null}
-                    </ThemedView>
-                </ScrollView>
-            </ThemedView>
-        </SafeAreaView>
+                    {error ? <ThemedText style={[styles.errorText, { color: errorColor }]}>{error}</ThemedText> : null}
+                </ThemedView>
+            </ScrollView>
+        </ThemedView>
     );
 }
 
 const styles = StyleSheet.create({
-    safeArea: {
-        flex: 1,
-    },
     container: {
         flex: 1,
     },

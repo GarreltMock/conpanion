@@ -19,7 +19,7 @@ function AppContent() {
     const invertedBorderColor = useThemeColor({}, "border", true);
     const invertedTextColor = useThemeColor({}, "text", true);
     const invertedMutedColor = useThemeColor({}, "muted", true);
-    const invertedIconHighlightColor = useThemeColor({}, "iconHighlight", true);
+    const invertedIconHighlightColor = useThemeColor({}, "highlight", true);
     const invertedErrorColor = useThemeColor({}, "error", true);
     const whiteColor = useThemeColor({}, "white");
 
@@ -42,6 +42,12 @@ function AppContent() {
                     }}
                 />
                 <Stack.Screen
+                    name="conference-list"
+                    options={{
+                        headerShown: false,
+                    }}
+                />
+                <Stack.Screen
                     name="conference"
                     options={{
                         headerShown: false,
@@ -56,6 +62,14 @@ function AppContent() {
                 />
                 <Stack.Screen name="modals/new-talk" options={{ presentation: "modal", headerShown: false }} />
                 <Stack.Screen name="modals/new-agenda-item" options={{ presentation: "modal", headerShown: false }} />
+                <Stack.Screen
+                    name="modals/settings"
+                    options={{
+                        presentation: "modal",
+                        headerShown: false,
+                        animation: "slide_from_bottom",
+                    }}
+                />
                 <Stack.Screen
                     name="modals/edit-note"
                     options={{

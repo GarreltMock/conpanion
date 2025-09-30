@@ -53,6 +53,7 @@ export default function TalkDetailScreen() {
     const { t } = useI18n();
     const textColor = useThemeColor({}, "text");
     const tintColor = useThemeColor({}, "tint");
+    const tintContentColor = useThemeColor({}, "tintContent");
     const backgroundColor = useThemeColor({}, "background");
     const headerBackgroundColor = useThemeColor({}, "headerBackground");
     const borderLightColor = useThemeColor({}, "borderLight");
@@ -351,6 +352,24 @@ export default function TalkDetailScreen() {
                                     </TouchableOpacity>
                                 ) : null} */}
 
+                                {/* Description */}
+                                {talk.description && (
+                                    <View style={styles.talkDetailItem}>
+                                        <View style={styles.talkDetailHeader}>
+                                            <IconSymbol
+                                                name="doc.text"
+                                                size={16}
+                                                color={iconColor}
+                                                style={styles.talkDetailIcon}
+                                            />
+                                            <ThemedText style={styles.talkDetailLabel}>
+                                                {t("talks.description")}
+                                            </ThemedText>
+                                        </View>
+                                        <ThemedText style={styles.talkDetailValue}>{talk.description}</ThemedText>
+                                    </View>
+                                )}
+
                                 {/* Speakers */}
                                 {talk.speakers && talk.speakers.length > 0 && (
                                     <View style={styles.talkDetailItem}>
@@ -413,24 +432,6 @@ export default function TalkDetailScreen() {
                                         <ThemedText style={styles.talkDetailValue}>{talk.location}</ThemedText>
                                     </View>
                                 )}
-
-                                {/* Description */}
-                                {talk.description && (
-                                    <View style={styles.talkDetailItem}>
-                                        <View style={styles.talkDetailHeader}>
-                                            <IconSymbol
-                                                name="doc.text"
-                                                size={16}
-                                                color={iconColor}
-                                                style={styles.talkDetailIcon}
-                                            />
-                                            <ThemedText style={styles.talkDetailLabel}>
-                                                {t("talks.description")}
-                                            </ThemedText>
-                                        </View>
-                                        <ThemedText style={styles.talkDetailValue}>{talk.description}</ThemedText>
-                                    </View>
-                                )}
                             </ScrollView>
                         )}
                     </View>
@@ -477,8 +478,8 @@ export default function TalkDetailScreen() {
                                 onPress={handleAddToUserTalks}
                                 activeOpacity={0.8}
                             >
-                                <IconSymbol name="bookmark.fill" size={20} color={backgroundColor} />
-                                <Text style={[styles.addToUserTalksText, { color: backgroundColor }]}>
+                                <IconSymbol name="bookmark.fill" size={20} color={tintContentColor} />
+                                <Text style={[styles.addToUserTalksText, { color: tintContentColor }]}>
                                     {t("talks.actions.addToUserAgenda")}
                                 </Text>
                             </TouchableOpacity>
