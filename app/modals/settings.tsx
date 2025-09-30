@@ -1,25 +1,18 @@
 import React from "react";
 import { StyleSheet, ScrollView, View, Pressable, Switch } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { useI18n } from "@/hooks/useI18n";
-import { useColorScheme } from "@/hooks/useColorScheme";
+import { useColorScheme } from "@/context/ColorSchemeContext";
 
 export default function SettingsModal() {
     const router = useRouter();
     const { t, locale, changeLocale } = useI18n();
-    const colorSchemeResult = useColorScheme();
+    const { colorScheme, userPreference, setColorScheme } = useColorScheme();
 
-    // Handle the hook returning either string or object during loading
-    const colorScheme = typeof colorSchemeResult === "string" ? colorSchemeResult : colorSchemeResult.colorScheme;
-    const userPreference = typeof colorSchemeResult === "string" ? "system" : colorSchemeResult.userPreference;
-    const setColorScheme = typeof colorSchemeResult === "string" ? () => {} : colorSchemeResult.setColorScheme;
-
-    const backgroundColor = useThemeColor({}, "background");
     const headerBackgroundColor = useThemeColor({}, "headerBackground");
     const borderLight = useThemeColor({}, "borderLight");
     const backgroundOverlayLight = useThemeColor({}, "backgroundOverlayLight");

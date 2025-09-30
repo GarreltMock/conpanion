@@ -8,13 +8,14 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Toaster } from "sonner-native";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 
-import { useColorScheme } from "@/hooks/useColorScheme";
+import { ColorSchemeProvider, useColorScheme } from "@/context/ColorSchemeContext";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { AppProvider } from "@/context/AppContext";
 import { useAppStartup } from "@/hooks/useAppStartup";
 
 function AppContent() {
-    const colorScheme = useColorScheme();
+    const { colorScheme } = useColorScheme();
+
     const invertedBackgroundColor = useThemeColor({}, "background", true);
     const invertedBorderColor = useThemeColor({}, "border", true);
     const invertedTextColor = useThemeColor({}, "text", true);
@@ -118,7 +119,7 @@ function AppContent() {
                     }}
                 />
             </Stack>
-            <StatusBar style="auto" />
+            <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
             <Toaster
                 position="bottom-center"
                 theme={colorScheme === "dark" ? "dark" : "light"}
@@ -183,9 +184,11 @@ export default function RootLayout() {
     return (
         <SafeAreaProvider>
             <GestureHandlerRootView style={{ flex: 1 }}>
-                <AppProvider>
-                    <AppContent />
-                </AppProvider>
+                <ColorSchemeProvider>
+                    <AppProvider>
+                        <AppContent />
+                    </AppProvider>
+                </ColorSchemeProvider>
             </GestureHandlerRootView>
         </SafeAreaProvider>
     );
