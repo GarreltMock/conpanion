@@ -190,7 +190,7 @@ export default function ConferencesScreen() {
                         </Pressable>
                         <Pressable
                             style={({ pressed }) => [
-                                styles.linkItemLast,
+                                styles.linkItem,
                                 { borderBottomColor: borderLight, opacity: pressed ? 0.7 : 1 },
                             ]}
                             onPress={() =>
@@ -206,6 +206,26 @@ export default function ConferencesScreen() {
                                 />
                                 <ThemedText style={styles.linkText}>
                                     {t("conferences.dashboard.conference.quiz")}
+                                </ThemedText>
+                            </View>
+                            <IconSymbol name="chevron.right" size={16} color={mutedColor} />
+                        </Pressable>
+                        <Pressable
+                            style={({ pressed }) => [
+                                styles.linkItemLast,
+                                { borderBottomColor: borderLight, opacity: pressed ? 0.7 : 1 },
+                            ]}
+                            onPress={() =>
+                                showLink(
+                                    "https://www.programmier.bar/verhaltensregeln",
+                                    t("conferences.dashboard.conference.codeOfConduct")
+                                )
+                            }
+                        >
+                            <View style={styles.linkTextContainer}>
+                                <FontAwesome6 name="gavel" size={20} color={textColor} style={styles.linkIcon} />
+                                <ThemedText style={styles.linkText}>
+                                    {t("conferences.dashboard.conference.codeOfConduct")}
                                 </ThemedText>
                             </View>
                             <IconSymbol name="chevron.right" size={16} color={mutedColor} />
@@ -283,7 +303,7 @@ export default function ConferencesScreen() {
                     <View style={styles.webviewContainer}>
                         <WebView
                             source={{
-                                uri: "https://www.buzzsprout.com/176239?client_source=large_player&iframe=true&referrer=https%3A%2F%2Fwww.buzzsprout.com%2Fadmin%2F176239%2Fpodcast%2Fembed",
+                                uri: "https://www.buzzsprout.com/176239?client_source=large_player&iframe=true&referrer=https%3A%2F%2Fwww.buzzsprout.com%2Fadmin%2F176239%2Fpodcast%2Fembed&tags=programmiercon",
                             }}
                             style={styles.webview}
                             javaScriptEnabled={true}

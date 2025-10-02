@@ -159,7 +159,7 @@ export default function SettingsModal() {
                         </Pressable>
                         <Pressable
                             style={({ pressed }) => [styles.settingItemLast, { opacity: pressed ? 0.7 : 1 }]}
-                            onPress={() => sendMail("mailto:support@example.com")}
+                            onPress={() => sendMail("mailto:podcast@programmier.bar")}
                         >
                             <ThemedText style={styles.settingLabel}>{t("settings.legal.contactSupport")}</ThemedText>
                             <IconSymbol name="chevron.right" size={16} color={mutedColor} />

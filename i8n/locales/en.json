@@ -43,8 +43,8 @@
         "profile": "Profile",
         "settings": "Settings",
         "tabs": {
-            "notes": "Notes",
-            "talks": "Talks",
+            "notes": "Current Talk",
+            "talks": "Agenda",
             "conferenc": "Conference"
         }
     },
@@ -157,7 +157,8 @@
                 "allConferences": "All Conferences",
                 "updates": "Conference Updates",
                 "feedback": "Feedback",
-                "quiz": "Quiz"
+                "quiz": "Quiz",
+                "codeOfConduct": "Code of Conduct"
             },
             "socials": {
                 "title": "Social Media",
