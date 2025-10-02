@@ -1,4 +1,4 @@
-package com.mock.conpanion
+package de.programmierbar.conference
 
 import android.app.Application
 import android.content.res.Configuration

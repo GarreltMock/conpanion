@@ -384,7 +384,7 @@
 					"-lc++",
 				);
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
-				PRODUCT_BUNDLE_IDENTIFIER = de.mock.conpanion;
+				PRODUCT_BUNDLE_IDENTIFIER = de.programmierbar.conference;
 				PRODUCT_NAME = programmiercon;
 				SWIFT_OBJC_BRIDGING_HEADER = "conpanion/conpanion-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";

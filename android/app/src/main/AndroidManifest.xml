@@ -32,6 +32,8 @@
         <data android:scheme="com.mock.conpanion"/>
         <data android:scheme="exp+programmiercon"/>
         <data android:scheme="exp+programmier.con"/>
+        <data android:scheme="de.programmierbar.conference"/>
+        <data android:scheme="exp+programmier-con"/>
       </intent-filter>
     </activity>
   </application>
