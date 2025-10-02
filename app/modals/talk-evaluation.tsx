@@ -148,11 +148,17 @@ export default function TalkEvaluationModal() {
     // Check if this modal was opened from the talk detail view
     const isFromTalkDetail = source !== "talk-notes";
 
+    // Validation: if any rating is filled, all must be filled
+    const hasAnyRating = ratingOverall > 0 || ratingSpeaker > 0 || ratingContent > 0;
+    const hasAllRatings = ratingOverall > 0 && ratingSpeaker > 0 && ratingContent > 0;
+    const isRatingValid = !hasAnyRating || hasAllRatings;
+    const isSaveDisabled = !isRatingValid;
+
     const renderStars = (rating: number, setter: (value: number) => void) => {
         const stars = [];
         for (let i = 1; i <= 5; i++) {
             stars.push(
-                <TouchableOpacity key={i} onPress={() => setter(i)} style={styles.starButton}>
+                <TouchableOpacity key={i} onPress={() => setter(rating === i ? 0 : i)} style={styles.starButton}>
                     <IconSymbol
                         name={i <= rating ? "star.fill" : "star"}
                         size={28}
@@ -227,21 +233,34 @@ export default function TalkEvaluationModal() {
                             />
                         </View>
 
+                        {isSaveDisabled && (
+                            <View style={styles.validationHint}>
+                                <IconSymbol name="info.circle" size={20} color={textColor} style={{ opacity: 0.6 }} />
+                                <ThemedText style={[styles.validationText, { color: textColor }]}>
+                                    {t("talks.evaluation.completeAllRatings")}
+                                </ThemedText>
+                            </View>
+                        )}
+
                         <View style={styles.ratingSection}>
                             <View style={styles.starsRow}>
-                                <ThemedText style={styles.starsLabel}>Inhalt</ThemedText>
+                                <ThemedText style={[styles.starsLabel, { opacity: 0.7 }]}>
+                                    {t("talks.evaluation.content")}
+                                </ThemedText>
                                 <View style={styles.starsContainer}>
                                     {renderStars(ratingContent, setContentRating)}
                                 </View>
                             </View>
                             <View style={styles.starsRow}>
-                                <ThemedText style={styles.starsLabel}>Sprecher</ThemedText>
+                                <ThemedText style={[styles.starsLabel, { opacity: 0.7 }]}>
+                                    {t("talks.evaluation.speaker")}
+                                </ThemedText>
                                 <View style={styles.starsContainer}>
                                     {renderStars(ratingSpeaker, setSpeakerRating)}
                                 </View>
                             </View>
                             <View style={styles.starsRow}>
-                                <ThemedText style={styles.starsLabel}>Gesamt</ThemedText>
+                                <ThemedText style={styles.starsLabel}>{t("talks.evaluation.overall")}</ThemedText>
                                 <View style={styles.starsContainer}>
                                     {renderStars(ratingOverall, setOverallRating)}
                                 </View>
@@ -271,10 +290,22 @@ export default function TalkEvaluationModal() {
                             {isFromTalkDetail ? (
                                 // When opened from talk detail view - just show Save button
                                 <TouchableOpacity
-                                    style={[styles.button, styles.saveButton, { backgroundColor: tintColor }]}
+                                    style={[
+                                        styles.button,
+                                        styles.saveButton,
+                                        { backgroundColor: tintColor },
+                                        isSaveDisabled && styles.buttonDisabled,
+                                    ]}
                                     onPress={handleSave}
+                                    disabled={isSaveDisabled}
                                 >
-                                    <Text style={[styles.buttonText, { color: tintContentColor }]}>
+                                    <Text
+                                        style={[
+                                            styles.buttonText,
+                                            { color: tintContentColor },
+                                            isSaveDisabled && styles.buttonTextDisabled,
+                                        ]}
+                                    >
                                         {t("common.save")}
                                     </Text>
                                 </TouchableOpacity>
@@ -295,10 +326,22 @@ export default function TalkEvaluationModal() {
                                     </TouchableOpacity>
 
                                     <TouchableOpacity
-                                        style={[styles.button, styles.doneButton, { backgroundColor: tintColor }]}
+                                        style={[
+                                            styles.button,
+                                            styles.doneButton,
+                                            { backgroundColor: tintColor },
+                                            isSaveDisabled && styles.buttonDisabled,
+                                        ]}
                                         onPress={handleDone}
+                                        disabled={isSaveDisabled}
                                     >
-                                        <Text style={[styles.buttonText, { color: tintContentColor }]}>
+                                        <Text
+                                            style={[
+                                                styles.buttonText,
+                                                { color: tintContentColor },
+                                                isSaveDisabled && styles.buttonTextDisabled,
+                                            ]}
+                                        >
                                             {t("common.done")}
                                         </Text>
                                     </TouchableOpacity>
@@ -444,14 +487,27 @@ const styles = StyleSheet.create({
     keepNotesButton: {
         borderWidth: 1,
     },
-    doneButton: {
-        // backgroundColor set dynamically
-    },
-    saveButton: {
-        // backgroundColor set dynamically
-    },
+    doneButton: {},
+    saveButton: {},
     buttonText: {
         fontSize: 15,
         fontWeight: "600",
+    },
+    buttonDisabled: {
+        opacity: 0.4,
+    },
+    buttonTextDisabled: {
+        opacity: 0.6,
+    },
+    validationHint: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 12,
+        marginBottom: 4,
+    },
+    validationText: {
+        fontSize: 14,
+        opacity: 0.6,
+        flex: 1,
     },
 });

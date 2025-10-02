@@ -116,7 +116,11 @@
             "nextTalk": "Next",
             "summary": "Feedback",
             "shareConsent": "I agree that my feedback will be shared",
-            "keepTakingNotes": "Keep Taking Notes"
+            "keepTakingNotes": "Keep Taking Notes",
+            "content": "Content",
+            "speaker": "Speaker",
+            "overall": "Overall",
+            "completeAllRatings": "Please rate all categories"
         },
         "addTalk": "Add Talk",
         "otherDay": "Other",

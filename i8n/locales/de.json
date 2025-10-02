@@ -116,7 +116,11 @@
             "nextTalk": "Next",
             "summary": "Feedback",
             "shareConsent": "Ich bin einverstanden, dass mein Feedback geteilt wird",
-            "keepTakingNotes": "Fortsetzen"
+            "keepTakingNotes": "Fortsetzen",
+            "content": "Inhalt",
+            "speaker": "Sprecher",
+            "overall": "Gesamt",
+            "completeAllRatings": "Bitte bewerte alle Kategorien"
         },
         "addTalk": "Neuer Vortrag",
         "otherDay": "Andere",
