@@ -166,7 +166,7 @@
                 "website": "Website"
             },
             "podcast": {
-                "title": "Podcast"
+                "title": "Podcasts for the conference"
             }
         }
     },
@@ -217,7 +217,6 @@
             "includeImages": "Include Images",
             "filename": "Filename",
             "filenamePlaceholder": "Enter export filename",
-            "saveAsHelp": "Export will be saved as {{filename}}.{{format}}",
             "selectTalks": "Select Talks to Include",
             "selectAll": "Select All",
             "selectNone": "Select None",

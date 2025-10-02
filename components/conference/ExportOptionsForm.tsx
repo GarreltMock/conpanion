@@ -274,9 +274,6 @@ export const ExportOptionsForm: React.FC<ExportOptionsFormProps> = ({ conference
                         placeholder={t("forms.export.filenamePlaceholder")}
                         placeholderTextColor={placeholderColor}
                     />
-                    <ThemedText style={styles.helperText}>
-                        {t("forms.export.saveAsHelp", { filename: options.filename, format: options.format })}
-                    </ThemedText>
 
                     <ThemedText style={styles.sectionTitle}>{t("forms.export.selectTalks")}</ThemedText>
 
@@ -401,11 +398,6 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         padding: Platform.OS === "ios" ? 12 : 8,
         fontSize: 16,
-    },
-    helperText: {
-        fontSize: 12,
-        marginTop: 4,
-        marginBottom: 16,
     },
     selectAllRow: {
         flexDirection: "row",

@@ -19,17 +19,15 @@ export default function ConferencesScreen() {
     const router = useRouter();
     const { t } = useI18n();
 
-    const tintColor = useThemeColor({}, "tint");
-    const tintContentColor = useThemeColor({}, "tintContent");
     const headerBackgroundColor = useThemeColor({}, "headerBackground");
     const borderLight = useThemeColor({}, "borderLight");
     const backgroundOverlayLight = useThemeColor({}, "backgroundOverlayLight");
     const textColor = useThemeColor({}, "text");
     const mutedColor = useThemeColor({}, "muted");
 
-    const handleAllConferences = () => {
-        router.push("/conference-list" as any);
-    };
+    // const handleAllConferences = () => {
+    //     router.push("/conference-list" as any);
+    // };
 
     const handleSettings = () => {
         router.push("/modals/settings" as any);
@@ -141,7 +139,8 @@ export default function ConferencesScreen() {
                             { backgroundColor: backgroundOverlayLight, borderColor: borderLight },
                         ]}
                     >
-                        <Pressable
+                        {/* TODO: after programmier.con */}
+                        {/* <Pressable
                             style={({ pressed }) => [
                                 styles.linkItem,
                                 { borderBottomColor: borderLight, opacity: pressed ? 0.7 : 1 },
@@ -168,7 +167,7 @@ export default function ConferencesScreen() {
                                 </View>
                             </View>
                             <IconSymbol name="chevron.right" size={16} color={mutedColor} />
-                        </Pressable>
+                        </Pressable> */}
                         <Pressable
                             style={({ pressed }) => [
                                 styles.linkItem,

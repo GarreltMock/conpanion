@@ -115,12 +115,13 @@ export const ConferenceItem: React.FC<ConferenceItemProps> = ({
                             <ThemedText style={styles.actionText}>{t("common.actions.export")}</ThemedText>
                         </TouchableOpacity>
                     )}
-                    {onEdit && (
+                    {/* TODO: after programmier.con */}
+                    {/* {onEdit && (
                         <TouchableOpacity style={styles.actionButton} onPress={onEdit}>
                             <Ionicons name="pencil-outline" size={20} color={iconColor} />
                             <ThemedText style={styles.actionText}>{t("common.edit")}</ThemedText>
                         </TouchableOpacity>
-                    )}
+                    )} */}
                 </View>
             </ThemedView>
         </TouchableOpacity>

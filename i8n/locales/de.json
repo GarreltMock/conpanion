@@ -15,7 +15,7 @@
         "actions": {
             "add": "Hinzufügen",
             "create": "Erstellen",
-            "export": "Exportieren",
+            "export": "Notizen exportieren",
             "selectAll": "Alle auswählen",
             "selectNone": "Keine auswählen"
         },
@@ -166,7 +166,7 @@
                 "website": "Webseite"
             },
             "podcast": {
-                "title": "Podcast"
+                "title": "Podcasts zur Konferenz"
             }
         }
     },
@@ -217,8 +217,7 @@
             "includeImages": "Bilder einschließen",
             "filename": "Dateiname",
             "filenamePlaceholder": "Export Dateiname eingeben",
-            "saveAsHelp": "Export wird gespeichert als {{filename}}.{{format}}",
-            "selectTalks": "Vorträge zum Einschließen auswählen",
+            "selectTalks": "Vorträge zum Export auswählen",
             "selectAll": "Alle auswählen",
             "selectNone": "Keine auswählen",
             "noTalks": "Keine Vorträge in dieser Konferenz gefunden",

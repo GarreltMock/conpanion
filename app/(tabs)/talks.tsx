@@ -72,6 +72,7 @@ export default function TalksScreen() {
     const headerBackgroundColor = useThemeColor({}, "headerBackground");
     const borderLight = useThemeColor({}, "borderLight");
     const borderColor = useThemeColor({}, "border");
+    const backgroundOverlayLightColor = useThemeColor({}, "backgroundOverlayLight");
 
     // Helper function to combine talks and activities with type info
     const combineAgendaItems = useCallback((talks: Talk[], activities: Activity[]): AgendaItem[] => {
@@ -298,7 +299,7 @@ export default function TalksScreen() {
 
                 {showRateButton && (
                     <View style={[styles.actions]}>
-                        <View style={[styles.actionBorder, { borderTopColor: borderLight }]} />
+                        <View style={[styles.actionBorder, { borderTopColor: backgroundOverlayLightColor }]} />
                         <TouchableOpacity style={styles.actionButton} onPress={handleRateTalk}>
                             <IconSymbol name="star" size={20} color={iconColor} />
                             <ThemedText style={styles.actionText}>{t("talks.actions.rateTalk")}</ThemedText>

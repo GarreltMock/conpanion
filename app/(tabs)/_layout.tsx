@@ -61,7 +61,7 @@ export default function TabLayout() {
                 name="conference"
                 options={{
                     title: t("navigation.tabs.conference"),
-                    tabBarIcon: ({ color }) => <IconSymbol size={28} name="calendar" color={color} />,
+                    tabBarIcon: ({ color }) => <IconSymbol size={28} name="squares.below.rectangle" color={color} />,
                 }}
             />
         </Tabs>
