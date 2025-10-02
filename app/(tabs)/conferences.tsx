@@ -9,8 +9,9 @@ import { useThemeColor } from "@/hooks/useThemeColor";
 import { useRouter } from "expo-router";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { useI18n } from "@/hooks/useI18n";
-import { Ionicons } from "@expo/vector-icons";
+import { FontAwesome6, Ionicons } from "@expo/vector-icons";
 import { toast } from "sonner-native";
+import WebView from "react-native-webview";
 
 export default function ConferencesScreen() {
     const { currentConference } = useApp();
@@ -75,6 +76,13 @@ export default function ConferencesScreen() {
         }
     };
 
+    const showLink = (url: string, title?: string) => {
+        router.push({
+            pathname: "/modals/webview",
+            params: { url, title },
+        });
+    };
+
     return (
         <ThemedView style={styles.container}>
             {/* Header */}
@@ -106,7 +114,7 @@ export default function ConferencesScreen() {
             <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
                 {/* Active Conference Section */}
                 <View style={(styles.section, { marginBottom: 12 })}>
-                    <ThemedText style={styles.sectionTitle}>{t("conferences.dashboard.activeConference")}</ThemedText>
+                    <ThemedText style={styles.sectionTitle}>{t("conferences.dashboard.conference.title")}</ThemedText>
                     {currentConference ? (
                         <ConferenceItem
                             conference={currentConference}
@@ -119,7 +127,7 @@ export default function ConferencesScreen() {
                         <View style={[styles.emptyCard, { borderColor: borderLight }]}>
                             <Ionicons name="calendar-outline" size={48} color={mutedColor} />
                             <ThemedText style={[styles.emptyText, { color: mutedColor }]}>
-                                {t("conferences.dashboard.noActiveConference")}
+                                {t("conferences.dashboard.conference.noActive")}
                             </ThemedText>
                         </View>
                     )}
@@ -140,20 +148,66 @@ export default function ConferencesScreen() {
                             ]}
                             onPress={handleAllConferences}
                         >
-                            <ThemedText style={styles.linkText}>{t("conferences.dashboard.allConferences")}</ThemedText>
+                            <ThemedText style={styles.linkText}>
+                                {t("conferences.dashboard.conference.allConferences")}
+                            </ThemedText>
                             <IconSymbol name="chevron.right" size={16} color={mutedColor} />
                         </Pressable>
                         <Pressable
-                            style={({ pressed }) => [styles.linkItemLast, { opacity: pressed ? 0.7 : 1 }]}
-                            onPress={() => handleOpenLink("https://feedback.example.com")}
+                            style={({ pressed }) => [
+                                styles.linkItem,
+                                { borderBottomColor: borderLight, opacity: pressed ? 0.7 : 1 },
+                            ]}
                         >
                             <View style={styles.sectionTitleRow}>
                                 <ThemedText style={styles.linkText}>
-                                    {t("conferences.dashboard.updates.title")}
+                                    {t("conferences.dashboard.conference.updates")}
                                 </ThemedText>
                                 <View style={[styles.badge, { backgroundColor: tintColor }]}>
                                     <ThemedText style={[styles.badgeText, { color: tintContentColor }]}>1</ThemedText>
                                 </View>
+                            </View>
+                            <IconSymbol name="chevron.right" size={16} color={mutedColor} />
+                        </Pressable>
+                        <Pressable
+                            style={({ pressed }) => [
+                                styles.linkItem,
+                                { borderBottomColor: borderLight, opacity: pressed ? 0.7 : 1 },
+                            ]}
+                            onPress={() =>
+                                showLink(
+                                    "https://docs.google.com/forms/d/e/1FAIpQLSdy-bCNbjQdfKzSSA-n097LY7avdCqMGFtzg0BvDpA9nq3jjQ/viewform?usp=header",
+                                    t("conferences.dashboard.conference.feedback")
+                                )
+                            }
+                        >
+                            <View style={styles.linkTextContainer}>
+                                <FontAwesome6 name="comment-dots" size={20} color={textColor} style={styles.linkIcon} />
+                                <ThemedText style={styles.linkText}>
+                                    {t("conferences.dashboard.conference.feedback")}
+                                </ThemedText>
+                            </View>
+                            <IconSymbol name="chevron.right" size={16} color={mutedColor} />
+                        </Pressable>
+                        <Pressable
+                            style={({ pressed }) => [
+                                styles.linkItemLast,
+                                { borderBottomColor: borderLight, opacity: pressed ? 0.7 : 1 },
+                            ]}
+                            onPress={() =>
+                                showLink("https://quiz.example.com", t("conferences.dashboard.conference.quiz"))
+                            }
+                        >
+                            <View style={styles.linkTextContainer}>
+                                <FontAwesome6
+                                    name="clipboard-question"
+                                    size={20}
+                                    color={textColor}
+                                    style={styles.linkIcon}
+                                />
+                                <ThemedText style={styles.linkText}>
+                                    {t("conferences.dashboard.conference.quiz")}
+                                </ThemedText>
                             </View>
                             <IconSymbol name="chevron.right" size={16} color={mutedColor} />
                         </Pressable>
@@ -166,40 +220,76 @@ export default function ConferencesScreen() {
                     <View
                         style={[
                             styles.sectionContainer,
+                            styles.socialLinkContainer,
                             { backgroundColor: backgroundOverlayLight, borderColor: borderLight },
                         ]}
                     >
                         <Pressable
-                            style={({ pressed }) => [
-                                styles.linkItem,
-                                { borderBottomColor: borderLight, opacity: pressed ? 0.7 : 1 },
-                            ]}
-                            onPress={() => handleOpenLink("https://feedback.example.com")}
-                        >
-                            <ThemedText style={styles.linkText}>
-                                {t("conferences.dashboard.socials.feedback")}
-                            </ThemedText>
-                            <IconSymbol name="arrow.up.right.square" size={16} color={mutedColor} />
-                        </Pressable>
-                        <Pressable
-                            style={({ pressed }) => [
-                                styles.linkItem,
-                                { borderBottomColor: borderLight, opacity: pressed ? 0.7 : 1 },
-                            ]}
-                            onPress={() => handleOpenLink("https://quiz.example.com")}
-                        >
-                            <ThemedText style={styles.linkText}>{t("conferences.dashboard.socials.quiz")}</ThemedText>
-                            <IconSymbol name="arrow.up.right.square" size={16} color={mutedColor} />
-                        </Pressable>
-                        <Pressable
-                            style={({ pressed }) => [styles.linkItemLast, { opacity: pressed ? 0.7 : 1 }]}
+                            style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
                             onPress={() => handleOpenLink("https://discord.gg/SvkGpjxSMe")}
                         >
-                            <ThemedText style={styles.linkText}>
-                                {t("conferences.dashboard.socials.discord")}
-                            </ThemedText>
-                            <IconSymbol name="arrow.up.right.square" size={16} color={mutedColor} />
+                            <FontAwesome6 name="discord" size={26} color={textColor} />
                         </Pressable>
+                        <Pressable
+                            style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
+                            onPress={() =>
+                                handleOpenLink(
+                                    "https://open.spotify.com/show/0ik0sXv9paTQCeThcOLCCJ?si=fac1e831038b4b22"
+                                )
+                            }
+                        >
+                            <FontAwesome6 name="spotify" size={26} color={textColor} />
+                        </Pressable>
+                        <Pressable
+                            style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
+                            onPress={() => handleOpenLink("https://www.programmier.bar/")}
+                        >
+                            <Ionicons name="globe-outline" size={26} color={textColor} />
+                        </Pressable>
+                        <Pressable
+                            style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
+                            onPress={() => handleOpenLink("https://www.linkedin.com/company/68164372")}
+                        >
+                            <FontAwesome6 name="linkedin" size={26} color={textColor} />
+                        </Pressable>
+                        <Pressable
+                            style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
+                            onPress={() => handleOpenLink("https://social.programmier.bar/@podcast")}
+                        >
+                            <FontAwesome6 name="mastodon" size={26} color={textColor} />
+                        </Pressable>
+                        <Pressable
+                            style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
+                            onPress={() => handleOpenLink("https://www.instagram.com/programmier.bar")}
+                        >
+                            <FontAwesome6 name="instagram" size={26} color={textColor} />
+                        </Pressable>
+                        <Pressable
+                            style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
+                            onPress={() => handleOpenLink("https://github.com/programmierbar")}
+                        >
+                            <FontAwesome6 name="github" size={26} color={textColor} />
+                        </Pressable>
+                        <Pressable
+                            style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
+                            onPress={() => handleOpenLink("https://bsky.app/profile/programmier.bar")}
+                        >
+                            <FontAwesome6 name="bluesky" size={26} color={textColor} />
+                        </Pressable>
+                    </View>
+                </View>
+
+                <View style={styles.section}>
+                    <ThemedText style={styles.sectionTitle}>{t("conferences.dashboard.podcast.title")}</ThemedText>
+                    <View style={styles.webviewContainer}>
+                        <WebView
+                            source={{
+                                uri: "https://www.buzzsprout.com/176239?client_source=large_player&iframe=true&referrer=https%3A%2F%2Fwww.buzzsprout.com%2Fadmin%2F176239%2Fpodcast%2Fembed",
+                            }}
+                            style={styles.webview}
+                            javaScriptEnabled={true}
+                            domStorageEnabled={true}
+                        />
                     </View>
                 </View>
             </ScrollView>
@@ -297,4 +387,25 @@ const styles = StyleSheet.create({
     linkText: {
         fontSize: 16,
     },
+    linkTextContainer: {
+        flexDirection: "row",
+        alignItems: "center",
+    },
+    linkIcon: {
+        marginRight: 8,
+        width: 22,
+        justifyContent: "center",
+        alignItems: "center",
+    },
+    socialLinkContainer: {
+        flexDirection: "row",
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        gap: 12,
+        alignItems: "center",
+        justifyContent: "space-between",
+        flexWrap: "wrap",
+    },
+    webviewContainer: { borderRadius: 12, overflow: "hidden" },
+    webview: { flex: 1, height: 375 },
 });

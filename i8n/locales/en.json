@@ -147,17 +147,22 @@
         "allConferences": "All Conferences",
         "dashboard": {
             "title": "Conference",
-            "activeConference": "Active Conference",
-            "noActiveConference": "No active conference selected",
-            "allConferences": "All Conferences",
-            "updates": {
-                "title": "Conference Updates"
+            "conference": {
+                "title": "Active Conference",
+                "noActive": "No active conference selected",
+                "allConferences": "All Conferences",
+                "updates": "Conference Updates",
+                "feedback": "Feedback",
+                "quiz": "Quiz"
             },
             "socials": {
                 "title": "Social Media",
-                "feedback": "Feedback",
-                "quiz": "Quiz",
-                "discord": "Discord"
+                "discord": "Discord",
+                "spotify": "Spotify",
+                "website": "Website"
+            },
+            "podcast": {
+                "title": "Podcast"
             }
         }
     },
