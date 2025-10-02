@@ -92,7 +92,7 @@ export default function ConferenceListModal() {
         }
 
         router.push({
-            pathname: "/conference",
+            pathname: "/conference-details",
             params: { id: conference.id },
         });
     };

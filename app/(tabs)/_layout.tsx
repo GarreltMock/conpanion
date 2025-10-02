@@ -58,7 +58,7 @@ export default function TabLayout() {
                 }}
             />
             <Tabs.Screen
-                name="conferences"
+                name="conference"
                 options={{
                     title: t("navigation.tabs.conference"),
                     tabBarIcon: ({ color }) => <IconSymbol size={28} name="calendar" color={color} />,

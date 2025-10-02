@@ -49,7 +49,7 @@ function AppContent() {
                     }}
                 />
                 <Stack.Screen
-                    name="conference"
+                    name="conference-details"
                     options={{
                         headerShown: false,
                     }}

@@ -38,7 +38,7 @@ export default function ConferencesScreen() {
     const handleConferenceDetails = () => {
         if (currentConference?.id) {
             router.push({
-                pathname: "/conference",
+                pathname: "/conference-details",
                 params: { id: currentConference.id },
             });
         }
