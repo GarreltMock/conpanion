@@ -146,7 +146,7 @@ export default function TalkEvaluationModal() {
     };
 
     // Check if this modal was opened from the talk detail view
-    const isFromTalkDetail = source === "talk-detail";
+    const isFromTalkDetail = source !== "talk-notes";
 
     const renderStars = (rating: number, setter: (value: number) => void) => {
         const stars = [];

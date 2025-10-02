@@ -52,7 +52,7 @@ export default function NotesScreen() {
 
         if (shouldShowEvaluationModal() && !seenEvaluationModals.has(activeTalk.id)) {
             setTalkEvaluationAsSeen(activeTalk.id);
-            router.push(`/modals/talk-evaluation?talkId=${activeTalk.id}`);
+            router.push(`/modals/talk-evaluation?talkId=${activeTalk.id}&source=talk-notes`);
         }
     }, [activeTalk, shouldShowEvaluationModal, refreshActiveTalk, isLoading, seenEvaluationModals]);
 
@@ -109,7 +109,7 @@ export default function NotesScreen() {
             router.push("/modals/new-talk");
         } else {
             setTalkEvaluationAsSeen(activeTalk.id);
-            router.push(`/modals/talk-evaluation?talkId=${activeTalk.id}`);
+            router.push(`/modals/talk-evaluation?talkId=${activeTalk.id}&source=talk-notes`);
         }
     };
 

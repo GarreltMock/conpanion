@@ -182,10 +182,16 @@ export default function TalksScreen() {
         router.push(`/talk?id=${talkId}`);
     };
 
-    const renderAgendaItemContent = (item: AgendaItem) => {
+    const renderAgendaItem = ({ item }: { item: AgendaItem }) => {
         const isTalk = item.itemType === "talk";
         const talk = isTalk ? (item as Talk) : null;
         const isActive = isTalk && activeTalk?.id === item.id;
+
+        // Check if talk is in the past
+        const isPastTalk = isTalk && item.startTime < new Date();
+
+        // Show rate button if: user selected, in the past, and not already rated
+        const showRateButton = isTalk && item.isUserSelected && isPastTalk && !talk?.rating;
 
         const handleBookmarkPress = async (e: any) => {
             e.stopPropagation();
@@ -206,6 +212,12 @@ export default function TalksScreen() {
             } catch (error) {
                 console.error(`Error toggling ${isTalk ? "talk" : "activity"} selection:`, error);
             }
+        };
+
+        const handleRateTalk = (e: any) => {
+            e.stopPropagation();
+            // Open the evaluation modal
+            router.push(`/modals/talk-evaluation?talkId=${item.id}&source=talk-list`);
         };
 
         return (
@@ -283,12 +295,18 @@ export default function TalksScreen() {
                         )}
                     </View>
                 </View>
+
+                {showRateButton && (
+                    <View style={[styles.actions]}>
+                        <View style={[styles.actionBorder, { borderTopColor: borderLight }]} />
+                        <TouchableOpacity style={styles.actionButton} onPress={handleRateTalk}>
+                            <IconSymbol name="star" size={20} color={iconColor} />
+                            <ThemedText style={styles.actionText}>{t("talks.actions.rateTalk")}</ThemedText>
+                        </TouchableOpacity>
+                    </View>
+                )}
             </TouchableOpacity>
         );
-    };
-
-    const renderAgendaItem = ({ item }: { item: AgendaItem }) => {
-        return renderAgendaItemContent(item);
     };
 
     const renderAgendaList = (agendaData: AgendaItem[], emptyTitle: string, emptyAction?: React.ReactNode) => (
@@ -531,7 +549,6 @@ const styles = StyleSheet.create({
         paddingBottom: 16,
     },
     talkItem: {
-        flexDirection: "row",
         alignItems: "center",
         marginHorizontal: 16,
         marginTop: 12,
@@ -692,5 +709,28 @@ const styles = StyleSheet.create({
         width: 14,
         height: 14,
         marginRight: 4,
+    },
+    actions: {
+        width: "100%",
+        marginTop: 12,
+        flexDirection: "row",
+        justifyContent: "flex-end",
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+    },
+    actionBorder: {
+        position: "absolute",
+        left: 16,
+        width: "100%",
+        borderTopWidth: 1,
+    },
+    actionButton: {
+        flexDirection: "row",
+        alignItems: "center",
+        marginLeft: 16,
+    },
+    actionText: {
+        marginLeft: 4,
+        fontSize: 14,
     },
 });
