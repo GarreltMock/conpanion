@@ -9,6 +9,7 @@ import { Toaster } from "sonner-native";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 
 import { ColorSchemeProvider, useColorScheme } from "@/context/ColorSchemeContext";
+import { I18nProvider } from "@/context/I18nContext";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { AppProvider } from "@/context/AppContext";
 import { useAppStartup } from "@/hooks/useAppStartup";
@@ -196,11 +197,13 @@ export default function RootLayout() {
     return (
         <SafeAreaProvider>
             <GestureHandlerRootView style={{ flex: 1 }}>
-                <ColorSchemeProvider>
-                    <AppProvider>
-                        <AppContent />
-                    </AppProvider>
-                </ColorSchemeProvider>
+                <I18nProvider>
+                    <ColorSchemeProvider>
+                        <AppProvider>
+                            <AppContent />
+                        </AppProvider>
+                    </ColorSchemeProvider>
+                </I18nProvider>
             </GestureHandlerRootView>
         </SafeAreaProvider>
     );
