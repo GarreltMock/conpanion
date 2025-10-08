@@ -12,6 +12,7 @@ import { ColorSchemeProvider, useColorScheme } from "@/context/ColorSchemeContex
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { AppProvider } from "@/context/AppContext";
 import { useAppStartup } from "@/hooks/useAppStartup";
+import { setupGlobalErrorHandler } from "@/utils/errorHandler";
 
 function AppContent() {
     const { colorScheme } = useColorScheme();
@@ -171,6 +172,9 @@ function AppContent() {
 }
 
 export default function RootLayout() {
+    // Setup global error handler on app load
+    setupGlobalErrorHandler();
+
     const [loaded] = useFonts({
         SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
         "MuseoSans-Thin": require("../assets/fonts/MuseoSans-Thin.ttf"),

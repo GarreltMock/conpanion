@@ -146,5 +146,15 @@ export const trackImageTransformation = async (success: boolean, errorType?: str
     });
 };
 
+// Track uncaught errors
+export const trackError = async (error: Error, errorInfo?: Record<string, any>): Promise<void> => {
+    await trackEvent("uncaught_error", {
+        errorMessage: error.message,
+        errorName: error.name,
+        errorStack: error.stack,
+        ...errorInfo,
+    });
+};
+
 // Export for easy access
 export { Octolytics };
