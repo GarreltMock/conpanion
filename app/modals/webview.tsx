@@ -7,6 +7,7 @@ import { ThemedView } from "@/components/ThemedView";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { useI18n } from "@/hooks/useI18n";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function WebViewModal() {
     const router = useRouter();
@@ -25,7 +26,38 @@ export default function WebViewModal() {
 
     if (!url) {
         return (
+            <SafeAreaView style={{ flex: 1 }}>
+                <ThemedView style={styles.container}>
+                    <View
+                        style={[
+                            styles.header,
+                            {
+                                backgroundColor: headerBackgroundColor,
+                                borderBottomColor: borderLight,
+                            },
+                        ]}
+                    >
+                        <View style={styles.headerLeft} />
+                        <ThemedText style={styles.headerTitle}>Error</ThemedText>
+                        <Pressable
+                            style={({ pressed }) => [styles.closeButton, { opacity: pressed ? 0.7 : 1 }]}
+                            onPress={handleClose}
+                        >
+                            <IconSymbol name="xmark" size={18} color={textColor} />
+                        </Pressable>
+                    </View>
+                    <View style={styles.errorContainer}>
+                        <ThemedText style={styles.errorText}>No URL provided</ThemedText>
+                    </View>
+                </ThemedView>
+            </SafeAreaView>
+        );
+    }
+
+    return (
+        <SafeAreaView style={{ flex: 1 }}>
             <ThemedView style={styles.container}>
+                {/* Header */}
                 <View
                     style={[
                         styles.header,
@@ -36,7 +68,9 @@ export default function WebViewModal() {
                     ]}
                 >
                     <View style={styles.headerLeft} />
-                    <ThemedText style={styles.headerTitle}>Error</ThemedText>
+                    <ThemedText style={styles.headerTitle} numberOfLines={1}>
+                        {title || new URL(url).hostname}
+                    </ThemedText>
                     <Pressable
                         style={({ pressed }) => [styles.closeButton, { opacity: pressed ? 0.7 : 1 }]}
                         onPress={handleClose}
@@ -44,64 +78,34 @@ export default function WebViewModal() {
                         <IconSymbol name="xmark" size={18} color={textColor} />
                     </Pressable>
                 </View>
-                <View style={styles.errorContainer}>
-                    <ThemedText style={styles.errorText}>No URL provided</ThemedText>
-                </View>
+
+                {/* WebView */}
+                <WebView
+                    source={{ uri: url }}
+                    style={[styles.webview, { backgroundColor }]}
+                    startInLoadingState={true}
+                    renderLoading={() => (
+                        <View style={[styles.loadingContainer, { backgroundColor }]}>
+                            <ActivityIndicator size="large" color={tintColor} />
+                            <ThemedText style={styles.loadingText}>{t("common.loading")}</ThemedText>
+                        </View>
+                    )}
+                    onError={(syntheticEvent) => {
+                        const { nativeEvent } = syntheticEvent;
+                        console.error("WebView error: ", nativeEvent);
+                    }}
+                    onHttpError={(syntheticEvent) => {
+                        const { nativeEvent } = syntheticEvent;
+                        console.error("WebView HTTP error: ", nativeEvent);
+                    }}
+                    allowsBackForwardNavigationGestures={true}
+                    javaScriptEnabled={true}
+                    domStorageEnabled={true}
+                    scalesPageToFit={true}
+                    bounces={false}
+                />
             </ThemedView>
-        );
-    }
-
-    return (
-        <ThemedView style={styles.container}>
-            {/* Header */}
-            <View
-                style={[
-                    styles.header,
-                    {
-                        backgroundColor: headerBackgroundColor,
-                        borderBottomColor: borderLight,
-                    },
-                ]}
-            >
-                <View style={styles.headerLeft} />
-                <ThemedText style={styles.headerTitle} numberOfLines={1}>
-                    {title || new URL(url).hostname}
-                </ThemedText>
-                <Pressable
-                    style={({ pressed }) => [styles.closeButton, { opacity: pressed ? 0.7 : 1 }]}
-                    onPress={handleClose}
-                >
-                    <IconSymbol name="xmark" size={18} color={textColor} />
-                </Pressable>
-            </View>
-
-            {/* WebView */}
-            <WebView
-                source={{ uri: url }}
-                style={[styles.webview, { backgroundColor }]}
-                startInLoadingState={true}
-                renderLoading={() => (
-                    <View style={styles.loadingContainer}>
-                        <ActivityIndicator size="large" color={tintColor} />
-                        <ThemedText style={styles.loadingText}>{t("common.loading")}</ThemedText>
-                    </View>
-                )}
-                onError={(syntheticEvent) => {
-                    const { nativeEvent } = syntheticEvent;
-                    console.error("WebView error: ", nativeEvent);
-                }}
-                onHttpError={(syntheticEvent) => {
-                    const { nativeEvent } = syntheticEvent;
-                    console.error("WebView HTTP error: ", nativeEvent);
-                }}
-                allowsBackForwardNavigationGestures={true}
-                decelerationRate="normal"
-                javaScriptEnabled={true}
-                domStorageEnabled={true}
-                scalesPageToFit={true}
-                bounces={false}
-            />
-        </ThemedView>
+        </SafeAreaView>
     );
 }
 
@@ -144,7 +148,6 @@ const styles = StyleSheet.create({
         bottom: 0,
         justifyContent: "center",
         alignItems: "center",
-        backgroundColor: "rgba(255, 255, 255, 0.9)",
     },
     loadingText: {
         marginTop: 16,
