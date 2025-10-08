@@ -7,6 +7,7 @@ import { useThemeColor } from "@/hooks/useThemeColor";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { useI18n } from "@/hooks/useI18n";
 import { useColorScheme } from "@/context/ColorSchemeContext";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function SettingsModal() {
     const router = useRouter();
@@ -57,117 +58,121 @@ export default function SettingsModal() {
     };
 
     return (
-        <ThemedView style={styles.container}>
-            {/* Header */}
-            <View
-                style={[
-                    styles.header,
-                    {
-                        backgroundColor: headerBackgroundColor,
-                        borderBottomColor: borderLight,
-                    },
-                ]}
-            >
-                <View style={styles.headerLeft} />
-                <ThemedText style={styles.headerTitle}>{t("settings.title")}</ThemedText>
-                <Pressable
-                    style={({ pressed }) => [styles.closeButton, { opacity: pressed ? 0.7 : 1 }]}
-                    onPress={handleClose}
+        <SafeAreaView style={{ flex: 1 }}>
+            <ThemedView style={styles.container}>
+                {/* Header */}
+                <View
+                    style={[
+                        styles.header,
+                        {
+                            backgroundColor: headerBackgroundColor,
+                            borderBottomColor: borderLight,
+                        },
+                    ]}
                 >
-                    <IconSymbol name="xmark" size={18} color={textColor} />
-                </Pressable>
-            </View>
-
-            <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-                {/* App Section */}
-                <View style={styles.section}>
-                    <ThemedText style={styles.sectionTitle}>{t("settings.app.title")}</ThemedText>
-                    <View
-                        style={[
-                            styles.settingsGroup,
-                            {
-                                backgroundColor: backgroundOverlayLight,
-                                borderColor: borderLight,
-                            },
-                        ]}
+                    <View style={styles.headerLeft} />
+                    <ThemedText style={styles.headerTitle}>{t("settings.title")}</ThemedText>
+                    <Pressable
+                        style={({ pressed }) => [styles.closeButton, { opacity: pressed ? 0.7 : 1 }]}
+                        onPress={handleClose}
                     >
-                        <View style={[styles.settingItem, { borderBottomColor: borderLight }]}>
-                            <ThemedText style={styles.settingLabel}>{t("settings.app.darkMode")}</ThemedText>
-                            <Switch
-                                style={{ marginVertical: -2 }}
-                                value={colorScheme === "dark"}
-                                onValueChange={toggleDarkMode}
-                                trackColor={{ false: mutedColor, true: tintColor }}
-                                thumbColor="#ffffff"
-                            />
-                        </View>
-                        <Pressable
-                            style={({ pressed }) => [styles.settingItemLast, { opacity: pressed ? 0.7 : 1 }]}
-                            onPress={toggleLanguage}
+                        <IconSymbol name="xmark" size={18} color={textColor} />
+                    </Pressable>
+                </View>
+
+                <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+                    {/* App Section */}
+                    <View style={styles.section}>
+                        <ThemedText style={styles.sectionTitle}>{t("settings.app.title")}</ThemedText>
+                        <View
+                            style={[
+                                styles.settingsGroup,
+                                {
+                                    backgroundColor: backgroundOverlayLight,
+                                    borderColor: borderLight,
+                                },
+                            ]}
                         >
-                            <ThemedText style={styles.settingLabel}>{t("settings.app.language")}</ThemedText>
-                            <View style={[styles.languageButton, { backgroundColor: backgroundOverlay }]}>
-                                <ThemedText style={[styles.languageText, { color: textColor }]}>
-                                    {locale.toUpperCase()}
-                                </ThemedText>
+                            <View style={[styles.settingItem, { borderBottomColor: borderLight }]}>
+                                <ThemedText style={styles.settingLabel}>{t("settings.app.darkMode")}</ThemedText>
+                                <Switch
+                                    style={{ marginVertical: -2 }}
+                                    value={colorScheme === "dark"}
+                                    onValueChange={toggleDarkMode}
+                                    trackColor={{ false: mutedColor, true: tintColor }}
+                                    thumbColor="#ffffff"
+                                />
                             </View>
-                        </Pressable>
+                            <Pressable
+                                style={({ pressed }) => [styles.settingItemLast, { opacity: pressed ? 0.7 : 1 }]}
+                                onPress={toggleLanguage}
+                            >
+                                <ThemedText style={styles.settingLabel}>{t("settings.app.language")}</ThemedText>
+                                <View style={[styles.languageButton, { backgroundColor: backgroundOverlay }]}>
+                                    <ThemedText style={[styles.languageText, { color: textColor }]}>
+                                        {locale.toUpperCase()}
+                                    </ThemedText>
+                                </View>
+                            </Pressable>
+                        </View>
                     </View>
-                </View>
 
-                {/* Legal Section */}
-                <View style={styles.section}>
-                    <ThemedText style={styles.sectionTitle}>{t("settings.legal.title")}</ThemedText>
-                    <View
-                        style={[
-                            styles.settingsGroup,
-                            {
-                                backgroundColor: backgroundOverlayLight,
-                                borderColor: borderLight,
-                            },
-                        ]}
-                    >
-                        <Pressable
-                            style={({ pressed }) => [
-                                styles.settingItem,
+                    {/* Legal Section */}
+                    <View style={styles.section}>
+                        <ThemedText style={styles.sectionTitle}>{t("settings.legal.title")}</ThemedText>
+                        <View
+                            style={[
+                                styles.settingsGroup,
                                 {
-                                    borderBottomColor: borderLight,
-                                    opacity: pressed ? 0.7 : 1,
+                                    backgroundColor: backgroundOverlayLight,
+                                    borderColor: borderLight,
                                 },
                             ]}
-                            onPress={() =>
-                                handleExternalLink("https://privacy.example.com", t("settings.legal.dataPrivacy"))
-                            }
                         >
-                            <ThemedText style={styles.settingLabel}>{t("settings.legal.dataPrivacy")}</ThemedText>
-                            <IconSymbol name="chevron.right" size={16} color={mutedColor} />
-                        </Pressable>
-                        <Pressable
-                            style={({ pressed }) => [
-                                styles.settingItem,
-                                {
-                                    borderBottomColor: borderLight,
-                                    opacity: pressed ? 0.7 : 1,
-                                },
-                            ]}
-                            onPress={() =>
-                                handleExternalLink("https://lotum.com/de/legal-info", t("settings.legal.impressum"))
-                            }
-                        >
-                            <ThemedText style={styles.settingLabel}>{t("settings.legal.impressum")}</ThemedText>
-                            <IconSymbol name="chevron.right" size={16} color={mutedColor} />
-                        </Pressable>
-                        <Pressable
-                            style={({ pressed }) => [styles.settingItemLast, { opacity: pressed ? 0.7 : 1 }]}
-                            onPress={() => sendMail("mailto:podcast@programmier.bar")}
-                        >
-                            <ThemedText style={styles.settingLabel}>{t("settings.legal.contactSupport")}</ThemedText>
-                            <IconSymbol name="chevron.right" size={16} color={mutedColor} />
-                        </Pressable>
+                            <Pressable
+                                style={({ pressed }) => [
+                                    styles.settingItem,
+                                    {
+                                        borderBottomColor: borderLight,
+                                        opacity: pressed ? 0.7 : 1,
+                                    },
+                                ]}
+                                onPress={() =>
+                                    handleExternalLink("https://privacy.example.com", t("settings.legal.dataPrivacy"))
+                                }
+                            >
+                                <ThemedText style={styles.settingLabel}>{t("settings.legal.dataPrivacy")}</ThemedText>
+                                <IconSymbol name="chevron.right" size={16} color={mutedColor} />
+                            </Pressable>
+                            <Pressable
+                                style={({ pressed }) => [
+                                    styles.settingItem,
+                                    {
+                                        borderBottomColor: borderLight,
+                                        opacity: pressed ? 0.7 : 1,
+                                    },
+                                ]}
+                                onPress={() =>
+                                    handleExternalLink("https://lotum.com/de/legal-info", t("settings.legal.impressum"))
+                                }
+                            >
+                                <ThemedText style={styles.settingLabel}>{t("settings.legal.impressum")}</ThemedText>
+                                <IconSymbol name="chevron.right" size={16} color={mutedColor} />
+                            </Pressable>
+                            <Pressable
+                                style={({ pressed }) => [styles.settingItemLast, { opacity: pressed ? 0.7 : 1 }]}
+                                onPress={() => sendMail("mailto:podcast@programmier.bar")}
+                            >
+                                <ThemedText style={styles.settingLabel}>
+                                    {t("settings.legal.contactSupport")}
+                                </ThemedText>
+                                <IconSymbol name="chevron.right" size={16} color={mutedColor} />
+                            </Pressable>
+                        </View>
                     </View>
-                </View>
-            </ScrollView>
-        </ThemedView>
+                </ScrollView>
+            </ThemedView>
+        </SafeAreaView>
     );
 }
 

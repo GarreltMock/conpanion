@@ -45,7 +45,7 @@
         "tabs": {
             "notes": "Current Talk",
             "talks": "Agenda",
-            "conferenc": "Conference"
+            "conference": "Conference"
         }
     },
     "errors": {

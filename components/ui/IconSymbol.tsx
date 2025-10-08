@@ -51,6 +51,7 @@ const MAPPING = {
     link: "link",
     "arrow.right.circle": "arrow-circle-right",
     "squares.below.rectangle": "display-settings",
+    gearshape: "settings",
 } as Partial<
     Record<import("expo-symbols").SymbolViewProps["name"], React.ComponentProps<typeof MaterialIcons>["name"]>
 >;

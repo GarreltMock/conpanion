@@ -1,7 +1,9 @@
-import { ErrorUtils } from "react-native";
 import { trackError } from "./analytics";
 
 let isErrorHandlerSetup = false;
+
+// Access ErrorUtils from the global object
+const ErrorUtils = (global as { ErrorUtils?: any }).ErrorUtils;
 
 /**
  * Sets up global error handlers to track uncaught errors
@@ -11,10 +13,16 @@ export const setupGlobalErrorHandler = (): void => {
         return;
     }
 
+    // Check if ErrorUtils is available
+    if (!ErrorUtils) {
+        console.warn("[ErrorHandler] ErrorUtils not available, skipping error handler setup");
+        return;
+    }
+
     // Handle JavaScript errors
     const defaultErrorHandler = ErrorUtils.getGlobalHandler();
 
-    ErrorUtils.setGlobalHandler((error, isFatal) => {
+    ErrorUtils.setGlobalHandler((error: Error, isFatal?: boolean) => {
         // Track the error to analytics
         trackError(error, {
             isFatal,
