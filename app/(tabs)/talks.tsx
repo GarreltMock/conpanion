@@ -194,6 +194,10 @@ export default function TalksScreen() {
         // Show rate button if: user selected, in the past, and not already rated
         const showRateButton = isTalk && item.isUserSelected && isPastTalk && !talk?.rating;
 
+        // Extract hour and minute from startTime
+        const timeString = format(item.startTime, "HH:mm", { locale: dateFnsLocale });
+        const [hours, minutes] = timeString.split(":");
+
         const handleBookmarkPress = async (e: any) => {
             e.stopPropagation();
             try {
@@ -233,22 +237,37 @@ export default function TalksScreen() {
                 activeOpacity={0.7}
                 disabled={!isTalk}
             >
-                <View style={styles.talkItemContent}>
+                <View
+                    style={[
+                        styles.talkItemContent,
+                        showRateButton && { borderWidth: 1, borderColor: backgroundOverlayLightColor },
+                    ]}
+                >
+                    {/* Time Display Block */}
+                    <View style={[styles.timeBlock, { backgroundColor: backgroundOverlayLightColor }]}>
+                        <ThemedText style={styles.timeBlockHours}>{hours}</ThemedText>
+                        <ThemedText style={styles.timeBlockMinutes}>{minutes}</ThemedText>
+                    </View>
+
                     <View style={[styles.leftCol, !isTalk && { paddingVertical: 6 }]}>
                         <View style={styles.titleRow}>
                             <ThemedText style={styles.talkTitle}>{item.title}</ThemedText>
                         </View>
                         <View style={[styles.metaContainer, !isTalk && { marginTop: 0 }]}>
-                            <View style={styles.timeRow}>
-                                <IconSymbol name="clock" size={14} color={iconColor} style={styles.timeIcon} />
-                                <ThemedText style={styles.talkDate}>
-                                    {`${format(
-                                        item.startTime,
-                                        conferenceDays[selectedDay]?.isOtherDay ? "MMM d, yyyy • HH:mm" : "HH:mm",
-                                        { locale: dateFnsLocale }
-                                    )}${item.duration ? ` (${item.duration} min)` : ""}`}
-                                </ThemedText>
-                            </View>
+                            {conferenceDays[selectedDay]?.isOtherDay && (
+                                <View style={styles.timeRow}>
+                                    <IconSymbol name="calendar" size={14} color={iconColor} style={styles.timeIcon} />
+                                    <ThemedText style={styles.talkDate}>
+                                        {format(item.startTime, "MMM d, yyyy", { locale: dateFnsLocale })}
+                                    </ThemedText>
+                                </View>
+                            )}
+                            {item.duration && (
+                                <View style={styles.timeRow}>
+                                    <IconSymbol name="clock" size={14} color={iconColor} style={styles.timeIcon} />
+                                    <ThemedText style={styles.talkDate}>{item.duration} min</ThemedText>
+                                </View>
+                            )}
                             {item.location && (
                                 <View style={styles.locationRow}>
                                     <IconSymbol
@@ -299,7 +318,6 @@ export default function TalksScreen() {
 
                 {showRateButton && (
                     <View style={[styles.actions]}>
-                        <View style={[styles.actionBorder, { borderTopColor: backgroundOverlayLightColor }]} />
                         <TouchableOpacity style={styles.actionButton} onPress={handleRateTalk}>
                             <IconSymbol name="star" size={20} color={iconColor} />
                             <ThemedText style={styles.actionText}>{t("talks.actions.rateTalk")}</ThemedText>
@@ -560,11 +578,36 @@ const styles = StyleSheet.create({
         flex: 1,
         display: "flex",
         flexDirection: "row",
+        borderRadius: 12,
+    },
+    timeBlock: {
+        width: 64,
+        paddingVertical: 12,
+        paddingHorizontal: 8,
+        alignItems: "center",
+        justifyContent: "center",
+        borderTopLeftRadius: 12,
+        borderBottomLeftRadius: 12,
+    },
+    timeBlockHours: {
+        fontSize: 24,
+        fontWeight: "700",
+        lineHeight: 28,
+        fontVariant: ["tabular-nums"],
+    },
+    timeBlockMinutes: {
+        fontSize: 24,
+        fontWeight: "700",
+        lineHeight: 28,
+        fontVariant: ["tabular-nums"],
+        opacity: 0.6,
     },
     leftCol: {
         padding: 16,
+        paddingLeft: 12,
         flex: 1,
         flexDirection: "column",
+        justifyContent: "center",
     },
     middleCol: {
         justifyContent: "center",
@@ -680,27 +723,23 @@ const styles = StyleSheet.create({
     },
     metaContainer: {
         marginTop: 6,
-        flexDirection: "column",
+        flexDirection: "row",
+        gap: 12,
+    },
+    locationRow: {
+        flexDirection: "row",
+        alignItems: "center",
     },
     locationText: {
         fontSize: 14,
         opacity: 0.7,
         lineHeight: 20,
     },
-    itemTypeIcon: {
-        width: 16,
-        height: 16,
-        marginRight: 8,
-        marginTop: 4,
-    },
-    locationRow: {
-        flexDirection: "row",
-        alignItems: "center",
-    },
+
     locationIcon: {
         width: 14,
         height: 14,
-        marginRight: 4,
+        marginRight: 2,
     },
     timeRow: {
         flexDirection: "row",
@@ -713,7 +752,6 @@ const styles = StyleSheet.create({
     },
     actions: {
         width: "100%",
-        marginTop: 12,
         flexDirection: "row",
         justifyContent: "flex-end",
         paddingHorizontal: 16,
