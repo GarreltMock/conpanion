@@ -193,6 +193,21 @@ export default function ConferencesScreen() {
                                 styles.linkItem,
                                 { borderBottomColor: borderLight, opacity: pressed ? 0.7 : 1 },
                             ]}
+                            onPress={() => router.push("/modals/map-view" as any)}
+                        >
+                            <View style={styles.linkTextContainer}>
+                                <FontAwesome6 name="map" size={20} color={textColor} style={styles.linkIcon} />
+                                <ThemedText style={styles.linkText}>
+                                    {t("conferences.dashboard.conference.map")}
+                                </ThemedText>
+                            </View>
+                            <IconSymbol name="chevron.right" size={16} color={mutedColor} />
+                        </Pressable>
+                        <Pressable
+                            style={({ pressed }) => [
+                                styles.linkItem,
+                                { borderBottomColor: borderLight, opacity: pressed ? 0.7 : 1 },
+                            ]}
                             onPress={() =>
                                 showLink("https://quiz.example.com", t("conferences.dashboard.conference.quiz"))
                             }

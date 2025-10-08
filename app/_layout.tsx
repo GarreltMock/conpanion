@@ -89,6 +89,14 @@ function AppContent() {
                     }}
                 />
                 <Stack.Screen
+                    name="modals/map-view"
+                    options={{
+                        presentation: "modal",
+                        headerShown: false,
+                        animation: "slide_from_bottom",
+                    }}
+                />
+                <Stack.Screen
                     name="modals/new-conference"
                     options={{
                         headerShown: false,
