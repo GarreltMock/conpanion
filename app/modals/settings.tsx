@@ -145,23 +145,8 @@ export default function SettingsModal() {
                                 <IconSymbol name="chevron.right" size={16} color={mutedColor} />
                             </Pressable>
                             <Pressable
-                                style={({ pressed }) => [
-                                    styles.settingItem,
-                                    {
-                                        borderBottomColor: borderLight,
-                                        opacity: pressed ? 0.7 : 1,
-                                    },
-                                ]}
-                                onPress={() =>
-                                    handleExternalLink("https://lotum.com/de/legal-info", t("settings.legal.impressum"))
-                                }
-                            >
-                                <ThemedText style={styles.settingLabel}>{t("settings.legal.impressum")}</ThemedText>
-                                <IconSymbol name="chevron.right" size={16} color={mutedColor} />
-                            </Pressable>
-                            <Pressable
                                 style={({ pressed }) => [styles.settingItemLast, { opacity: pressed ? 0.7 : 1 }]}
-                                onPress={() => sendMail("mailto:podcast@programmier.bar")}
+                                onPress={() => sendMail("mailto:con@programmier.bar")}
                             >
                                 <ThemedText style={styles.settingLabel}>
                                     {t("settings.legal.contactSupport")}
