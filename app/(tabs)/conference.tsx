@@ -175,7 +175,7 @@ export default function ConferencesScreen() {
                             ]}
                             onPress={() =>
                                 showLink(
-                                    "https://docs.google.com/forms/d/e/1FAIpQLSdy-bCNbjQdfKzSSA-n097LY7avdCqMGFtzg0BvDpA9nq3jjQ/viewform?usp=header",
+                                    "https://l.programmier.bar/pcfeedback",
                                     t("conferences.dashboard.conference.feedback")
                                 )
                             }
@@ -209,7 +209,7 @@ export default function ConferencesScreen() {
                                 { borderBottomColor: borderLight, opacity: pressed ? 0.7 : 1 },
                             ]}
                             onPress={() =>
-                                showLink("https://quiz.example.com", t("conferences.dashboard.conference.quiz"))
+                                showLink("https://l.programmier.bar/pcquiz", t("conferences.dashboard.conference.quiz"))
                             }
                         >
                             <View style={styles.linkTextContainer}>
