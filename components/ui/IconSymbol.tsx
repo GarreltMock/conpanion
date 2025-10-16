@@ -45,6 +45,7 @@ const MAPPING = {
     "minus.circle.fill": "remove-circle",
     person: "person",
     photo: "photo",
+    bookmark: "bookmark-border",
     "bookmark.fill": "bookmark",
     eye: "visibility",
     "wand.and.stars": "auto-fix-high",
