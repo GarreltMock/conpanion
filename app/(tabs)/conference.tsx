@@ -111,8 +111,9 @@ export default function ConferencesScreen() {
 
             <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
                 {/* Active Conference Section */}
-                <View style={(styles.section, { marginBottom: 12 })}>
-                    <ThemedText style={styles.sectionTitle}>{t("conferences.dashboard.conference.title")}</ThemedText>
+                <View style={(styles.section, { marginBottom: 12, marginTop: 8 })}>
+                    {/* TODO: after programmier.con */}
+                    {/* <ThemedText style={styles.sectionTitle}>{t("conferences.dashboard.conference.title")}</ThemedText> */}
                     {currentConference ? (
                         <ConferenceItem
                             conference={currentConference}
@@ -193,21 +194,6 @@ export default function ConferencesScreen() {
                                 styles.linkItem,
                                 { borderBottomColor: borderLight, opacity: pressed ? 0.7 : 1 },
                             ]}
-                            onPress={() => router.push("/modals/map-view" as any)}
-                        >
-                            <View style={styles.linkTextContainer}>
-                                <FontAwesome6 name="map" size={20} color={textColor} style={styles.linkIcon} />
-                                <ThemedText style={styles.linkText}>
-                                    {t("conferences.dashboard.conference.map")}
-                                </ThemedText>
-                            </View>
-                            <IconSymbol name="chevron.right" size={16} color={mutedColor} />
-                        </Pressable>
-                        <Pressable
-                            style={({ pressed }) => [
-                                styles.linkItem,
-                                { borderBottomColor: borderLight, opacity: pressed ? 0.7 : 1 },
-                            ]}
                             onPress={() =>
                                 showLink("https://l.programmier.bar/pcquiz", t("conferences.dashboard.conference.quiz"))
                             }
@@ -227,7 +213,22 @@ export default function ConferencesScreen() {
                         </Pressable>
                         <Pressable
                             style={({ pressed }) => [
-                                styles.linkItemLast,
+                                styles.linkItem,
+                                { borderBottomColor: borderLight, opacity: pressed ? 0.7 : 1 },
+                            ]}
+                            onPress={() => router.push("/modals/map-view" as any)}
+                        >
+                            <View style={styles.linkTextContainer}>
+                                <FontAwesome6 name="map" size={20} color={textColor} style={styles.linkIcon} />
+                                <ThemedText style={styles.linkText}>
+                                    {t("conferences.dashboard.conference.map")}
+                                </ThemedText>
+                            </View>
+                            <IconSymbol name="chevron.right" size={16} color={mutedColor} />
+                        </Pressable>
+                        <Pressable
+                            style={({ pressed }) => [
+                                styles.linkItem,
                                 { borderBottomColor: borderLight, opacity: pressed ? 0.7 : 1 },
                             ]}
                             onPress={() =>
@@ -241,6 +242,26 @@ export default function ConferencesScreen() {
                                 <FontAwesome6 name="gavel" size={20} color={textColor} style={styles.linkIcon} />
                                 <ThemedText style={styles.linkText}>
                                     {t("conferences.dashboard.conference.codeOfConduct")}
+                                </ThemedText>
+                            </View>
+                            <IconSymbol name="chevron.right" size={16} color={mutedColor} />
+                        </Pressable>
+                        <Pressable
+                            style={({ pressed }) => [
+                                styles.linkItemLast,
+                                { borderBottomColor: borderLight, opacity: pressed ? 0.7 : 1 },
+                            ]}
+                            onPress={() =>
+                                showLink(
+                                    "https://www.programmier.bar/aufnahmen",
+                                    t("conferences.dashboard.conference.photoAndVideoPolicy")
+                                )
+                            }
+                        >
+                            <View style={styles.linkTextContainer}>
+                                <FontAwesome6 name="camera" size={20} color={textColor} style={styles.linkIcon} />
+                                <ThemedText style={styles.linkText}>
+                                    {t("conferences.dashboard.conference.photoAndVideoPolicy")}
                                 </ThemedText>
                             </View>
                             <IconSymbol name="chevron.right" size={16} color={mutedColor} />

@@ -71,7 +71,7 @@
     },
     "notes": {
         "noActiveTalk": "No Active Talk",
-        "createTalkPrompt": "Create a new talk to start taking notes",
+        "createTalkPrompt": "When a talk starts in your agenda, it will appear here",
         "noNotesYet": "No notes yet",
         "note": "note",
         "notes": "notes",
@@ -159,7 +159,8 @@
                 "feedback": "Feedback",
                 "map": "Map",
                 "quiz": "Quiz",
-                "codeOfConduct": "Code of Conduct"
+                "codeOfConduct": "Code of Conduct",
+                "photoAndVideoPolicy": "Photo and Video Policy"
             },
             "socials": {
                 "title": "Social Media",

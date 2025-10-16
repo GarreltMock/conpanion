@@ -71,7 +71,7 @@
     },
     "notes": {
         "noActiveTalk": "Kein aktiver Vortrag",
-        "createTalkPrompt": "Erstellen Sie einen neuen Vortrag, um Notizen zu machen",
+        "createTalkPrompt": "Wenn ein Vortrag in deiner Agenda startet, wird er hier angezeigt",
         "noNotesYet": "Noch keine Notizen",
         "note": "Notiz",
         "notes": "Notizen",
@@ -159,7 +159,8 @@
                 "feedback": "Feedback",
                 "map": "Karte",
                 "quiz": "Quiz",
-                "codeOfConduct": "Verhaltensregeln"
+                "codeOfConduct": "Verhaltensregeln",
+                "photoAndVideoPolicy": "Foto- und Video-Richtlinien"
             },
             "socials": {
                 "title": "Social Media",
