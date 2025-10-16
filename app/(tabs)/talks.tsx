@@ -468,14 +468,14 @@ export default function TalksScreen() {
                     </ThemedText>
                 </View>
 
-                <TouchableOpacity
+                {/* <TouchableOpacity
                     style={[styles.newTalkButton, { backgroundColor: tintColor }]}
                     onPress={handleNewTalk}
                     activeOpacity={0.8}
                 >
                     <IconSymbol name="plus" size={18} color={tintContentColor} />
                     <Text style={[styles.buttonText, { color: tintContentColor }]}>{t("talks.addTalk")}</Text>
-                </TouchableOpacity>
+                </TouchableOpacity> */}
             </View>
 
             {/* Sticky Day Selection - Between tabs and content */}
