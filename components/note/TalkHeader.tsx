@@ -86,7 +86,8 @@ export const TalkHeader: React.FC<TalkHeaderProps> = ({ conferenceName, talk, on
                     )}
                 </View>
 
-                {!talk ? (
+                {/* TODO: after programmier.con */}
+                {/* {!talk ? (
                     <Pressable
                         style={({ pressed }) => [
                             styles.newTalkButton,
@@ -118,6 +119,22 @@ export const TalkHeader: React.FC<TalkHeaderProps> = ({ conferenceName, talk, on
                         <Text style={[styles.buttonText, { color: textColor }]}>{t("talks.actions.switch")}</Text>
                     </Pressable>
                 ) : (
+                    <Pressable
+                        style={({ pressed }) => [
+                            styles.newTalkButton,
+                            {
+                                backgroundColor: tintColor,
+                                opacity: pressed ? 0.8 : 1,
+                            },
+                        ]}
+                        onPress={handlePress}
+                    >
+                        <IconSymbol name="checkmark" size={18} color={tintContentColor} />
+                        <Text style={[styles.buttonText, { color: tintContentColor }]}>{t("common.done")}</Text>
+                    </Pressable>
+                )} */}
+
+                {(!isScheduledTalk || !isTalkActive) && (
                     <Pressable
                         style={({ pressed }) => [
                             styles.newTalkButton,

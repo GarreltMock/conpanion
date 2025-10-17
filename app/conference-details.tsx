@@ -397,10 +397,11 @@ export default function ConferenceDetailScreen() {
                                 </ThemedText>
                             </TouchableOpacity>
                         )}
-                        <TouchableOpacity style={styles.menuItem} onPress={handleEditConferenceFromMenu}>
+                        {/* TODO: after programmier.con */}
+                        {/* <TouchableOpacity style={styles.menuItem} onPress={handleEditConferenceFromMenu}>
                             <Ionicons name="pencil-outline" size={20} color={iconColor} />
                             <ThemedText style={styles.menuItemText}>{t("common.edit")}</ThemedText>
-                        </TouchableOpacity>
+                        </TouchableOpacity> */}
                         {conference?.apiUrl && (
                             <TouchableOpacity style={styles.menuItem} onPress={handleSyncAgenda}>
                                 <Ionicons name="refresh-outline" size={20} color={iconColor} />

@@ -468,6 +468,7 @@ export default function TalksScreen() {
                     </ThemedText>
                 </View>
 
+                {/* TODO: after programmier.con */}
                 {/* <TouchableOpacity
                     style={[styles.newTalkButton, { backgroundColor: tintColor }]}
                     onPress={handleNewTalk}
