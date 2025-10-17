@@ -6,6 +6,7 @@ import { ThemedView } from "../../components/ThemedView";
 import { ThemedText } from "../../components/ThemedText";
 import * as FileSystem from "expo-file-system";
 import { toast } from "sonner-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function ExportOptionsModal() {
     const { id } = useLocalSearchParams<{ id: string }>();
@@ -51,9 +52,11 @@ export default function ExportOptionsModal() {
     }
 
     return (
-        <ThemedView style={styles.container}>
-            <ExportOptionsForm conferenceId={id} onCancel={handleCancel} onExport={handleExport} />
-        </ThemedView>
+        <SafeAreaView style={{ flex: 1 }}>
+            <ThemedView style={styles.container}>
+                <ExportOptionsForm conferenceId={id} onCancel={handleCancel} onExport={handleExport} />
+            </ThemedView>
+        </SafeAreaView>
     );
 }
 

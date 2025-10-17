@@ -20,6 +20,7 @@ import { useImageTransform } from "@/hooks/useImageTransform";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { Point, Polygon as PolygonType } from "@/types";
 import { toast } from "sonner-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 type ImageLayout = { x: number; y: number; width: number; height: number };
 
@@ -45,7 +46,7 @@ export default function ImageEditScreen() {
     // Theme colors
     const tintColor = useThemeColor({}, "tint");
     const tintContentColor = useThemeColor({}, "tintContent");
-    const whiteColor = useThemeColor({}, "white");
+    const textColor = useThemeColor({}, "text");
     const borderLightColor = useThemeColor({}, "borderLight");
     const backgroundColor = useThemeColor({}, "background");
 
@@ -360,59 +361,61 @@ export default function ImageEditScreen() {
     };
 
     return (
-        <ThemedView style={[styles.container, { backgroundColor }]}>
-            <View style={styles.header}>
-                <TouchableOpacity style={styles.cancelButton} onPress={handleCancel} disabled={loading}>
-                    <IconSymbol name="xmark" size={24} color={whiteColor} />
-                </TouchableOpacity>
+        <SafeAreaView style={{ flex: 1 }}>
+            <ThemedView style={[styles.container, { backgroundColor }]}>
+                <View style={styles.header}>
+                    <TouchableOpacity style={styles.cancelButton} onPress={handleCancel} disabled={loading}>
+                        <IconSymbol name="xmark" size={24} color={textColor} />
+                    </TouchableOpacity>
 
-                <ThemedText style={styles.headerTitle}>Edit Image</ThemedText>
+                    <ThemedText style={[styles.headerTitle, { color: textColor }]}>Edit Image</ThemedText>
 
-                <View style={{ width: 40 }} />
-            </View>
-
-            {loading ? (
-                <View style={styles.loadingContainer}>
-                    <ActivityIndicator size="large" color={tintColor} />
-                    <ThemedText style={[styles.loadingText, { color: whiteColor }]}>Processing image...</ThemedText>
+                    <View style={{ width: 40 }} />
                 </View>
-            ) : (
-                <View style={styles.imageContainer}>
-                    <Animated.Image
-                        ref={imageRef}
-                        source={{ uri: decodedUri }}
-                        style={styles.image}
-                        resizeMode="contain"
-                        onLayout={(event) => {
-                            let layout = event.nativeEvent.layout;
-                            setImageLayout(layout);
-                            initCorners(layout);
-                        }}
-                    />
-                    {renderCornerEditor()}
 
-                    <View style={styles.editActions}>
-                        <TouchableOpacity
-                            style={[styles.actionButton, { borderColor: borderLightColor, borderWidth: 1 }]}
-                            onPress={handleCancel}
-                            disabled={loading}
-                        >
-                            <ThemedText style={[styles.actionButtonText, { color: whiteColor }]}>Cancel</ThemedText>
-                        </TouchableOpacity>
-
-                        <TouchableOpacity
-                            style={[styles.actionButton, styles.saveButton, { backgroundColor: tintColor }]}
-                            onPress={handleSaveCorners}
-                            disabled={!corners || loading}
-                        >
-                            <ThemedText style={[styles.actionButtonText, { color: tintContentColor }]}>
-                                Transform
-                            </ThemedText>
-                        </TouchableOpacity>
+                {loading ? (
+                    <View style={styles.loadingContainer}>
+                        <ActivityIndicator size="large" color={tintColor} />
+                        <ThemedText style={[styles.loadingText, { color: textColor }]}>Processing image...</ThemedText>
                     </View>
-                </View>
-            )}
-        </ThemedView>
+                ) : (
+                    <View style={styles.imageContainer}>
+                        <Animated.Image
+                            ref={imageRef}
+                            source={{ uri: decodedUri }}
+                            style={styles.image}
+                            resizeMode="contain"
+                            onLayout={(event) => {
+                                let layout = event.nativeEvent.layout;
+                                setImageLayout(layout);
+                                initCorners(layout);
+                            }}
+                        />
+                        {renderCornerEditor()}
+
+                        <View style={styles.editActions}>
+                            <TouchableOpacity
+                                style={[styles.actionButton, { borderColor: borderLightColor, borderWidth: 1 }]}
+                                onPress={handleCancel}
+                                disabled={loading}
+                            >
+                                <ThemedText style={[styles.actionButtonText, { color: textColor }]}>Cancel</ThemedText>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                style={[styles.actionButton, styles.saveButton, { backgroundColor: tintColor }]}
+                                onPress={handleSaveCorners}
+                                disabled={!corners || loading}
+                            >
+                                <ThemedText style={[styles.actionButtonText, { color: tintContentColor }]}>
+                                    Transform
+                                </ThemedText>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                )}
+            </ThemedView>
+        </SafeAreaView>
     );
 }
 
@@ -432,10 +435,9 @@ const styles = StyleSheet.create({
     headerTitle: {
         fontSize: 18,
         fontWeight: "600",
-        color: "white",
     },
     cancelButton: {
-        padding: 8,
+        paddingHorizontal: 8,
         width: 40,
         alignItems: "center",
     },

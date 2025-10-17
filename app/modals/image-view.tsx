@@ -8,6 +8,7 @@ import { ThemedView } from "@/components/ThemedView";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { useImageZoomPan } from "@/hooks/useImageZoomPan";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function ImageViewModal() {
     const { imageUri } = useLocalSearchParams<{
@@ -17,7 +18,7 @@ export default function ImageViewModal() {
     const decodedUri = decodeURIComponent(imageUri as string);
 
     // Theme colors
-    const whiteColor = useThemeColor({}, "white");
+    const textColor = useThemeColor({}, "text");
     const backgroundColor = useThemeColor({}, "background");
 
     // Image zoom and pan functionality
@@ -28,23 +29,25 @@ export default function ImageViewModal() {
     };
 
     return (
-        <ThemedView style={[styles.container, { backgroundColor: backgroundColor }]}>
-            <View style={styles.header}>
-                <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
-                    <IconSymbol name="xmark" size={24} color={whiteColor} />
-                </TouchableOpacity>
-            </View>
+        <SafeAreaView style={{ flex: 1 }}>
+            <ThemedView style={[styles.container, { backgroundColor: backgroundColor }]}>
+                <View style={styles.header}>
+                    <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
+                        <IconSymbol name="xmark" size={24} color={textColor} />
+                    </TouchableOpacity>
+                </View>
 
-            <GestureDetector gesture={combinedGestures}>
-                <Animated.View style={styles.imageContainer}>
-                    <Animated.Image
-                        source={{ uri: decodedUri }}
-                        style={[styles.image, animatedImageStyle]}
-                        resizeMode="contain"
-                    />
-                </Animated.View>
-            </GestureDetector>
-        </ThemedView>
+                <GestureDetector gesture={combinedGestures}>
+                    <Animated.View style={styles.imageContainer}>
+                        <Animated.Image
+                            source={{ uri: decodedUri }}
+                            style={[styles.image, animatedImageStyle]}
+                            resizeMode="contain"
+                        />
+                    </Animated.View>
+                </GestureDetector>
+            </ThemedView>
+        </SafeAreaView>
     );
 }
 

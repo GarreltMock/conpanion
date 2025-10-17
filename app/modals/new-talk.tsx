@@ -9,6 +9,7 @@ import { useApp } from "@/context/AppContext";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { useI18n } from "@/hooks/useI18n";
 import { toast } from "sonner-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function NewTalkModal() {
     const [title, setTitle] = useState("");
@@ -51,53 +52,55 @@ export default function NewTalkModal() {
     };
 
     return (
-        <ModalView style={styles.container}>
-            <View style={[styles.header, { borderBottomColor: borderLight }]}>
-                <TouchableOpacity style={styles.cancelButton} onPress={handleCancel} disabled={isCreating}>
-                    <ThemedText style={styles.cancelText}>{t("common.cancel")}</ThemedText>
-                </TouchableOpacity>
+        <SafeAreaView style={{ flex: 1 }}>
+            <ModalView style={styles.container}>
+                <View style={[styles.header, { borderBottomColor: borderLight }]}>
+                    <TouchableOpacity style={styles.cancelButton} onPress={handleCancel} disabled={isCreating}>
+                        <ThemedText style={styles.cancelText}>{t("common.cancel")}</ThemedText>
+                    </TouchableOpacity>
 
-                <ThemedText style={styles.title}>{t("modals.newTalk")}</ThemedText>
+                    <ThemedText style={styles.title}>{t("modals.newTalk")}</ThemedText>
 
-                <TouchableOpacity
-                    style={[
-                        styles.createButton,
-                        { backgroundColor: tintColor },
-                        !title.trim() && styles.disabledButton,
-                    ]}
-                    onPress={handleCreate}
-                    disabled={!title.trim() || isCreating}
-                >
-                    {isCreating ? (
-                        <ActivityIndicator size="small" color={tintContentColor} />
-                    ) : (
-                        <Text style={[styles.createText, { color: tintContentColor }]}>
-                            {t("common.actions.create")}
-                        </Text>
-                    )}
-                </TouchableOpacity>
-            </View>
-
-            <View style={styles.formContainer}>
-                <View style={[styles.inputContainer, { borderColor: border }]}>
-                    <IconSymbol name="mic.fill" size={22} color={textColor + "80"} style={styles.inputIcon} />
-
-                    <TextInput
-                        style={[styles.input, { color: textColor }]}
-                        placeholder={t("forms.talk.titlePlaceholder")}
-                        placeholderTextColor={textColor + "60"}
-                        value={title}
-                        onChangeText={setTitle}
-                        autoFocus
-                        maxLength={100}
-                        returnKeyType="done"
-                        onSubmitEditing={title.trim() ? handleCreate : undefined}
-                    />
+                    <TouchableOpacity
+                        style={[
+                            styles.createButton,
+                            { backgroundColor: tintColor },
+                            !title.trim() && styles.disabledButton,
+                        ]}
+                        onPress={handleCreate}
+                        disabled={!title.trim() || isCreating}
+                    >
+                        {isCreating ? (
+                            <ActivityIndicator size="small" color={tintContentColor} />
+                        ) : (
+                            <Text style={[styles.createText, { color: tintContentColor }]}>
+                                {t("common.actions.create")}
+                            </Text>
+                        )}
+                    </TouchableOpacity>
                 </View>
 
-                <ThemedText style={styles.helpText}>{t("help.keepTakingNotes")}</ThemedText>
-            </View>
-        </ModalView>
+                <View style={styles.formContainer}>
+                    <View style={[styles.inputContainer, { borderColor: border }]}>
+                        <IconSymbol name="mic.fill" size={22} color={textColor + "80"} style={styles.inputIcon} />
+
+                        <TextInput
+                            style={[styles.input, { color: textColor }]}
+                            placeholder={t("forms.talk.titlePlaceholder")}
+                            placeholderTextColor={textColor + "60"}
+                            value={title}
+                            onChangeText={setTitle}
+                            autoFocus
+                            maxLength={100}
+                            returnKeyType="done"
+                            onSubmitEditing={title.trim() ? handleCreate : undefined}
+                        />
+                    </View>
+
+                    <ThemedText style={styles.helpText}>{t("help.keepTakingNotes")}</ThemedText>
+                </View>
+            </ModalView>
+        </SafeAreaView>
     );
 }
 

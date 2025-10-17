@@ -134,7 +134,7 @@ export const TalkHeader: React.FC<TalkHeaderProps> = ({ conferenceName, talk, on
                     </Pressable>
                 )} */}
 
-                {(!isScheduledTalk || !isTalkActive) && (
+                {!!talk && (!isScheduledTalk || !isTalkActive) && (
                     <Pressable
                         style={({ pressed }) => [
                             styles.newTalkButton,

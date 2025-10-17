@@ -138,7 +138,10 @@ export default function SettingsModal() {
                                     },
                                 ]}
                                 onPress={() =>
-                                    handleExternalLink("https://privacy.example.com", t("settings.legal.dataPrivacy"))
+                                    handleExternalLink(
+                                        "https://l.programmier.bar/pc-dse",
+                                        t("settings.legal.dataPrivacy")
+                                    )
                                 }
                             >
                                 <ThemedText style={styles.settingLabel}>{t("settings.legal.dataPrivacy")}</ThemedText>

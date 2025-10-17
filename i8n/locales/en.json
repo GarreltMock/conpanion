@@ -115,7 +115,7 @@
             "title": "Evaluation",
             "nextTalk": "Next",
             "summary": "Feedback",
-            "shareConsent": "I agree that my feedback will be shared",
+            "shareConsent": "(optional) I consent to my feedback being published, e.g., on programmier.bar’s social media channels or in newsletters.",
             "keepTakingNotes": "Keep Taking Notes",
             "content": "Content",
             "speaker": "Speaker",

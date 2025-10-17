@@ -115,7 +115,7 @@
             "title": "Bewertung",
             "nextTalk": "Next",
             "summary": "Feedback",
-            "shareConsent": "Ich bin einverstanden, dass mein Feedback geteilt wird",
+            "shareConsent": "(optional) Ich willige ein, dass mein Feedback z. B. auf Social-Media-Kanälen oder Newsletter der programmier.bar veröffentlicht werden darf.",
             "keepTakingNotes": "Fortsetzen",
             "content": "Inhalt",
             "speaker": "Sprecher",

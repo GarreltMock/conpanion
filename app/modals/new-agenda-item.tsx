@@ -25,6 +25,7 @@ import { useThemeColor } from "@/hooks/useThemeColor";
 import { useI18n } from "@/hooks/useI18n";
 import { Speaker } from "@/types";
 import { toast } from "sonner-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const roundToNearestFiveMinutes = (date: Date): Date => {
     const rounded = new Date(date);
@@ -192,328 +193,335 @@ export default function NewAgendaItemModal() {
     };
 
     return (
-        <MyKeyboardAvoidingView>
-            <ModalView style={styles.container}>
-                <View style={[styles.header, { borderBottomColor: borderLightColor }]}>
-                    <TouchableOpacity style={styles.cancelButton} onPress={handleCancel} disabled={isCreating}>
-                        <ThemedText style={styles.cancelText}>{t("common.cancel")}</ThemedText>
-                    </TouchableOpacity>
+        <SafeAreaView style={{ flex: 1 }}>
+            <MyKeyboardAvoidingView>
+                <ModalView style={styles.container}>
+                    <View style={[styles.header, { borderBottomColor: borderLightColor }]}>
+                        <TouchableOpacity style={styles.cancelButton} onPress={handleCancel} disabled={isCreating}>
+                            <ThemedText style={styles.cancelText}>{t("common.cancel")}</ThemedText>
+                        </TouchableOpacity>
 
-                    <ThemedText style={styles.title}>
-                        {isNotTalk ? t("modals.newActivity") : t("modals.newAgendaTalk")}
-                    </ThemedText>
+                        <ThemedText style={styles.title}>
+                            {isNotTalk ? t("modals.newActivity") : t("modals.newAgendaTalk")}
+                        </ThemedText>
 
-                    <TouchableOpacity
-                        style={[
-                            styles.createButton,
-                            { backgroundColor: tintColor },
-                            !title.trim() && styles.disabledButton,
-                        ]}
-                        onPress={handleCreate}
-                        disabled={!title.trim() || isCreating}
-                    >
-                        {isCreating ? (
-                            <ActivityIndicator size="small" color={tintContentColor} />
-                        ) : (
-                            <Text style={[styles.createText, { color: tintContentColor }]}>
-                                {t("common.actions.create")}
-                            </Text>
-                        )}
-                    </TouchableOpacity>
-                </View>
-
-                <ScrollView
-                    style={styles.scrollContainer}
-                    contentContainerStyle={styles.formContainer}
-                    keyboardShouldPersistTaps="handled"
-                    showsVerticalScrollIndicator={false}
-                >
-                    <ThemedText style={styles.helpText}>
-                        {!isNotTalk ? t("help.createScheduledTalk") : t("help.createScheduledActivity")}
-                    </ThemedText>
-
-                    <View style={[styles.inputContainer, { borderColor: borderColor }]}>
-                        <IconSymbol name="mic.fill" size={22} color={textColor + "80"} style={styles.inputIcon} />
-                        <TextInput
-                            style={[styles.input, { color: textColor }]}
-                            placeholder={t("forms.talk.titlePlaceholder")}
-                            placeholderTextColor={textColor + "60"}
-                            value={title}
-                            onChangeText={setTitle}
-                            autoFocus
-                            maxLength={100}
-                            returnKeyType="done"
-                        />
+                        <TouchableOpacity
+                            style={[
+                                styles.createButton,
+                                { backgroundColor: tintColor },
+                                !title.trim() && styles.disabledButton,
+                            ]}
+                            onPress={handleCreate}
+                            disabled={!title.trim() || isCreating}
+                        >
+                            {isCreating ? (
+                                <ActivityIndicator size="small" color={tintContentColor} />
+                            ) : (
+                                <Text style={[styles.createText, { color: tintContentColor }]}>
+                                    {t("common.actions.create")}
+                                </Text>
+                            )}
+                        </TouchableOpacity>
                     </View>
 
-                    <TouchableOpacity
-                        style={styles.checkboxContainer}
-                        onPress={() => setIsNotTalk(!isNotTalk)}
-                        activeOpacity={0.7}
+                    <ScrollView
+                        style={styles.scrollContainer}
+                        contentContainerStyle={styles.formContainer}
+                        keyboardShouldPersistTaps="handled"
+                        showsVerticalScrollIndicator={false}
                     >
-                        <View
-                            style={[
-                                styles.checkbox,
-                                { borderColor: borderColor },
-                                isNotTalk && { backgroundColor: tintColor, borderColor: tintColor },
-                            ]}
-                        >
-                            {isNotTalk && (
-                                <IconSymbol name="checkmark" size={14} color={tintContentColor} weight="bold" />
-                            )}
+                        <ThemedText style={styles.helpText}>
+                            {!isNotTalk ? t("help.createScheduledTalk") : t("help.createScheduledActivity")}
+                        </ThemedText>
+
+                        <View style={[styles.inputContainer, { borderColor: borderColor }]}>
+                            <IconSymbol name="mic.fill" size={22} color={textColor + "80"} style={styles.inputIcon} />
+                            <TextInput
+                                style={[styles.input, { color: textColor }]}
+                                placeholder={t("forms.talk.titlePlaceholder")}
+                                placeholderTextColor={textColor + "60"}
+                                value={title}
+                                onChangeText={setTitle}
+                                autoFocus
+                                maxLength={100}
+                                returnKeyType="done"
+                            />
                         </View>
-                        <ThemedText style={styles.checkboxLabel}>{t("modals.thisIsNoTalk")}</ThemedText>
-                    </TouchableOpacity>
 
-                    <View style={styles.dateContainer}>
-                        {conferenceDays.length > 1 && (
-                            <View style={styles.dayContainer}>
-                                <ScrollView
-                                    horizontal
-                                    style={styles.dayButtonsContainer}
-                                    showsHorizontalScrollIndicator={false}
-                                >
-                                    {conferenceDays.map((day) => (
-                                        <TouchableOpacity
-                                            key={day.index}
-                                            style={[
-                                                styles.dayButton,
-                                                { borderColor: borderColor },
-                                                selectedDay === day.index && { backgroundColor: tintColor },
-                                            ]}
-                                            onPress={() => setSelectedDay(day.index)}
-                                        >
-                                            <Text
-                                                style={[
-                                                    styles.dayButtonText,
-                                                    { color: selectedDay === day.index ? tintContentColor : textColor },
-                                                ]}
-                                            >
-                                                {format(day.date, "EEE d", { locale: dateFnsLocale })}
-                                            </Text>
-                                        </TouchableOpacity>
-                                    ))}
-                                </ScrollView>
-                                <ThemedText style={styles.selectedDayText}>
-                                    {conferenceDays[selectedDay]?.label}
-                                </ThemedText>
+                        <TouchableOpacity
+                            style={styles.checkboxContainer}
+                            onPress={() => setIsNotTalk(!isNotTalk)}
+                            activeOpacity={0.7}
+                        >
+                            <View
+                                style={[
+                                    styles.checkbox,
+                                    { borderColor: borderColor },
+                                    isNotTalk && { backgroundColor: tintColor, borderColor: tintColor },
+                                ]}
+                            >
+                                {isNotTalk && (
+                                    <IconSymbol name="checkmark" size={14} color={tintContentColor} weight="bold" />
+                                )}
                             </View>
-                        )}
+                            <ThemedText style={styles.checkboxLabel}>{t("modals.thisIsNoTalk")}</ThemedText>
+                        </TouchableOpacity>
 
-                        <View style={[styles.timePickerContainer, { borderColor: borderColor }]}>
-                            {Platform.OS === "ios" ? (
-                                <View
-                                    style={[
-                                        styles.timePickerButton,
-                                        styles.startTimeButton,
-                                        { borderBottomColor: borderLightColor },
-                                    ]}
-                                >
-                                    <IconSymbol
-                                        name="clock"
-                                        size={20}
-                                        color={textColor + "80"}
-                                        style={styles.dateIcon}
-                                    />
-                                    <ThemedText style={styles.dateLabel}>{t("forms.talk.startTime")}</ThemedText>
+                        <View style={styles.dateContainer}>
+                            {conferenceDays.length > 1 && (
+                                <View style={styles.dayContainer}>
+                                    <ScrollView
+                                        horizontal
+                                        style={styles.dayButtonsContainer}
+                                        showsHorizontalScrollIndicator={false}
+                                    >
+                                        {conferenceDays.map((day) => (
+                                            <TouchableOpacity
+                                                key={day.index}
+                                                style={[
+                                                    styles.dayButton,
+                                                    { borderColor: borderColor },
+                                                    selectedDay === day.index && { backgroundColor: tintColor },
+                                                ]}
+                                                onPress={() => setSelectedDay(day.index)}
+                                            >
+                                                <Text
+                                                    style={[
+                                                        styles.dayButtonText,
+                                                        {
+                                                            color:
+                                                                selectedDay === day.index
+                                                                    ? tintContentColor
+                                                                    : textColor,
+                                                        },
+                                                    ]}
+                                                >
+                                                    {format(day.date, "EEE d", { locale: dateFnsLocale })}
+                                                </Text>
+                                            </TouchableOpacity>
+                                        ))}
+                                    </ScrollView>
+                                    <ThemedText style={styles.selectedDayText}>
+                                        {conferenceDays[selectedDay]?.label}
+                                    </ThemedText>
+                                </View>
+                            )}
+
+                            <View style={[styles.timePickerContainer, { borderColor: borderColor }]}>
+                                {Platform.OS === "ios" ? (
+                                    <View
+                                        style={[
+                                            styles.timePickerButton,
+                                            styles.startTimeButton,
+                                            { borderBottomColor: borderLightColor },
+                                        ]}
+                                    >
+                                        <IconSymbol
+                                            name="clock"
+                                            size={20}
+                                            color={textColor + "80"}
+                                            style={styles.dateIcon}
+                                        />
+                                        <ThemedText style={styles.dateLabel}>{t("forms.talk.startTime")}</ThemedText>
+                                        <DateTimePicker
+                                            value={startTime}
+                                            mode="time"
+                                            display="compact"
+                                            onChange={handleStartTimeChange}
+                                            style={styles.timePicker}
+                                        />
+                                    </View>
+                                ) : (
+                                    <TouchableOpacity
+                                        style={[
+                                            styles.timePickerButton,
+                                            styles.startTimeButton,
+                                            { borderBottomColor: borderLightColor },
+                                        ]}
+                                        onPress={() => setShowTimePicker(true)}
+                                    >
+                                        <IconSymbol
+                                            name="clock"
+                                            size={20}
+                                            color={textColor + "80"}
+                                            style={styles.dateIcon}
+                                        />
+                                        <ThemedText style={styles.dateLabel}>{t("forms.talk.startTime")}</ThemedText>
+                                        <ThemedText style={styles.dateValue}>
+                                            {format(startTime, "h:mm a", { locale: dateFnsLocale })}
+                                        </ThemedText>
+                                    </TouchableOpacity>
+                                )}
+
+                                {Platform.OS === "android" && showTimePicker && (
                                     <DateTimePicker
                                         value={startTime}
                                         mode="time"
-                                        display="compact"
+                                        display="default"
                                         onChange={handleStartTimeChange}
-                                        style={styles.timePicker}
                                     />
-                                </View>
-                            ) : (
-                                <TouchableOpacity
-                                    style={[
-                                        styles.timePickerButton,
-                                        styles.startTimeButton,
-                                        { borderBottomColor: borderLightColor },
-                                    ]}
-                                    onPress={() => setShowTimePicker(true)}
+                                )}
+
+                                <RNPickerSelect
+                                    onValueChange={(value) => setDuration(value)}
+                                    items={durationOptions}
+                                    value={duration}
+                                    style={{
+                                        inputIOS: {
+                                            fontFamily: "MuseoSans-Medium",
+                                            fontSize: 16,
+                                            fontWeight: "500",
+                                            color: textColor,
+                                        },
+                                        inputAndroid: {
+                                            fontFamily: "MuseoSans-Medium",
+                                            fontSize: 16,
+                                            fontWeight: "500",
+                                            color: textColor,
+                                        },
+                                    }}
+                                    useNativeAndroidPickerStyle={false}
+                                    darkTheme={true}
                                 >
-                                    <IconSymbol
-                                        name="clock"
-                                        size={20}
-                                        color={textColor + "80"}
-                                        style={styles.dateIcon}
-                                    />
-                                    <ThemedText style={styles.dateLabel}>{t("forms.talk.startTime")}</ThemedText>
-                                    <ThemedText style={styles.dateValue}>
-                                        {format(startTime, "h:mm a", { locale: dateFnsLocale })}
-                                    </ThemedText>
-                                </TouchableOpacity>
-                            )}
-
-                            {Platform.OS === "android" && showTimePicker && (
-                                <DateTimePicker
-                                    value={startTime}
-                                    mode="time"
-                                    display="default"
-                                    onChange={handleStartTimeChange}
-                                />
-                            )}
-
-                            <RNPickerSelect
-                                onValueChange={(value) => setDuration(value)}
-                                items={durationOptions}
-                                value={duration}
-                                style={{
-                                    inputIOS: {
-                                        fontFamily: "MuseoSans-Medium",
-                                        fontSize: 16,
-                                        fontWeight: "500",
-                                        color: textColor,
-                                    },
-                                    inputAndroid: {
-                                        fontFamily: "MuseoSans-Medium",
-                                        fontSize: 16,
-                                        fontWeight: "500",
-                                        color: textColor,
-                                    },
-                                }}
-                                useNativeAndroidPickerStyle={false}
-                                darkTheme={true}
-                            >
-                                <View style={[styles.timePickerButton, styles.durationButton]}>
-                                    <IconSymbol
-                                        name="timer"
-                                        size={20}
-                                        color={textColor + "80"}
-                                        style={styles.dateIcon}
-                                    />
-                                    <ThemedText style={styles.dateLabel}>{t("forms.talk.duration")}</ThemedText>
-                                    <ThemedText style={styles.dateValue}>{duration} minutes</ThemedText>
-                                </View>
-                            </RNPickerSelect>
-                        </View>
-                    </View>
-
-                    {/* Stage/Location Field */}
-                    <View style={[styles.inputContainer, { borderColor: borderColor }]}>
-                        <IconSymbol name="location" size={22} color={textColor + "80"} style={styles.inputIcon} />
-                        <TextInput
-                            style={[styles.input, { color: textColor }]}
-                            placeholder={t("forms.talk.locationOptional")}
-                            placeholderTextColor={textColor + "60"}
-                            value={location}
-                            onChangeText={setLocation}
-                            maxLength={50}
-                            returnKeyType="done"
-                        />
-                    </View>
-
-                    {/* Description Field */}
-                    <View style={[styles.inputContainer, { borderColor: borderColor }]}>
-                        <IconSymbol name="doc.text" size={22} color={textColor + "80"} style={styles.inputIcon} />
-                        <TextInput
-                            style={[styles.input, styles.multilineInput, { color: textColor }]}
-                            placeholder={t("forms.talk.descriptionOptional")}
-                            placeholderTextColor={textColor + "60"}
-                            value={description}
-                            onChangeText={setDescription}
-                            multiline
-                            numberOfLines={3}
-                            maxLength={500}
-                            textAlignVertical="top"
-                        />
-                    </View>
-
-                    {/* Speakers Section - Only for talks */}
-                    {!isNotTalk && (
-                        <View style={styles.speakersSection}>
-                            <View style={styles.speakersHeader}>
-                                <ThemedText style={styles.sectionTitle}>{t("forms.speakers.title")}</ThemedText>
-                                <TouchableOpacity style={styles.addButton} onPress={addSpeaker}>
-                                    <IconSymbol name="plus.circle" size={24} color={iconColor} />
-                                </TouchableOpacity>
+                                    <View style={[styles.timePickerButton, styles.durationButton]}>
+                                        <IconSymbol
+                                            name="timer"
+                                            size={20}
+                                            color={textColor + "80"}
+                                            style={styles.dateIcon}
+                                        />
+                                        <ThemedText style={styles.dateLabel}>{t("forms.talk.duration")}</ThemedText>
+                                        <ThemedText style={styles.dateValue}>{duration} minutes</ThemedText>
+                                    </View>
+                                </RNPickerSelect>
                             </View>
-
-                            {speakers.map((speaker, index) => (
-                                <View key={index} style={[styles.speakerContainer, { borderColor: borderColor }]}>
-                                    <View style={styles.speakerHeader}>
-                                        <ThemedText style={styles.speakerLabel}>
-                                            {t("talks.speaker")} {index + 1}
-                                        </ThemedText>
-                                        <TouchableOpacity onPress={() => removeSpeaker(index)}>
-                                            <IconSymbol name="minus.circle.fill" size={20} color={errorColor} />
-                                        </TouchableOpacity>
-                                    </View>
-
-                                    <View style={styles.speakerInputContainer}>
-                                        <IconSymbol
-                                            name="person"
-                                            size={18}
-                                            color={textColor + "80"}
-                                            style={styles.speakerInputIcon}
-                                        />
-                                        <TextInput
-                                            style={[
-                                                styles.speakerInput,
-                                                { color: textColor, borderColor: borderLightColor },
-                                            ]}
-                                            placeholder={t("forms.speakers.namePlaceholder")}
-                                            placeholderTextColor={textColor + "60"}
-                                            value={speaker.name}
-                                            onChangeText={(text) => updateSpeaker(index, "name", text)}
-                                            maxLength={100}
-                                        />
-                                    </View>
-
-                                    <View style={styles.speakerInputContainer}>
-                                        <IconSymbol
-                                            name="photo"
-                                            size={18}
-                                            color={textColor + "80"}
-                                            style={styles.speakerInputIcon}
-                                        />
-                                        <TextInput
-                                            style={[
-                                                styles.speakerInput,
-                                                { color: textColor, borderColor: borderLightColor },
-                                            ]}
-                                            placeholder={t("forms.speakers.photoUrlOptional")}
-                                            placeholderTextColor={textColor + "60"}
-                                            value={speaker.photo || ""}
-                                            onChangeText={(text) => updateSpeaker(index, "photo", text)}
-                                            maxLength={500}
-                                            keyboardType="url"
-                                            autoCapitalize="none"
-                                            autoCorrect={false}
-                                        />
-                                    </View>
-
-                                    <View style={styles.speakerInputContainer}>
-                                        <IconSymbol
-                                            name="doc.text"
-                                            size={18}
-                                            color={textColor + "80"}
-                                            style={styles.speakerInputIcon}
-                                        />
-                                        <TextInput
-                                            style={[
-                                                styles.speakerInput,
-                                                styles.bioInput,
-                                                { color: textColor, borderColor: borderLightColor },
-                                            ]}
-                                            placeholder={t("forms.speakers.bioOptional")}
-                                            placeholderTextColor={textColor + "60"}
-                                            value={speaker.bio || ""}
-                                            onChangeText={(text) => updateSpeaker(index, "bio", text)}
-                                            multiline
-                                            numberOfLines={2}
-                                            maxLength={200}
-                                            textAlignVertical="top"
-                                        />
-                                    </View>
-                                </View>
-                            ))}
                         </View>
-                    )}
-                </ScrollView>
-            </ModalView>
-        </MyKeyboardAvoidingView>
+
+                        {/* Stage/Location Field */}
+                        <View style={[styles.inputContainer, { borderColor: borderColor }]}>
+                            <IconSymbol name="location" size={22} color={textColor + "80"} style={styles.inputIcon} />
+                            <TextInput
+                                style={[styles.input, { color: textColor }]}
+                                placeholder={t("forms.talk.locationOptional")}
+                                placeholderTextColor={textColor + "60"}
+                                value={location}
+                                onChangeText={setLocation}
+                                maxLength={50}
+                                returnKeyType="done"
+                            />
+                        </View>
+
+                        {/* Description Field */}
+                        <View style={[styles.inputContainer, { borderColor: borderColor }]}>
+                            <IconSymbol name="doc.text" size={22} color={textColor + "80"} style={styles.inputIcon} />
+                            <TextInput
+                                style={[styles.input, styles.multilineInput, { color: textColor }]}
+                                placeholder={t("forms.talk.descriptionOptional")}
+                                placeholderTextColor={textColor + "60"}
+                                value={description}
+                                onChangeText={setDescription}
+                                multiline
+                                numberOfLines={3}
+                                maxLength={500}
+                                textAlignVertical="top"
+                            />
+                        </View>
+
+                        {/* Speakers Section - Only for talks */}
+                        {!isNotTalk && (
+                            <View style={styles.speakersSection}>
+                                <View style={styles.speakersHeader}>
+                                    <ThemedText style={styles.sectionTitle}>{t("forms.speakers.title")}</ThemedText>
+                                    <TouchableOpacity style={styles.addButton} onPress={addSpeaker}>
+                                        <IconSymbol name="plus.circle" size={24} color={iconColor} />
+                                    </TouchableOpacity>
+                                </View>
+
+                                {speakers.map((speaker, index) => (
+                                    <View key={index} style={[styles.speakerContainer, { borderColor: borderColor }]}>
+                                        <View style={styles.speakerHeader}>
+                                            <ThemedText style={styles.speakerLabel}>
+                                                {t("talks.speaker")} {index + 1}
+                                            </ThemedText>
+                                            <TouchableOpacity onPress={() => removeSpeaker(index)}>
+                                                <IconSymbol name="minus.circle.fill" size={20} color={errorColor} />
+                                            </TouchableOpacity>
+                                        </View>
+
+                                        <View style={styles.speakerInputContainer}>
+                                            <IconSymbol
+                                                name="person"
+                                                size={18}
+                                                color={textColor + "80"}
+                                                style={styles.speakerInputIcon}
+                                            />
+                                            <TextInput
+                                                style={[
+                                                    styles.speakerInput,
+                                                    { color: textColor, borderColor: borderLightColor },
+                                                ]}
+                                                placeholder={t("forms.speakers.namePlaceholder")}
+                                                placeholderTextColor={textColor + "60"}
+                                                value={speaker.name}
+                                                onChangeText={(text) => updateSpeaker(index, "name", text)}
+                                                maxLength={100}
+                                            />
+                                        </View>
+
+                                        <View style={styles.speakerInputContainer}>
+                                            <IconSymbol
+                                                name="photo"
+                                                size={18}
+                                                color={textColor + "80"}
+                                                style={styles.speakerInputIcon}
+                                            />
+                                            <TextInput
+                                                style={[
+                                                    styles.speakerInput,
+                                                    { color: textColor, borderColor: borderLightColor },
+                                                ]}
+                                                placeholder={t("forms.speakers.photoUrlOptional")}
+                                                placeholderTextColor={textColor + "60"}
+                                                value={speaker.photo || ""}
+                                                onChangeText={(text) => updateSpeaker(index, "photo", text)}
+                                                maxLength={500}
+                                                keyboardType="url"
+                                                autoCapitalize="none"
+                                                autoCorrect={false}
+                                            />
+                                        </View>
+
+                                        <View style={styles.speakerInputContainer}>
+                                            <IconSymbol
+                                                name="doc.text"
+                                                size={18}
+                                                color={textColor + "80"}
+                                                style={styles.speakerInputIcon}
+                                            />
+                                            <TextInput
+                                                style={[
+                                                    styles.speakerInput,
+                                                    styles.bioInput,
+                                                    { color: textColor, borderColor: borderLightColor },
+                                                ]}
+                                                placeholder={t("forms.speakers.bioOptional")}
+                                                placeholderTextColor={textColor + "60"}
+                                                value={speaker.bio || ""}
+                                                onChangeText={(text) => updateSpeaker(index, "bio", text)}
+                                                multiline
+                                                numberOfLines={2}
+                                                maxLength={200}
+                                                textAlignVertical="top"
+                                            />
+                                        </View>
+                                    </View>
+                                ))}
+                            </View>
+                        )}
+                    </ScrollView>
+                </ModalView>
+            </MyKeyboardAvoidingView>
+        </SafeAreaView>
     );
 }
 
