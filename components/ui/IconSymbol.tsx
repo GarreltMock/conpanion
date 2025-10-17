@@ -45,11 +45,14 @@ const MAPPING = {
     "minus.circle.fill": "remove-circle",
     person: "person",
     photo: "photo",
+    bookmark: "bookmark-border",
     "bookmark.fill": "bookmark",
     eye: "visibility",
     "wand.and.stars": "auto-fix-high",
     link: "link",
     "arrow.right.circle": "arrow-circle-right",
+    "squares.below.rectangle": "display-settings",
+    gearshape: "settings",
 } as Partial<
     Record<import("expo-symbols").SymbolViewProps["name"], React.ComponentProps<typeof MaterialIcons>["name"]>
 >;

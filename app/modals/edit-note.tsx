@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, Alert, StyleSheet, View } from "react-native";
+import { ActivityIndicator, StyleSheet, View } from "react-native";
 
 import { MyKeyboardAvoidingView } from "@/components/MyKeyboardAvoidingView";
 import { ThemedView } from "@/components/ThemedView";
@@ -8,6 +8,7 @@ import { NoteInput } from "@/components/note/NoteInput";
 import { useApp } from "@/context/AppContext";
 import { useI18n } from "@/hooks/useI18n";
 import { Note, NoteImage } from "@/types";
+import { toast } from "sonner-native";
 
 export default function EditNoteModal() {
     const { noteId } = useLocalSearchParams<{ noteId: string }>();
@@ -23,11 +24,11 @@ export default function EditNoteModal() {
             if (foundNote) {
                 setNote(foundNote);
             } else {
-                Alert.alert(t("common.errors.title"), t("errors.noteNotFound"));
+                toast.error(t("errors.noteNotFound"));
                 router.back();
             }
         }
-    }, [noteId, notes]);
+    }, [noteId, notes, t]);
 
     const handleDeletedImages = async (initialImages: NoteImage[], currentImages: NoteImage[]) => {
         const currentImageUris = new Set(currentImages.map((img) => img.uri));
@@ -66,7 +67,7 @@ export default function EditNoteModal() {
             router.back();
         } catch (error) {
             console.error("Error updating note:", error);
-            Alert.alert(t("common.errors.title"), t("errors.updateNoteFailed"));
+            toast.error(t("errors.updateNoteFailed"));
         } finally {
             setIsSaving(false);
         }
@@ -76,9 +77,10 @@ export default function EditNoteModal() {
         router.back();
     };
 
-    const handleTakePhoto = async (fromGallery: boolean): Promise<string> => {
+    const handleTakePhoto = async (fromGallery: boolean): Promise<string | null> => {
         try {
-            return await addImageNote(fromGallery);
+            if (!note) return null;
+            return await addImageNote(note.talkId, fromGallery);
         } catch (error) {
             console.error("Error taking photo:", error);
             throw error;
@@ -90,11 +92,13 @@ export default function EditNoteModal() {
         try {
             if (isRecording) {
                 // When stopping, return the URI of the recorded audio
-                const audioUri = await stopAudioRecording();
+                if (!note) return null;
+                const audioUri = await stopAudioRecording(note.talkId);
                 return audioUri;
             } else {
                 // Start recording
-                await addAudioNote();
+                if (!note) return null;
+                await addAudioNote(note.talkId);
                 return null;
             }
         } catch (error) {

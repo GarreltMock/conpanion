@@ -1,7 +1,20 @@
 import { format } from "date-fns";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, FlatList, StyleSheet, TouchableOpacity, View, Image, Text, ScrollView } from "react-native";
+import {
+    ActivityIndicator,
+    FlatList,
+    StyleSheet,
+    TouchableOpacity,
+    View,
+    Image,
+    Text,
+    ScrollView,
+    Modal,
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
+import { toast } from "sonner-native";
 
 import { MyKeyboardAvoidingView } from "@/components/MyKeyboardAvoidingView";
 import { NoteInput } from "@/components/note/NoteInput";
@@ -16,9 +29,11 @@ import { Note, NoteImage, Talk } from "@/types";
 
 export default function TalkDetailScreen() {
     const { id } = useLocalSearchParams<{ id: string }>();
+    const insets = useSafeAreaInsets();
     const [talk, setTalk] = useState<Talk | null>(null);
     const [talkNotes, setTalkNotes] = useState<Note[]>([]);
     const [detailsExpanded, setDetailsExpanded] = useState(false);
+    const [showSubmenu, setShowSubmenu] = useState(false);
 
     const {
         talks,
@@ -28,19 +43,22 @@ export default function TalkDetailScreen() {
         getNotesForTalk,
         addAudioNote,
         deleteNote,
+        restoreNote,
         isLoading,
         isRecording,
         toggleTalkSelection,
+        deleteTalk,
     } = useApp();
 
     const { t } = useI18n();
     const textColor = useThemeColor({}, "text");
     const tintColor = useThemeColor({}, "tint");
+    const tintContentColor = useThemeColor({}, "tintContent");
     const backgroundColor = useThemeColor({}, "background");
     const headerBackgroundColor = useThemeColor({}, "headerBackground");
     const borderLightColor = useThemeColor({}, "borderLight");
     const backgroundOverlayLightColor = useThemeColor({}, "backgroundOverlayLight");
-    const iconColor = useThemeColor({}, "tabIconDefault");
+    const iconColor = useThemeColor({}, "icon");
 
     useEffect(() => {
         if (id) {
@@ -74,13 +92,14 @@ export default function TalkDetailScreen() {
     const handleSubmitNote = async (text: string, images: NoteImage[], audioRecordings: string[]) => {
         if (!text.trim() && images.length === 0 && audioRecordings.length === 0) return;
         if (!talk?.id) return;
-        await addNote(text, images, audioRecordings, talk.id);
+        await addNote(talk.id, text, images, audioRecordings);
     };
 
     // Handle taking a photo
     const handleTakePhoto = async (fromGallery: boolean): Promise<string | null> => {
         try {
-            return await addImageNote(fromGallery);
+            if (!talk?.id) return null;
+            return await addImageNote(talk.id, fromGallery);
         } catch (error) {
             console.error("Error taking photo:", error);
             throw error;
@@ -92,12 +111,14 @@ export default function TalkDetailScreen() {
         try {
             if (isRecording) {
                 // When stopping, return the URI of the recorded audio
-                const audioUri = await stopAudioRecording();
+                if (!talk?.id) return null;
+                const audioUri = await stopAudioRecording(talk.id);
                 console.log("Audio recording stopped, URI:", audioUri);
                 return audioUri;
             } else {
                 // Start recording
-                await addAudioNote();
+                if (!talk?.id) return null;
+                await addAudioNote(talk.id);
                 return null;
             }
         } catch (error) {
@@ -108,6 +129,10 @@ export default function TalkDetailScreen() {
 
     const handleDeleteNote = async (noteId: string) => {
         await deleteNote(noteId);
+    };
+
+    const handleRestoreNote = async (note: Note) => {
+        await restoreNote(note);
     };
 
     const handleAddToUserTalks = async () => {
@@ -131,6 +156,42 @@ export default function TalkDetailScreen() {
         router.push(`/modals/talk-evaluation?talkId=${talk.id}&source=talk-detail`);
     };
 
+    const handleRateTalk = () => {
+        if (!talk) return;
+        setShowSubmenu(false);
+        router.push(`/modals/talk-evaluation?talkId=${talk.id}&source=talk-detail`);
+    };
+
+    const handleDeleteTalk = () => {
+        if (!talk) return;
+
+        setShowSubmenu(false);
+
+        const toastId = toast.warning(t("talks.deleteWarning"), {
+            duration: 10000,
+            important: true,
+            action: {
+                label: t("common.delete"),
+                onClick: async () => {
+                    try {
+                        await deleteTalk(talk.id);
+                        toast.success(t("talks.deleteSuccess") || "Talk deleted successfully");
+                        router.back();
+                    } catch (error) {
+                        console.error("Error deleting talk:", error);
+                        toast.error(t("talks.deleteFailed") || "Failed to delete talk");
+                    } finally {
+                        toast.dismiss(toastId);
+                    }
+                },
+            },
+            cancel: {
+                label: t("common.cancel"),
+                onClick: () => {},
+            },
+        });
+    };
+
     if (isLoading || !talk) {
         return (
             <ThemedView style={styles.loadingContainer}>
@@ -143,11 +204,21 @@ export default function TalkDetailScreen() {
         <MyKeyboardAvoidingView>
             <ThemedView style={styles.container}>
                 <View
-                    style={[styles.header, { backgroundColor: headerBackgroundColor, borderColor: borderLightColor }]}
+                    style={[
+                        styles.header,
+                        {
+                            backgroundColor: headerBackgroundColor,
+                            borderColor: borderLightColor,
+                            paddingTop: insets.top + 10,
+                        },
+                    ]}
                 >
                     <TouchableOpacity style={styles.backButton} onPress={handleBack}>
                         <IconSymbol name="chevron.left" size={20} color={textColor} />
                         <ThemedText style={styles.backText}>{t("navigation.tabs.talks")}</ThemedText>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.headerMenuButton} onPress={() => setShowSubmenu(true)}>
+                        <Ionicons name="ellipsis-vertical" size={24} color={textColor} />
                     </TouchableOpacity>
                 </View>
 
@@ -200,7 +271,7 @@ export default function TalkDetailScreen() {
                 </View>
 
                 {/* Talk Details Section - Collapsible only if user selected */}
-                {(talk.speakers?.length || talk.stage || talk.description || talk.summary) && (
+                {(talk.speakers?.length || talk.location || talk.description) && ( // TODO: after programmiercon // || talk.summary) && (
                     <View
                         style={[
                             styles.detailsSection,
@@ -232,7 +303,8 @@ export default function TalkDetailScreen() {
                                 showsVerticalScrollIndicator={true}
                             >
                                 {/* Evaluation Summary */}
-                                {talk.summary ? (
+                                {/* TODO: after programmiercon */}
+                                {/* {talk.summary ? (
                                     <TouchableOpacity
                                         style={[styles.talkDetailItem, isTalkInPast(talk) && styles.clickableSummary]}
                                         onPress={isTalkInPast(talk) ? handleEditEvaluation : undefined}
@@ -278,7 +350,25 @@ export default function TalkDetailScreen() {
                                             </ThemedText>
                                         </View>
                                     </TouchableOpacity>
-                                ) : null}
+                                ) : null} */}
+
+                                {/* Description */}
+                                {talk.description && (
+                                    <View style={styles.talkDetailItem}>
+                                        <View style={styles.talkDetailHeader}>
+                                            <IconSymbol
+                                                name="doc.text"
+                                                size={16}
+                                                color={iconColor}
+                                                style={styles.talkDetailIcon}
+                                            />
+                                            <ThemedText style={styles.talkDetailLabel}>
+                                                {t("talks.description")}
+                                            </ThemedText>
+                                        </View>
+                                        <ThemedText style={styles.talkDetailValue}>{talk.description}</ThemedText>
+                                    </View>
+                                )}
 
                                 {/* Speakers */}
                                 {talk.speakers && talk.speakers.length > 0 && (
@@ -326,7 +416,7 @@ export default function TalkDetailScreen() {
                                 )}
 
                                 {/* Stage/Location */}
-                                {talk.stage && (
+                                {talk.location && (
                                     <View style={styles.talkDetailItem}>
                                         <View style={styles.talkDetailHeader}>
                                             <IconSymbol
@@ -339,25 +429,7 @@ export default function TalkDetailScreen() {
                                                 {t("talks.location")}
                                             </ThemedText>
                                         </View>
-                                        <ThemedText style={styles.talkDetailValue}>{talk.stage}</ThemedText>
-                                    </View>
-                                )}
-
-                                {/* Description */}
-                                {talk.description && (
-                                    <View style={styles.talkDetailItem}>
-                                        <View style={styles.talkDetailHeader}>
-                                            <IconSymbol
-                                                name="doc.text"
-                                                size={16}
-                                                color={iconColor}
-                                                style={styles.talkDetailIcon}
-                                            />
-                                            <ThemedText style={styles.talkDetailLabel}>
-                                                {t("talks.description")}
-                                            </ThemedText>
-                                        </View>
-                                        <ThemedText style={styles.talkDetailValue}>{talk.description}</ThemedText>
+                                        <ThemedText style={styles.talkDetailValue}>{talk.location}</ThemedText>
                                     </View>
                                 )}
                             </ScrollView>
@@ -377,7 +449,9 @@ export default function TalkDetailScreen() {
                         <FlatList
                             data={talkNotes}
                             keyExtractor={(item) => item.id}
-                            renderItem={({ item }) => <NoteItem note={item} onDelete={handleDeleteNote} />}
+                            renderItem={({ item }) => (
+                                <NoteItem note={item} onDelete={handleDeleteNote} onRestore={handleRestoreNote} />
+                            )}
                             contentContainerStyle={styles.notesList}
                             keyboardShouldPersistTaps="handled"
                             ListEmptyComponent={() => (
@@ -404,9 +478,9 @@ export default function TalkDetailScreen() {
                                 onPress={handleAddToUserTalks}
                                 activeOpacity={0.8}
                             >
-                                <IconSymbol name="bookmark.fill" size={20} color={backgroundColor} />
-                                <Text style={[styles.addToUserTalksText, { color: backgroundColor }]}>
-                                    {t("talks.actions.addToMyTalks")}
+                                <IconSymbol name="bookmark.fill" size={20} color={tintContentColor} />
+                                <Text style={[styles.addToUserTalksText, { color: tintContentColor }]}>
+                                    {t("talks.actions.addToUserAgenda")}
                                 </Text>
                             </TouchableOpacity>
                         </View>
@@ -415,6 +489,33 @@ export default function TalkDetailScreen() {
                     <></>
                 )}
             </ThemedView>
+
+            <Modal
+                visible={showSubmenu}
+                transparent={true}
+                animationType="fade"
+                onRequestClose={() => setShowSubmenu(false)}
+            >
+                <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setShowSubmenu(false)}>
+                    <View style={[styles.submenu, { backgroundColor: backgroundColor, borderColor: borderLightColor }]}>
+                        <TouchableOpacity style={styles.menuItem} onPress={handleRateTalk}>
+                            <Ionicons name="star-outline" size={20} color={iconColor} />
+                            <ThemedText style={styles.menuItemText}>{t("talks.actions.rateTalk")}</ThemedText>
+                        </TouchableOpacity>
+                        {talk?.source === "user" && (
+                            <>
+                                <View style={[styles.menuSeparator, { backgroundColor: borderLightColor }]} />
+                                <TouchableOpacity style={styles.menuItem} onPress={handleDeleteTalk}>
+                                    <Ionicons name="trash-outline" size={20} color="#FF3B30" />
+                                    <ThemedText style={[styles.menuItemText, { color: "#FF3B30" }]}>
+                                        {t("common.delete")}
+                                    </ThemedText>
+                                </TouchableOpacity>
+                            </>
+                        )}
+                    </View>
+                </TouchableOpacity>
+            </Modal>
         </MyKeyboardAvoidingView>
     );
 }
@@ -430,9 +531,11 @@ const styles = StyleSheet.create({
     },
     header: {
         paddingHorizontal: 8,
-        paddingTop: 60,
         paddingBottom: 10,
         borderBottomWidth: 1,
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
     },
     backButton: {
         flexDirection: "row",
@@ -629,5 +732,40 @@ const styles = StyleSheet.create({
     addSummaryText: {
         fontStyle: "italic",
         opacity: 0.6,
+    },
+    headerMenuButton: {
+        paddingHorizontal: 8,
+    },
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: "rgba(0, 0, 0, 0.5)",
+        justifyContent: "flex-start",
+        alignItems: "flex-end",
+        paddingTop: 110,
+        paddingRight: 16,
+    },
+    submenu: {
+        borderRadius: 12,
+        borderWidth: 1,
+        minWidth: 200,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 12,
+        elevation: 8,
+    },
+    menuItem: {
+        flexDirection: "row",
+        alignItems: "center",
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+    },
+    menuItemText: {
+        marginLeft: 12,
+        fontSize: 16,
+        fontWeight: "500",
+    },
+    menuSeparator: {
+        height: 1,
+        marginHorizontal: 16,
     },
 });

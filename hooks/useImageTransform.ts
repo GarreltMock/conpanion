@@ -6,6 +6,7 @@ import { imageUriToImageData, imageDataToUriRN } from "./helper/image_utils";
 import { Polygon } from "@/types";
 import { Platform } from "react-native";
 import { readQRCode } from "./helper/qr_code";
+import { trackImageTransformation } from "@/utils/analytics";
 
 // Simple URL validation function
 function isValidUrl(text: string): boolean {
@@ -109,6 +110,9 @@ export function useImageTransform() {
                         detectedUrls.push(qr.text);
                     }
 
+                    // Track successful transformation
+                    await trackImageTransformation(true);
+
                     return {
                         corners: result.polygon,
                         transformed: {
@@ -120,9 +124,14 @@ export function useImageTransform() {
                     };
                 }
 
+                // Track successful processing (corners detected but no transformation)
+                await trackImageTransformation(true);
+
                 return { corners: result.polygon };
             } catch (err) {
                 console.error("Error processing image:", err);
+                // Track failed transformation
+                await trackImageTransformation(false, err instanceof Error ? err.message : "unknown_error");
                 throw new Error(`Failed to process image: ${err instanceof Error ? err.message : String(err)}`);
             }
         },
@@ -181,6 +190,9 @@ export function useImageTransform() {
                     detectedUrls.push(qr.text);
                 }
 
+                // Track successful manual transformation
+                await trackImageTransformation(true);
+
                 return {
                     uri: transformedUri,
                     width: transformed.width,
@@ -189,6 +201,8 @@ export function useImageTransform() {
                 };
             } catch (err) {
                 console.error("Error transforming image:", err);
+                // Track failed manual transformation
+                await trackImageTransformation(false, err instanceof Error ? err.message : "manual_transform_error");
                 throw new Error(`Failed to transform image: ${err instanceof Error ? err.message : String(err)}`);
             }
         },

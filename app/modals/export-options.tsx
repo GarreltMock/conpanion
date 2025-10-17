@@ -1,10 +1,12 @@
 import React from "react";
-import { StyleSheet, Alert, Share, SafeAreaView } from "react-native";
+import { StyleSheet, Share } from "react-native";
 import { ExportOptionsForm } from "../../components/conference/ExportOptionsForm";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { ThemedView } from "../../components/ThemedView";
 import { ThemedText } from "../../components/ThemedText";
 import * as FileSystem from "expo-file-system";
+import { toast } from "sonner-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function ExportOptionsModal() {
     const { id } = useLocalSearchParams<{ id: string }>();
@@ -19,7 +21,7 @@ export default function ExportOptionsModal() {
             // Check if the file exists
             const fileInfo = await FileSystem.getInfoAsync(filePath);
             if (!fileInfo.exists) {
-                Alert.alert("Error", "Export file not found");
+                toast.error("Export file not found");
                 return;
             }
 
@@ -35,7 +37,7 @@ export default function ExportOptionsModal() {
                 router.back();
             }
         } catch (error) {
-            Alert.alert("Error", "Failed to share the export file");
+            toast.error("Failed to share the export file");
             console.error("Share error:", error);
         }
     };
@@ -43,31 +45,22 @@ export default function ExportOptionsModal() {
     // If no conference ID provided, show error
     if (!id) {
         return (
-            <SafeAreaView style={styles.safeArea}>
-                <ThemedView style={styles.centered}>
-                    <ThemedText>No conference selected for export</ThemedText>
-                </ThemedView>
-            </SafeAreaView>
+            <ThemedView style={styles.centered}>
+                <ThemedText>No conference selected for export</ThemedText>
+            </ThemedView>
         );
     }
 
     return (
-        <SafeAreaView style={styles.safeArea}>
+        <SafeAreaView style={{ flex: 1 }}>
             <ThemedView style={styles.container}>
-                <ExportOptionsForm
-                    conferenceId={id}
-                    onCancel={handleCancel}
-                    onExport={handleExport}
-                />
+                <ExportOptionsForm conferenceId={id} onCancel={handleCancel} onExport={handleExport} />
             </ThemedView>
         </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
-    safeArea: {
-        flex: 1,
-    },
     container: {
         flex: 1,
     },

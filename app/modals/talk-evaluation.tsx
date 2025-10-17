@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, Alert, StyleSheet, View, Text, TouchableOpacity, TextInput } from "react-native";
+import { ActivityIndicator, StyleSheet, View, Text, TouchableOpacity, TextInput, ScrollView } from "react-native";
 
 import { MyKeyboardAvoidingView } from "@/components/MyKeyboardAvoidingView";
 import { ThemedView } from "@/components/ThemedView";
@@ -9,21 +9,27 @@ import { IconSymbol } from "@/components/ui/IconSymbol";
 import { useApp } from "@/context/AppContext";
 import { useI18n } from "@/hooks/useI18n";
 import { useThemeColor } from "@/hooks/useThemeColor";
-import { Talk } from "@/types";
+import { ProgrammierConFeedback, Talk } from "@/types";
+import { trackTalkRated } from "@/utils/analytics";
+import { toast } from "sonner-native";
 
 export default function TalkEvaluationModal() {
     const { talkId, source } = useLocalSearchParams<{ talkId: string; source?: string }>();
     const [talk, setTalk] = useState<Talk | null>(null);
-    const [rating, setRating] = useState<number>(0);
+    const [ratingOverall, setOverallRating] = useState<number>(0);
+    const [ratingSpeaker, setSpeakerRating] = useState<number>(0);
+    const [ratingContent, setContentRating] = useState<number>(0);
     const [summary, setSummary] = useState<string>("");
+    const [shareAllowed, setShareAllowed] = useState<boolean>(false);
     const [isLoading, setIsLoading] = useState(true);
 
     const { talks, saveEvaluation, endTalk, currentConference } = useApp();
     const { t } = useI18n();
 
     const tintColor = useThemeColor({}, "tint");
-    const backgroundColor = useThemeColor({}, "background");
+    const tintContentColor = useThemeColor({}, "tintContent");
     const textColor = useThemeColor({}, "text");
+    const borderColor = useThemeColor({}, "border");
     const borderLightColor = useThemeColor({}, "borderLight");
     const backgroundOverlayLightColor = useThemeColor({}, "backgroundOverlayLight");
 
@@ -58,21 +64,39 @@ export default function TalkEvaluationModal() {
             if (foundTalk) {
                 setTalk(foundTalk);
                 // Prefill existing evaluation data
-                setRating(foundTalk.rating || 0);
                 setSummary(foundTalk.summary || "");
+                setOverallRating(foundTalk.rating || 0);
+
+                setSpeakerRating(foundTalk.feedback?.ratingSpeaker || 0);
+                setContentRating(foundTalk.feedback?.ratingContent || 0);
+                setShareAllowed(foundTalk.feedback?.shareConsent || false);
             } else {
-                Alert.alert("Error", "Talk not found");
+                toast.error("Talk not found");
                 router.back();
             }
         }
         setIsLoading(false);
     }, [talkId, talks]);
 
+    const getProgrammierConFeedback = (): ProgrammierConFeedback | undefined => {
+        if (!talk) return undefined;
+
+        return {
+            ratingOverall,
+            ratingSpeaker,
+            ratingContent,
+            shareConsent: shareAllowed,
+            feedback: summary,
+        };
+    };
+
     const handleKeepTakingNotes = async () => {
         if (!talk) return;
 
         try {
-            await saveEvaluation(talk.id, rating, summary);
+            await saveEvaluation(talk.id, ratingOverall, summary, getProgrammierConFeedback());
+            await trackEvaluation();
+
             router.back();
         } catch (error) {
             console.error("Error saving evaluation:", error);
@@ -84,13 +108,14 @@ export default function TalkEvaluationModal() {
         if (!talk) return;
 
         try {
-            await saveEvaluation(talk.id, rating, summary);
+            await saveEvaluation(talk.id, ratingOverall, summary, getProgrammierConFeedback());
+            await trackEvaluation();
             await endTalk(talk);
 
             router.back();
         } catch (error) {
             console.error("Error finishing talk:", error);
-            Alert.alert("Error", "Failed to finish talk. Please try again.");
+            toast.error("Failed to finish talk. Please try again.");
         }
     };
 
@@ -98,11 +123,21 @@ export default function TalkEvaluationModal() {
         if (!talk) return;
 
         try {
-            await saveEvaluation(talk.id, rating, summary);
+            await saveEvaluation(talk.id, ratingOverall, summary, getProgrammierConFeedback());
+            await trackEvaluation();
+
             router.back();
         } catch (error) {
             console.error("Error saving evaluation:", error);
-            Alert.alert("Error", "Failed to save evaluation. Please try again.");
+            toast.error("Failed to save evaluation. Please try again.");
+        }
+    };
+
+    const trackEvaluation = async () => {
+        if (!talk) return;
+
+        if (shareAllowed) {
+            await trackTalkRated({ talkId: talk.id, ratingOverall, ratingContent, ratingSpeaker, feedback: summary });
         }
     };
 
@@ -111,13 +146,19 @@ export default function TalkEvaluationModal() {
     };
 
     // Check if this modal was opened from the talk detail view
-    const isFromTalkDetail = source === "talk-detail";
+    const isFromTalkDetail = source !== "talk-notes";
 
-    const renderStars = () => {
+    // Validation: if any rating is filled, all must be filled
+    const hasAnyRating = ratingOverall > 0 || ratingSpeaker > 0 || ratingContent > 0;
+    const hasAllRatings = ratingOverall > 0 && ratingSpeaker > 0 && ratingContent > 0;
+    const isRatingValid = !hasAnyRating || hasAllRatings;
+    const isSaveDisabled = !isRatingValid;
+
+    const renderStars = (rating: number, setter: (value: number) => void) => {
         const stars = [];
         for (let i = 1; i <= 5; i++) {
             stars.push(
-                <TouchableOpacity key={i} onPress={() => setRating(i)} style={styles.starButton}>
+                <TouchableOpacity key={i} onPress={() => setter(rating === i ? 0 : i)} style={styles.starButton}>
                     <IconSymbol
                         name={i <= rating ? "star.fill" : "star"}
                         size={28}
@@ -145,91 +186,170 @@ export default function TalkEvaluationModal() {
     return (
         <MyKeyboardAvoidingView style={styles.backdrop}>
             <View style={styles.spacer} />
-            {nextTalk && (
+            {nextTalk && !isFromTalkDetail && (
                 <View style={styles.nextTalkContainer}>
                     <View style={styles.nextTalkRow}>
-                        <IconSymbol 
-                            name="arrow.right.circle" 
-                            size={16} 
-                            color={textColor + "80"} 
-                            style={styles.nextTalkIcon} 
-                        />
-                        <ThemedText style={[styles.nextTalkText, { color: textColor + "80" }]}>
-                            Next Talk: {nextTalk.title}
+                        <ThemedText style={[styles.nextTalkText, { color: textColor }]}>
+                            {t("talks.evaluation.nextTalk")}
+                        </ThemedText>
+                        <IconSymbol name="arrow.right.circle" size={16} color={textColor} style={styles.nextTalkIcon} />
+                        <ThemedText style={[styles.nextTalkText, { color: textColor, opacity: 0.5, flex: 1 }]}>
+                            {nextTalk.title}
                         </ThemedText>
                     </View>
                 </View>
             )}
             <ThemedView style={styles.container}>
-                <View style={styles.content}>
-                    <View style={styles.header}>
-                        <View>
-                            <ThemedText style={styles.subtitle}>Evaluation</ThemedText>
-                            <ThemedText style={styles.title}>{talk.title}</ThemedText>
+                <ScrollView showsVerticalScrollIndicator={false} bounces={false}>
+                    <View style={styles.content}>
+                        <View style={styles.header}>
+                            <View>
+                                <ThemedText style={styles.subtitle}>{t("talks.evaluation.title")}</ThemedText>
+                                <ThemedText style={styles.title}>{talk.title}</ThemedText>
+                            </View>
+                            {isFromTalkDetail && (
+                                <TouchableOpacity style={styles.closeButton} onPress={handleClose} activeOpacity={0.6}>
+                                    <IconSymbol name="xmark" size={18} color={textColor + "80"} />
+                                </TouchableOpacity>
+                            )}
                         </View>
-                        {isFromTalkDetail && (
-                            <TouchableOpacity style={styles.closeButton} onPress={handleClose} activeOpacity={0.6}>
-                                <IconSymbol name="xmark" size={18} color={textColor + "80"} />
-                            </TouchableOpacity>
+
+                        <View style={styles.summarySection}>
+                            <TextInput
+                                style={[
+                                    styles.summaryInput,
+                                    {
+                                        borderColor: borderLightColor,
+                                        backgroundColor: backgroundOverlayLightColor,
+                                        color: textColor,
+                                    },
+                                ]}
+                                placeholder={t("talks.evaluation.summary")}
+                                placeholderTextColor={textColor + "60"}
+                                multiline
+                                value={summary}
+                                onChangeText={setSummary}
+                                textAlignVertical="top"
+                            />
+                        </View>
+
+                        {isSaveDisabled && (
+                            <View style={styles.validationHint}>
+                                <IconSymbol name="info.circle" size={20} color={textColor} style={{ opacity: 0.6 }} />
+                                <ThemedText style={[styles.validationText, { color: textColor }]}>
+                                    {t("talks.evaluation.completeAllRatings")}
+                                </ThemedText>
+                            </View>
                         )}
-                    </View>
 
-                    <View style={styles.summarySection}>
-                        <TextInput
-                            style={[
-                                styles.summaryInput,
-                                {
-                                    borderColor: borderLightColor,
-                                    backgroundColor: backgroundOverlayLightColor,
-                                    color: textColor,
-                                },
-                            ]}
-                            placeholder={t("talks.summary")}
-                            placeholderTextColor={textColor + "60"}
-                            multiline
-                            value={summary}
-                            onChangeText={setSummary}
-                            textAlignVertical="top"
-                        />
-                    </View>
+                        <View style={styles.ratingSection}>
+                            <View style={styles.starsRow}>
+                                <ThemedText style={[styles.starsLabel, { opacity: 0.7 }]}>
+                                    {t("talks.evaluation.content")}
+                                </ThemedText>
+                                <View style={styles.starsContainer}>
+                                    {renderStars(ratingContent, setContentRating)}
+                                </View>
+                            </View>
+                            <View style={styles.starsRow}>
+                                <ThemedText style={[styles.starsLabel, { opacity: 0.7 }]}>
+                                    {t("talks.evaluation.speaker")}
+                                </ThemedText>
+                                <View style={styles.starsContainer}>
+                                    {renderStars(ratingSpeaker, setSpeakerRating)}
+                                </View>
+                            </View>
+                            <View style={styles.starsRow}>
+                                <ThemedText style={styles.starsLabel}>{t("talks.evaluation.overall")}</ThemedText>
+                                <View style={styles.starsContainer}>
+                                    {renderStars(ratingOverall, setOverallRating)}
+                                </View>
+                            </View>
+                        </View>
 
-                    <View style={styles.ratingSection}>
-                        <View style={styles.starsContainer}>{renderStars()}</View>
-                    </View>
-
-                    <View style={styles.buttonsContainer}>
-                        {isFromTalkDetail ? (
-                            // When opened from talk detail view - just show Save button
-                            <TouchableOpacity
-                                style={[styles.button, styles.saveButton, { backgroundColor: tintColor }]}
-                                onPress={handleSave}
+                        <TouchableOpacity
+                            style={styles.checkboxContainer}
+                            onPress={() => setShareAllowed(!shareAllowed)}
+                            activeOpacity={0.7}
+                        >
+                            <View
+                                style={[
+                                    styles.checkbox,
+                                    { borderColor: borderColor },
+                                    shareAllowed && { backgroundColor: tintColor, borderColor: tintColor },
+                                ]}
                             >
-                                <Text style={[styles.buttonText, { color: backgroundColor }]}>Save</Text>
-                            </TouchableOpacity>
-                        ) : (
-                            // When opened from normal flow - show original buttons
-                            <>
-                                <TouchableOpacity
-                                    style={[styles.button, styles.keepNotesButton, { borderColor: borderLightColor }]}
-                                    onPress={handleKeepTakingNotes}
-                                >
-                                    <Text style={[styles.buttonText, { color: textColor }]}>
-                                        {t("talks.keepTakingNotes")}
-                                    </Text>
-                                </TouchableOpacity>
+                                {shareAllowed && (
+                                    <IconSymbol name="checkmark" size={14} color={tintContentColor} weight="bold" />
+                                )}
+                            </View>
+                            <ThemedText style={styles.checkboxLabel}>{t("talks.evaluation.shareConsent")}</ThemedText>
+                        </TouchableOpacity>
 
+                        <View style={styles.buttonsContainer}>
+                            {isFromTalkDetail ? (
+                                // When opened from talk detail view - just show Save button
                                 <TouchableOpacity
-                                    style={[styles.button, styles.doneButton, { backgroundColor: tintColor }]}
-                                    onPress={handleDone}
+                                    style={[
+                                        styles.button,
+                                        styles.saveButton,
+                                        { backgroundColor: tintColor },
+                                        isSaveDisabled && styles.buttonDisabled,
+                                    ]}
+                                    onPress={handleSave}
+                                    disabled={isSaveDisabled}
                                 >
-                                    <Text style={[styles.buttonText, { color: backgroundColor }]}>
-                                        {t("common.done")}
+                                    <Text
+                                        style={[
+                                            styles.buttonText,
+                                            { color: tintContentColor },
+                                            isSaveDisabled && styles.buttonTextDisabled,
+                                        ]}
+                                    >
+                                        {t("common.save")}
                                     </Text>
                                 </TouchableOpacity>
-                            </>
-                        )}
+                            ) : (
+                                // When opened from normal flow - show original buttons
+                                <>
+                                    <TouchableOpacity
+                                        style={[
+                                            styles.button,
+                                            styles.keepNotesButton,
+                                            { borderColor: borderLightColor },
+                                        ]}
+                                        onPress={handleKeepTakingNotes}
+                                    >
+                                        <Text style={[styles.buttonText, { color: textColor }]}>
+                                            {t("talks.evaluation.keepTakingNotes")}
+                                        </Text>
+                                    </TouchableOpacity>
+
+                                    <TouchableOpacity
+                                        style={[
+                                            styles.button,
+                                            styles.doneButton,
+                                            { backgroundColor: tintColor },
+                                            isSaveDisabled && styles.buttonDisabled,
+                                        ]}
+                                        onPress={handleDone}
+                                        disabled={isSaveDisabled}
+                                    >
+                                        <Text
+                                            style={[
+                                                styles.buttonText,
+                                                { color: tintContentColor },
+                                                isSaveDisabled && styles.buttonTextDisabled,
+                                            ]}
+                                        >
+                                            {t("common.done")}
+                                        </Text>
+                                    </TouchableOpacity>
+                                </>
+                            )}
+                        </View>
                     </View>
-                </View>
+                </ScrollView>
             </ThemedView>
         </MyKeyboardAvoidingView>
     );
@@ -254,11 +374,13 @@ const styles = StyleSheet.create({
         alignItems: "center",
     },
     nextTalkIcon: {
-        marginRight: 6,
+        marginHorizontal: 6,
+        opacity: 0.7,
     },
     nextTalkText: {
         fontSize: 13,
-        fontWeight: "500",
+        lineHeight: 16,
+        opacity: 0.7,
     },
     container: {
         borderTopLeftRadius: 16,
@@ -308,15 +430,47 @@ const styles = StyleSheet.create({
     },
     ratingSection: {
         alignItems: "center",
-        marginBottom: 24,
+        marginBottom: 12,
+    },
+    starsRow: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        width: "100%",
+        gap: 8,
+        marginBottom: 12,
+    },
+    starsLabel: {
+        fontSize: 15,
+        fontWeight: "500",
     },
     starsContainer: {
         flexDirection: "row",
-        justifyContent: "center",
+        alignItems: "center",
         gap: 6,
     },
     starButton: {
         padding: 2,
+    },
+    checkboxContainer: {
+        flexDirection: "row",
+        alignItems: "center",
+        marginBottom: 24,
+    },
+    checkbox: {
+        width: 20,
+        height: 20,
+        borderWidth: 2,
+        borderRadius: 4,
+        marginRight: 12,
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    checkboxLabel: {
+        fontSize: 14,
+        opacity: 0.6,
+        lineHeight: 16,
+        flex: 1,
     },
     buttonsContainer: {
         flexDirection: "row",
@@ -333,14 +487,27 @@ const styles = StyleSheet.create({
     keepNotesButton: {
         borderWidth: 1,
     },
-    doneButton: {
-        // backgroundColor set dynamically
-    },
-    saveButton: {
-        // backgroundColor set dynamically
-    },
+    doneButton: {},
+    saveButton: {},
     buttonText: {
         fontSize: 15,
         fontWeight: "600",
+    },
+    buttonDisabled: {
+        opacity: 0.4,
+    },
+    buttonTextDisabled: {
+        opacity: 0.6,
+    },
+    validationHint: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 12,
+        marginBottom: 4,
+    },
+    validationText: {
+        fontSize: 14,
+        opacity: 0.6,
+        flex: 1,
     },
 });

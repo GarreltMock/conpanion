@@ -2,15 +2,11 @@ import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
     ActivityIndicator,
-    Alert,
     Dimensions,
     Image,
-    SafeAreaView,
     StyleSheet,
     TouchableOpacity,
     View,
-    Platform,
-    StatusBar,
     DeviceEventEmitter,
 } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
@@ -23,6 +19,8 @@ import { IconSymbol } from "@/components/ui/IconSymbol";
 import { useImageTransform } from "@/hooks/useImageTransform";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { Point, Polygon as PolygonType } from "@/types";
+import { toast } from "sonner-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 type ImageLayout = { x: number; y: number; width: number; height: number };
 
@@ -47,8 +45,9 @@ export default function ImageEditScreen() {
 
     // Theme colors
     const tintColor = useThemeColor({}, "tint");
-    const whiteColor = useThemeColor({}, "white");
-    const backgroundOverlayColor = useThemeColor({}, "backgroundOverlay");
+    const tintContentColor = useThemeColor({}, "tintContent");
+    const textColor = useThemeColor({}, "text");
+    const borderLightColor = useThemeColor({}, "borderLight");
     const backgroundColor = useThemeColor({}, "background");
 
     // Get original image dimensions
@@ -197,7 +196,7 @@ export default function ImageEditScreen() {
             router.back();
         } catch (error) {
             console.error("Error transforming image:", error);
-            Alert.alert("Transformation Error", "Failed to transform the image with the selected corners.");
+            toast.error("Failed to transform the image with the selected corners.");
         } finally {
             setLoading(false);
         }
@@ -362,14 +361,14 @@ export default function ImageEditScreen() {
     };
 
     return (
-        <ThemedView style={[styles.container, { backgroundColor }]}>
-            <SafeAreaView style={styles.safeArea}>
+        <SafeAreaView style={{ flex: 1 }}>
+            <ThemedView style={[styles.container, { backgroundColor }]}>
                 <View style={styles.header}>
                     <TouchableOpacity style={styles.cancelButton} onPress={handleCancel} disabled={loading}>
-                        <IconSymbol name="xmark" size={24} color={whiteColor} />
+                        <IconSymbol name="xmark" size={24} color={textColor} />
                     </TouchableOpacity>
 
-                    <ThemedText style={styles.headerTitle}>Edit Image</ThemedText>
+                    <ThemedText style={[styles.headerTitle, { color: textColor }]}>Edit Image</ThemedText>
 
                     <View style={{ width: 40 }} />
                 </View>
@@ -377,7 +376,7 @@ export default function ImageEditScreen() {
                 {loading ? (
                     <View style={styles.loadingContainer}>
                         <ActivityIndicator size="large" color={tintColor} />
-                        <ThemedText style={[styles.loadingText, { color: whiteColor }]}>Processing image...</ThemedText>
+                        <ThemedText style={[styles.loadingText, { color: textColor }]}>Processing image...</ThemedText>
                     </View>
                 ) : (
                     <View style={styles.imageContainer}>
@@ -396,27 +395,27 @@ export default function ImageEditScreen() {
 
                         <View style={styles.editActions}>
                             <TouchableOpacity
-                                style={[styles.actionButton, { backgroundColor: backgroundOverlayColor }]}
+                                style={[styles.actionButton, { borderColor: borderLightColor, borderWidth: 1 }]}
                                 onPress={handleCancel}
                                 disabled={loading}
                             >
-                                <ThemedText style={[styles.actionButtonText, { color: whiteColor }]}>Cancel</ThemedText>
+                                <ThemedText style={[styles.actionButtonText, { color: textColor }]}>Cancel</ThemedText>
                             </TouchableOpacity>
 
                             <TouchableOpacity
-                                style={[styles.actionButton, styles.saveButton, { backgroundColor: tintColor + "CC" }]}
+                                style={[styles.actionButton, styles.saveButton, { backgroundColor: tintColor }]}
                                 onPress={handleSaveCorners}
                                 disabled={!corners || loading}
                             >
-                                <ThemedText style={[styles.actionButtonText, { color: whiteColor }]}>
+                                <ThemedText style={[styles.actionButtonText, { color: tintContentColor }]}>
                                     Transform
                                 </ThemedText>
                             </TouchableOpacity>
                         </View>
                     </View>
                 )}
-            </SafeAreaView>
-        </ThemedView>
+            </ThemedView>
+        </SafeAreaView>
     );
 }
 
@@ -425,10 +424,6 @@ const { width, height } = Dimensions.get("window");
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-    },
-    safeArea: {
-        flex: 1,
-        paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
     },
     header: {
         flexDirection: "row",
@@ -440,10 +435,9 @@ const styles = StyleSheet.create({
     headerTitle: {
         fontSize: 18,
         fontWeight: "600",
-        color: "white",
     },
     cancelButton: {
-        padding: 8,
+        paddingHorizontal: 8,
         width: 40,
         alignItems: "center",
     },
@@ -507,14 +501,13 @@ const styles = StyleSheet.create({
         fontSize: 14,
     },
     editActions: {
-        position: "absolute",
         bottom: 40,
         left: 0,
         right: 0,
         flexDirection: "row",
         justifyContent: "center",
         paddingHorizontal: 20,
-        zIndex: 20,
+        zIndex: 30,
     },
     actionButton: {
         paddingVertical: 12,

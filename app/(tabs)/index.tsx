@@ -24,6 +24,7 @@ export default function NotesScreen() {
         stopAudioRecording,
         addNote,
         deleteNote,
+        restoreNote,
         getNotesForTalk,
         isLoading,
         isRecording,
@@ -51,7 +52,7 @@ export default function NotesScreen() {
 
         if (shouldShowEvaluationModal() && !seenEvaluationModals.has(activeTalk.id)) {
             setTalkEvaluationAsSeen(activeTalk.id);
-            router.push(`/modals/talk-evaluation?talkId=${activeTalk.id}`);
+            router.push(`/modals/talk-evaluation?talkId=${activeTalk.id}&source=talk-notes`);
         }
     }, [activeTalk, shouldShowEvaluationModal, refreshActiveTalk, isLoading, seenEvaluationModals]);
 
@@ -92,7 +93,7 @@ export default function NotesScreen() {
         }
     }, [talkNotes.length]);
 
-    const handleTalkDone = async () => {
+    const handleHeaderButtonPress = async () => {
         if (!activeTalk) {
             router.push("/modals/new-talk");
             return;
@@ -108,20 +109,22 @@ export default function NotesScreen() {
             router.push("/modals/new-talk");
         } else {
             setTalkEvaluationAsSeen(activeTalk.id);
-            router.push(`/modals/talk-evaluation?talkId=${activeTalk.id}`);
+            router.push(`/modals/talk-evaluation?talkId=${activeTalk.id}&source=talk-notes`);
         }
     };
 
     // Handle combined note submission (text, images, audio)
     const handleSubmitNote = async (text: string, images: NoteImage[], audioRecordings: string[]) => {
         if (!text.trim() && images.length === 0 && audioRecordings.length === 0) return;
-        await addNote(text, images, audioRecordings);
+        if (!activeTalk?.id) return;
+        await addNote(activeTalk.id, text, images, audioRecordings);
     };
 
     // Handle taking a photo
     const handleTakePhoto = async (fromGallery: boolean): Promise<string | null> => {
         try {
-            return await addImageNote(fromGallery);
+            if (!activeTalk?.id) return null;
+            return await addImageNote(activeTalk.id, fromGallery);
         } catch (error) {
             console.error("Error taking photo:", error);
             throw error;
@@ -133,12 +136,14 @@ export default function NotesScreen() {
         try {
             if (isRecording) {
                 // When stopping, return the URI of the recorded audio
-                const audioUri = await stopAudioRecording();
+                if (!activeTalk?.id) return null;
+                const audioUri = await stopAudioRecording(activeTalk.id);
                 console.log("Audio recording stopped, URI:", audioUri);
                 return audioUri;
             } else {
                 // Start recording
-                await addAudioNote();
+                if (!activeTalk?.id) return null;
+                await addAudioNote(activeTalk.id);
                 return null;
             }
         } catch (error) {
@@ -149,6 +154,10 @@ export default function NotesScreen() {
 
     const handleDeleteNote = async (noteId: string) => {
         await deleteNote(noteId);
+    };
+
+    const handleRestoreNote = async (note: Note) => {
+        await restoreNote(note);
     };
 
     const renderEmptyState = () => (
@@ -172,7 +181,7 @@ export default function NotesScreen() {
                 <TalkHeader
                     conferenceName={currentConference?.name || "My Conference"}
                     talk={activeTalk}
-                    onDone={handleTalkDone}
+                    onPress={handleHeaderButtonPress}
                 />
 
                 {activeTalk ? (
@@ -180,7 +189,9 @@ export default function NotesScreen() {
                         ref={flatListRef}
                         data={talkNotes}
                         keyExtractor={(item) => item.id}
-                        renderItem={({ item }) => <NoteItem note={item} onDelete={handleDeleteNote} />}
+                        renderItem={({ item }) => (
+                            <NoteItem note={item} onDelete={handleDeleteNote} onRestore={handleRestoreNote} />
+                        )}
                         contentContainerStyle={styles.notesList}
                         keyboardShouldPersistTaps="handled"
                         ListEmptyComponent={() => (

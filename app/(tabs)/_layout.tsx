@@ -8,8 +8,9 @@ import { useI18n } from "@/hooks/useI18n";
 import { useThemeColor } from "@/hooks/useThemeColor";
 
 export default function TabLayout() {
-    const tintColor = useThemeColor({}, "tint");
+    const highlightColor = useThemeColor({}, "highlight");
     const headerBackgroundColor = useThemeColor({}, "headerBackground");
+    const borderLightColor = useThemeColor({}, "borderLight");
 
     const { t } = useI18n();
     const [isKeyboardVisible, setKeyboardVisible] = useState(false);
@@ -31,14 +32,14 @@ export default function TabLayout() {
     return (
         <Tabs
             screenOptions={{
-                tabBarActiveTintColor: tintColor,
+                tabBarActiveTintColor: highlightColor,
                 headerShown: false,
                 tabBarButton: HapticTab,
                 tabBarStyle: [
                     Platform.select({
                         android: isKeyboardVisible ? { display: "none" } : {},
                     }),
-                    { backgroundColor: headerBackgroundColor },
+                    { backgroundColor: headerBackgroundColor, borderTopColor: borderLightColor, borderTopWidth: 1 },
                 ],
             }}
         >
@@ -57,10 +58,10 @@ export default function TabLayout() {
                 }}
             />
             <Tabs.Screen
-                name="conferences"
+                name="conference"
                 options={{
-                    title: t("navigation.tabs.conferences"),
-                    tabBarIcon: ({ color }) => <IconSymbol size={28} name="calendar" color={color} />,
+                    title: t("navigation.tabs.conference"),
+                    tabBarIcon: ({ color }) => <IconSymbol size={28} name="squares.below.rectangle" color={color} />,
                 }}
             />
         </Tabs>

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { View, StyleSheet, FlatList, Alert, Text, Pressable } from "react-native";
+import { View, StyleSheet, FlatList, Text, Pressable, TouchableOpacity } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useApp } from "@/context/AppContext";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
@@ -12,8 +13,9 @@ import { Conference } from "@/types";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { useI18n } from "@/hooks/useI18n";
 
-export default function ConferencesScreen() {
-    const { conferences, currentConference, getConferences, deleteConference, hasConferences } = useApp();
+export default function ConferenceListModal() {
+    const { conferences, currentConference, getConferences, hasConferences } = useApp();
+    const insets = useSafeAreaInsets();
 
     const [loading, setLoading] = useState(true);
     const [hasAnyConferences, setHasAnyConferences] = useState(true);
@@ -21,10 +23,11 @@ export default function ConferencesScreen() {
 
     const router = useRouter();
     const { t } = useI18n();
+    const textColor = useThemeColor({}, "text");
     const tintColor = useThemeColor({}, "tint");
-    const backgroundColor = useThemeColor({}, "background");
+    const tintContentColor = useThemeColor({}, "tintContent");
     const headerBackgroundColor = useThemeColor({}, "headerBackground");
-    const borderLight = useThemeColor({}, "borderLight");
+    const borderLightColor = useThemeColor({}, "borderLight");
 
     useEffect(() => {
         const checkConferencesAndLoad = async () => {
@@ -81,30 +84,6 @@ export default function ConferencesScreen() {
         });
     };
 
-    const handleDeleteConference = (conference: Conference) => {
-        Alert.alert(
-            t("common.delete") + " " + t("conferences.title").slice(0, -1),
-            `${t("common.delete")} "${conference.name}"? ${t("conferences.deleteWarning")}`,
-            [
-                { text: t("common.cancel"), style: "cancel" },
-                {
-                    text: t("common.delete"),
-                    style: "destructive",
-                    onPress: async () => {
-                        try {
-                            await deleteConference(conference.id);
-                            // Check if we have any conferences left
-                            const hasConfs = await hasConferences();
-                            setHasAnyConferences(hasConfs);
-                        } catch {
-                            Alert.alert(t("common.errors.title"), t("conferences.deleteFailed"));
-                        }
-                    },
-                },
-            ]
-        );
-    };
-
     const handleViewConferenceDetails = (conference: Conference) => {
         // Make sure we have an ID to navigate with
         if (!conference || !conference.id) {
@@ -113,9 +92,13 @@ export default function ConferencesScreen() {
         }
 
         router.push({
-            pathname: "/conference",
+            pathname: "/conference-details",
             params: { id: conference.id },
         });
+    };
+
+    const handleClose = () => {
+        router.back();
     };
 
     if (loading) {
@@ -132,8 +115,20 @@ export default function ConferencesScreen() {
 
     return (
         <ThemedView style={styles.container}>
-            <View style={[styles.header, { borderBottomColor: borderLight, backgroundColor: headerBackgroundColor }]}>
-                <ThemedText style={styles.headerTitle}>{t("conferences.title")}</ThemedText>
+            <View
+                style={[
+                    styles.header,
+                    {
+                        backgroundColor: headerBackgroundColor,
+                        borderColor: borderLightColor,
+                        paddingTop: insets.top + 10,
+                    },
+                ]}
+            >
+                <TouchableOpacity style={styles.backButton} onPress={handleClose}>
+                    <IconSymbol name="chevron.left" size={20} color={textColor} />
+                    <ThemedText style={styles.backText}>{t("common.back")}</ThemedText>
+                </TouchableOpacity>
                 <Pressable
                     style={({ pressed }) => [
                         styles.addButton,
@@ -144,22 +139,24 @@ export default function ConferencesScreen() {
                     ]}
                     onPress={handleCreateNewConference}
                 >
-                    <IconSymbol name="plus" size={18} color={backgroundColor} />
-                    <Text style={[styles.buttonText, { color: backgroundColor }]}>{t("common.actions.add")}</Text>
+                    <IconSymbol name="plus" size={18} color={tintContentColor} />
+                    <Text style={[styles.buttonText, { color: tintContentColor }]}>{t("common.actions.add")}</Text>
                 </Pressable>
             </View>
+
             <FlatList
                 data={conferences}
                 keyExtractor={(item) => item.id}
                 renderItem={({ item }) => (
-                    <ConferenceItem
-                        conference={item}
-                        isActive={currentConference?.id === item.id}
-                        onPress={() => handleViewConferenceDetails(item)}
-                        onExport={() => handleExportConference(item)}
-                        onEdit={() => handleEditConference(item)}
-                        onDelete={() => handleDeleteConference(item)}
-                    />
+                    <View style={{ marginVertical: 8, marginHorizontal: 16 }}>
+                        <ConferenceItem
+                            conference={item}
+                            isActive={currentConference?.id === item.id}
+                            onPress={() => handleViewConferenceDetails(item)}
+                            onExport={() => handleExportConference(item)}
+                            onEdit={() => handleEditConference(item)}
+                        />
+                    </View>
                 )}
                 refreshing={refreshing}
                 onRefresh={handleRefresh}
@@ -186,18 +183,27 @@ const styles = StyleSheet.create({
         alignItems: "center",
     },
     header: {
+        marginBottom: 12,
+        paddingHorizontal: 8,
+        paddingBottom: 10,
+        borderBottomWidth: 1,
         flexDirection: "row",
         justifyContent: "space-between",
         alignItems: "center",
-        paddingHorizontal: 16,
-        paddingTop: 60,
-        paddingBottom: 10,
-        marginBottom: 6,
-        borderBottomWidth: 1,
+    },
+    backButton: {
+        flexDirection: "row",
+        alignItems: "center",
+    },
+    backText: {
+        fontSize: 17,
+        marginLeft: 4,
     },
     headerTitle: {
         fontSize: 22,
         fontWeight: "bold",
+        flex: 1,
+        textAlign: "center",
     },
     addButton: {
         flexDirection: "row",

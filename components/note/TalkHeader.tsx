@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { View, StyleSheet, Pressable, Text } from "react-native";
 import { format } from "date-fns";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
@@ -12,13 +13,14 @@ import { Talk } from "@/types";
 interface TalkHeaderProps {
     conferenceName: string;
     talk: Talk | null;
-    onDone: () => void;
+    onPress: () => void;
 }
 
-export const TalkHeader: React.FC<TalkHeaderProps> = ({ conferenceName, talk, onDone }) => {
+export const TalkHeader: React.FC<TalkHeaderProps> = ({ conferenceName, talk, onPress }) => {
     const { t } = useI18n();
+    const insets = useSafeAreaInsets();
     const tintColor = useThemeColor({}, "tint");
-    const backgroundColor = useThemeColor({}, "background");
+    const tintContentColor = useThemeColor({}, "tintContent");
     const headerBackgroundColor = useThemeColor({}, "headerBackground");
     const borderLightColor = useThemeColor({}, "borderLight");
     const textColor = useThemeColor({}, "text");
@@ -46,8 +48,8 @@ export const TalkHeader: React.FC<TalkHeaderProps> = ({ conferenceName, talk, on
         setCurrentTime(new Date());
     }, [talk]);
 
-    const handleDone = () => {
-        onDone();
+    const handlePress = () => {
+        onPress();
     };
 
     // Calculate talk state once
@@ -55,11 +57,18 @@ export const TalkHeader: React.FC<TalkHeaderProps> = ({ conferenceName, talk, on
     const isTalkActive = talk?.duration
         ? new Date(talk.startTime.getTime() + talk.duration * 60 * 1000) > currentTime
         : true;
-    const isOutlinedButton = isScheduledTalk && isTalkActive;
 
     return (
         <ThemedView
-            style={[styles.container, { borderBottomColor: borderLightColor, backgroundColor: headerBackgroundColor }]}
+            style={[
+                styles.container,
+                {
+                    borderBottomColor: borderLightColor,
+                    backgroundColor: headerBackgroundColor,
+                    paddingTop: insets.top + 10,
+                    height: insets.top + 64,
+                },
+            ]}
         >
             <View style={styles.headerContent}>
                 <View style={styles.titleContainer}>
@@ -77,51 +86,69 @@ export const TalkHeader: React.FC<TalkHeaderProps> = ({ conferenceName, talk, on
                     )}
                 </View>
 
-                <Pressable
-                    style={({ pressed }) => [
-                        styles.newTalkButton,
-                        {
-                            backgroundColor: isOutlinedButton ? "transparent" : tintColor,
-                            borderWidth: isOutlinedButton ? 1 : 0,
-                            borderColor: isOutlinedButton ? borderLightColor : "transparent",
-                            opacity: pressed ? 0.8 : 1,
-                        },
-                    ]}
-                    onPress={handleDone}
-                >
-                    {(() => {
-                        if (!talk) {
-                            return (
-                                <>
-                                    <IconSymbol name="plus" size={18} color={backgroundColor} />
-                                    <Text style={[styles.buttonText, { color: backgroundColor }]}>
-                                        {t("talks.actions.new")}
-                                    </Text>
-                                </>
-                            );
-                        }
+                {/* TODO: after programmier.con */}
+                {/* {!talk ? (
+                    <Pressable
+                        style={({ pressed }) => [
+                            styles.newTalkButton,
+                            {
+                                backgroundColor: tintColor,
+                                borderColor: "transparent",
+                                opacity: pressed ? 0.8 : 1,
+                            },
+                        ]}
+                        onPress={handlePress}
+                    >
+                        <IconSymbol name="plus" size={18} color={tintContentColor} />
+                        <Text style={[styles.buttonText, { color: tintContentColor }]}>{t("talks.actions.new")}</Text>
+                    </Pressable>
+                ) : isScheduledTalk && isTalkActive ? (
+                    <Pressable
+                        style={({ pressed }) => [
+                            styles.newTalkButton,
+                            {
+                                backgroundColor: "transparent",
+                                borderWidth: 1,
+                                borderColor: borderLightColor,
+                                opacity: pressed ? 0.8 : 1,
+                            },
+                        ]}
+                        onPress={handlePress}
+                    >
+                        <IconSymbol name="plus" size={18} color={textColor} />
+                        <Text style={[styles.buttonText, { color: textColor }]}>{t("talks.actions.switch")}</Text>
+                    </Pressable>
+                ) : (
+                    <Pressable
+                        style={({ pressed }) => [
+                            styles.newTalkButton,
+                            {
+                                backgroundColor: tintColor,
+                                opacity: pressed ? 0.8 : 1,
+                            },
+                        ]}
+                        onPress={handlePress}
+                    >
+                        <IconSymbol name="checkmark" size={18} color={tintContentColor} />
+                        <Text style={[styles.buttonText, { color: tintContentColor }]}>{t("common.done")}</Text>
+                    </Pressable>
+                )} */}
 
-                        if (isScheduledTalk && isTalkActive) {
-                            return (
-                                <>
-                                    <IconSymbol name="plus" size={18} color={textColor} />
-                                    <Text style={[styles.buttonText, { color: textColor }]}>
-                                        {t("talks.actions.switch")}
-                                    </Text>
-                                </>
-                            );
-                        } else {
-                            return (
-                                <>
-                                    <IconSymbol name="checkmark" size={18} color={backgroundColor} />
-                                    <Text style={[styles.buttonText, { color: backgroundColor }]}>
-                                        {t("common.done")}
-                                    </Text>
-                                </>
-                            );
-                        }
-                    })()}
-                </Pressable>
+                {!!talk && (!isScheduledTalk || !isTalkActive) && (
+                    <Pressable
+                        style={({ pressed }) => [
+                            styles.newTalkButton,
+                            {
+                                backgroundColor: tintColor,
+                                opacity: pressed ? 0.8 : 1,
+                            },
+                        ]}
+                        onPress={handlePress}
+                    >
+                        <IconSymbol name="checkmark" size={18} color={tintContentColor} />
+                        <Text style={[styles.buttonText, { color: tintContentColor }]}>{t("common.done")}</Text>
+                    </Pressable>
+                )}
             </View>
         </ThemedView>
     );
@@ -130,11 +157,11 @@ export const TalkHeader: React.FC<TalkHeaderProps> = ({ conferenceName, talk, on
 const styles = StyleSheet.create({
     container: {
         paddingHorizontal: 16,
-        paddingTop: 60,
         paddingBottom: 8,
         borderBottomWidth: 1,
     },
     headerContent: {
+        flex: 1,
         flexDirection: "row",
         justifyContent: "space-between",
         alignItems: "center",

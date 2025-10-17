@@ -43,9 +43,9 @@
         "profile": "Profile",
         "settings": "Settings",
         "tabs": {
-            "notes": "Notes",
-            "talks": "Talks",
-            "conferences": "Conferences"
+            "notes": "Current Talk",
+            "talks": "Agenda",
+            "conference": "Conference"
         }
     },
     "errors": {
@@ -65,12 +65,14 @@
         "urlOpenFailed": "Failed to open URL",
         "transformationFailed": "Failed to transform the image with the selected corners.",
         "networkError": "Network error. Please check your connection.",
-        "unknownError": "Something went wrong. Please try again."
+        "unknownError": "Something went wrong. Please try again.",
+        "apiNotConfigured": "No API URL configured for this conference",
+        "syncFailed": "Failed to sync conference agenda"
     },
     "notes": {
         "noActiveTalk": "No Active Talk",
-        "createTalkPrompt": "Create a new talk to start taking notes",
-        "noNotesYet": "No notes yet. Start taking notes for this talk.",
+        "createTalkPrompt": "When a talk starts in your agenda, it will appear here",
+        "noNotesYet": "No notes yet",
         "note": "note",
         "notes": "notes",
         "input": {
@@ -93,15 +95,15 @@
         "actions": {
             "new": "New Talk",
             "switch": "Switch Talk",
-            "addToMyTalks": "Add to My Talks",
+            "addToUserAgenda": "Add to your Agenda",
             "rateTalk": "Rate Talk"
         },
-        "myTalks": "My Talks",
+        "userAgenda": "Your Talks",
         "fullAgenda": "Full Agenda",
         "noTalksSelected": "No talks selected",
         "browseTalks": "Browse the agenda to bookmark talks",
+        "exploreAgenda": "Explore Agenda",
         "noTalksScheduled": "No talks scheduled for this day",
-        "createTalkToStart": "Create a new talk to start taking notes",
         "talkDetails": "Talk Details",
         "addSummary": "Add Summary",
         "userSummary": "User Summary",
@@ -109,11 +111,22 @@
         "speakers": "Speakers",
         "location": "Location",
         "description": "Description",
-        "evaluation": "Evaluation",
-        "nextTalk": "Next Talk: {{title}}",
-        "summary": "Summary",
-        "keepTakingNotes": "Keep taking notes",
-        "addTalk": "Add Talk"
+        "evaluation": {
+            "title": "Evaluation",
+            "nextTalk": "Next",
+            "summary": "Feedback",
+            "shareConsent": "(optional) I consent to my feedback being published, e.g., on programmier.bar’s social media channels or in newsletters.",
+            "keepTakingNotes": "Keep Taking Notes",
+            "content": "Content",
+            "speaker": "Speaker",
+            "overall": "Overall",
+            "completeAllRatings": "Please rate all categories"
+        },
+        "addTalk": "Add Talk",
+        "otherDay": "Other",
+        "deleteWarning": "This will delete the talk and all its notes. This cannot be undone.",
+        "deleteSuccess": "Talk deleted successfully",
+        "deleteFailed": "Failed to delete talk"
     },
     "conferences": {
         "title": "Conferences",
@@ -128,7 +141,37 @@
         "created": "Created",
         "myConference": "My Conference",
         "deleteWarning": "This will delete all talks and notes associated with this conference and cannot be undone.",
-        "deleteFailed": "Failed to delete conference"
+        "deleteFailed": "Failed to delete conference",
+        "syncAgenda": "Update Agenda",
+        "syncing": "Updating...",
+        "syncingDescription": "Fetching the latest agenda from the API",
+        "syncSuccess": "Conference agenda updated successfully",
+        "lastSync": "Last Updated",
+        "neverSynced": "Never",
+        "allConferences": "All Conferences",
+        "dashboard": {
+            "title": "Conference",
+            "conference": {
+                "title": "Active Conference",
+                "noActive": "No active conference selected",
+                "allConferences": "All Conferences",
+                "updates": "Conference Updates",
+                "feedback": "Feedback",
+                "map": "Map",
+                "quiz": "Quiz",
+                "codeOfConduct": "Code of Conduct",
+                "photoAndVideoPolicy": "Photo and Video Policy"
+            },
+            "socials": {
+                "title": "Social Media",
+                "discord": "Discord",
+                "spotify": "Spotify",
+                "website": "Website"
+            },
+            "podcast": {
+                "title": "Podcasts for the conference"
+            }
+        }
     },
     "forms": {
         "conference": {
@@ -139,12 +182,21 @@
             "descriptionOptional": "Description (Optional)",
             "descriptionPlaceholder": "Enter conference description",
             "dateRangeRequired": "Date Range *",
-            "status": "Status"
+            "status": "Status",
+            "apiConfiguration": "API Configuration (Optional)",
+            "apiUrl": "API URL",
+            "apiUrlPlaceholder": "https://api.example.com/agenda",
+            "dataFormat": "Data Format",
+            "apiConfigurationHelp": "Configure an API endpoint to automatically sync conference agenda. The system will fetch talk information from the provided URL.",
+            "saveChanges": "Save Changes",
+            "conferenceNameRequired": "Conference name is required",
+            "conferenceIdMissing": "Conference ID is missing",
+            "updateFailed": "Failed to update conference"
         },
         "talk": {
             "titleRequired": "Please enter a talk title",
             "titlePlaceholder": "Enter talk title",
-            "stageOptional": "Stage (optional)",
+            "locationOptional": "Location (optional)",
             "descriptionOptional": "Description (optional)",
             "startTime": "Start Time",
             "duration": "Duration",
@@ -158,14 +210,25 @@
             "bioOptional": "Bio (optional)"
         },
         "export": {
-            "title": "Export {{conference}}",
-            "formatTitle": "Export Format",
+            "defaultFilename": "conference-export",
+            "title": "Export",
+            "format": {
+                "title": "Export Format",
+                "pdf": "PDF",
+                "markdown": "Markdown"
+            },
             "includeImages": "Include Images",
-            "filenameLabel": "Filename",
+            "filename": "Filename",
             "filenamePlaceholder": "Enter export filename",
-            "filenameHelper": "Export will be saved as {{filename}}.{{format}}",
             "selectTalks": "Select Talks to Include",
-            "noTalks": "No talks found in this conference"
+            "selectAll": "Select All",
+            "selectNone": "Select None",
+            "noTalks": "No talks found in this conference",
+            "exporting": "Exporting...",
+            "errors": {
+                "filenameRequired": "Filename is required",
+                "exportFailed": "Export failed"
+            }
         },
         "validation": {
             "nameRequired": "Conference name is required",
@@ -174,8 +237,11 @@
     },
     "modals": {
         "newConference": "New Conference",
+        "editConference": "Edit Conference",
         "newTalk": "New Talk",
         "newAgendaTalk": "New Agenda Talk",
+        "newActivity": "New Activity",
+        "thisIsNoTalk": "This is no talk",
         "editImage": "Edit Image"
     },
     "onboarding": {
@@ -194,6 +260,7 @@
     },
     "help": {
         "createScheduledTalk": "Create a scheduled talk for your agenda. The talk will become active when its start time arrives.",
+        "createScheduledActivity": "Create a scheduled activity like lunch, registration, or networking.",
         "dragCorners": "Drag the corners to adjust the document boundaries",
         "keepTakingNotes": "This will create a new talk and set it as the active talk for taking notes."
     },
@@ -211,5 +278,19 @@
     "share": {
         "conferenceExport": "Conference Export",
         "shareMessage": "Here is your conference export from Conpanion"
+    },
+    "settings": {
+        "title": "Settings",
+        "app": {
+            "title": "App",
+            "darkMode": "Dark Mode",
+            "language": "Language"
+        },
+        "legal": {
+            "title": "About",
+            "dataPrivacy": "Data Privacy",
+            "impressum": "Impressum",
+            "contactSupport": "Contact Support"
+        }
     }
 }

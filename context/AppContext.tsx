@@ -1,13 +1,17 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
 import * as ImagePicker from "expo-image-picker";
 import { Audio } from "expo-av";
-import { Conference, Talk, Note, ExportOptions, NoteImage, Speaker } from "../types";
+import { Conference, Talk, Note, ExportOptions, NoteImage, Speaker, Activity, ProgrammierConFeedback } from "../types";
+import { ApiTalk, ApiActivity } from "../types/apiSchemas";
+import conferenceApiService from "../services/conferenceApiService";
+import autoUpdateService from "../services/autoUpdateService";
 import {
     getTalks,
     getNotes,
     saveTalk,
     saveNote,
     deleteNote as deleteNoteFromStorage,
+    deleteTalk as deleteTalkFromStorage,
     initializeDefaultConference,
     saveImage,
     saveAudio,
@@ -16,12 +20,13 @@ import {
     saveConference as saveConferenceToStorage,
     deleteConference as deleteConferenceFromStorage,
     setActiveConferenceId,
-    getExportOptions as getExportOptionsFromStorage,
-    saveExportOptions as saveExportOptionsToStorage,
     generatePDF,
     generateMarkdown,
     initializeConferenceDirectories,
     deleteImage as deleteImageFromStorage,
+    getActivities,
+    saveActivity,
+    deleteActivity,
 } from "../storage";
 import { generateId } from "@/storage/helper";
 
@@ -42,6 +47,9 @@ interface AppContextType {
     switchActiveConference: (conferenceId: string) => Promise<void>;
     getConferences: () => Promise<Conference[]>;
     hasConferences: () => Promise<boolean>;
+    syncConferenceAgenda: (conferenceId: string) => Promise<void>;
+    testApiEndpoint: (apiUrl: string, transformerId?: string) => Promise<{ success: boolean; error?: string }>;
+    runAutoUpdates: () => Promise<void>;
 
     // Talk Management
     talks: Talk[];
@@ -52,35 +60,54 @@ interface AppContextType {
         startTime: Date,
         duration: number,
         speakers?: Speaker[],
-        stage?: string,
+        location?: string,
         description?: string
     ) => Promise<Talk>;
+    deleteTalk: (talkId: string) => Promise<void>;
     endTalk: (talk: Talk) => Promise<void>;
     endCurrentTalk: () => Promise<void>;
     getAllTalks: () => Promise<Talk[]>;
     toggleTalkSelection: (talkId: string) => Promise<void>;
     getUserSelectedTalks: () => Talk[];
     getAgendaTalks: () => Talk[];
-    saveEvaluation: (talkId: string, rating: number, summary: string, markAsEvaluated?: boolean) => Promise<void>;
+    saveEvaluation: (
+        talkId: string,
+        rating: number,
+        summary: string,
+        feedback?: ProgrammierConFeedback
+    ) => Promise<void>;
     shouldShowEvaluationModal: () => boolean;
     refreshActiveTalk: () => Promise<void>;
 
+    // Activity Management
+    activities: Activity[];
+    createActivity: (
+        title: string,
+        startTime: Date,
+        duration?: number,
+        location?: string,
+        description?: string
+    ) => Promise<Activity>;
+    getAllActivities: () => Promise<Activity[]>;
+    toggleActivitySelection: (activityId: string) => Promise<void>;
+    getUserSelectedActivities: () => Activity[];
+    getAgendaActivities: () => Activity[];
+
     // Note Management
     notes: Note[];
-    addImageNote: (fromGallery: boolean) => Promise<string | null>; // Returns image URI instead of creating note
-    addAudioNote: () => Promise<Note | null>;
-    stopAudioRecording: () => Promise<string | null>; // Returns audio URI instead of creating note
-    addNote: (text: string, images: NoteImage[], audioRecordings: string[], talkId?: string) => Promise<Note>;
+    addImageNote: (talkId: string, fromGallery: boolean) => Promise<string | null>; // Returns image URI instead of creating note
+    addAudioNote: (talkId: string) => Promise<void>;
+    stopAudioRecording: (talkId: string) => Promise<string | null>; // Returns audio URI instead of creating note
+    addNote: (talkId: string, text: string, images: NoteImage[], audioRecordings: string[]) => Promise<Note>;
     updateNote: (note: Note) => Promise<void>;
     deleteNote: (noteId: string) => Promise<void>;
+    restoreNote: (note: Note) => Promise<void>;
     deleteImage: (imagePath: string) => Promise<void>;
     getNotesForTalk: (talkId: string) => Note[];
 
     // Export Functionality
     exportToPDF: (conferenceId: string, options: ExportOptions) => Promise<string>;
     exportToMarkdown: (conferenceId: string, options: ExportOptions) => Promise<string>;
-    saveExportOptions: (options: ExportOptions) => Promise<void>;
-    getExportOptions: () => Promise<ExportOptions | null>;
 
     // States
     isLoading: boolean;
@@ -97,12 +124,12 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     const [currentConference, setCurrentConference] = useState<Conference | null>(null);
     const [conferences, setConferences] = useState<Conference[]>([]);
     const [talks, setTalks] = useState<Talk[]>([]);
+    const [activities, setActivities] = useState<Activity[]>([]);
     const [activeTalk, setActiveTalk] = useState<Talk | null>(null);
     const [notes, setNotes] = useState<Note[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [isRecording, setIsRecording] = useState<boolean>(false);
     const [recording, setRecording] = useState<Audio.Recording | null>(null);
-
 
     const loadConference = useCallback(async () => {
         try {
@@ -157,9 +184,12 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
                     }
                 }
 
-                // Load talks and notes
+                // Load talks, activities, and notes
                 const storedTalks = await getTalks();
                 setTalks(storedTalks);
+
+                const storedActivities = await getActivities();
+                setActivities(storedActivities);
 
                 const storedNotes = await getNotes();
                 setNotes(storedNotes);
@@ -341,7 +371,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         setActiveTalk(null);
     };
 
-
     const getConferencesFromContext = async (): Promise<Conference[]> => {
         // First check if we already have conferences in state
         if (conferences.length > 0) {
@@ -356,6 +385,181 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     const hasConferencesInStorage = async (): Promise<boolean> => {
         const storedConferences = await getConferencesFromStorage();
         return storedConferences.length > 0;
+    };
+
+    // API Sync Methods
+    const syncConferenceAgenda = async (conferenceId: string): Promise<void> => {
+        const conference = conferences.find((conf) => conf.id === conferenceId);
+        if (!conference || !conference.apiUrl) {
+            throw new Error("Conference not found or no API URL configured");
+        }
+
+        const result = await conferenceApiService.fetchConferenceAgenda(conference.apiUrl, conference.apiTransformer);
+
+        if (!result.success || !result.data) {
+            throw new Error(result.error || "Failed to fetch agenda data");
+        }
+
+        // Update talks with API data
+        await updateApiTalks(conferenceId, result.data.talks);
+
+        // Update activities with API data if provided
+        if (result.data.activities) {
+            await updateApiActivities(conferenceId, result.data.activities);
+        }
+
+        // Update conference with API data and sync timestamp
+        const updatedConference = {
+            ...conference,
+            // Update conference metadata if provided by the API
+            ...(result.data.conference?.name && { name: result.data.conference.name }),
+            ...(result.data.conference?.description && { description: result.data.conference.description }),
+            ...(result.data.conference?.location && { location: result.data.conference.location }),
+            ...(result.data.conference?.startDate && { startDate: new Date(result.data.conference.startDate) }),
+            ...(result.data.conference?.endDate && { endDate: new Date(result.data.conference.endDate) }),
+            lastApiSync: new Date(),
+            updatedAt: new Date(),
+        };
+        await updateConference(updatedConference);
+    };
+
+    const updateApiTalks = async (conferenceId: string, apiTalks: ApiTalk[]): Promise<void> => {
+        const currentTalks = talks.filter((talk) => talk.conferenceId === conferenceId);
+        const currentApiTalks = currentTalks.filter((talk) => talk.source === "api");
+        const userTalks = currentTalks.filter((talk) => talk.source === "user");
+
+        // Convert API talks to our Talk format
+        const newApiTalks: Talk[] = apiTalks.map((apiTalk) => {
+            // Try to find existing talk by API ID
+            const existingTalk = currentApiTalks.find((talk) => talk.apiId === apiTalk.id);
+
+            return {
+                id: existingTalk?.id || generateId(), // Keep existing ID if found
+                conferenceId,
+                title: apiTalk.title,
+                startTime: new Date(apiTalk.startTime),
+                duration: apiTalk.duration,
+                isUserSelected: existingTalk?.isUserSelected || false, // Preserve user selection
+                speakers: apiTalk.speakers,
+                location: apiTalk.location,
+                description: apiTalk.description,
+                source: "api" as const,
+                apiId: apiTalk.id,
+                // Preserve user-added evaluation data
+                rating: existingTalk?.rating,
+                summary: existingTalk?.summary,
+            };
+        });
+
+        // Save all API talks (this will update existing ones and create new ones)
+        for (const talk of newApiTalks) {
+            await saveTalk(talk);
+        }
+
+        // Remove API talks that are no longer in the API response
+        const apiTalkIds = new Set(apiTalks.map((t) => t.id));
+        const staleTalks = currentApiTalks.filter((talk) => talk.apiId && !apiTalkIds.has(talk.apiId));
+
+        for (const staleTalk of staleTalks) {
+            console.log(`Removing stale API talk: ${staleTalk.title} (ID: ${staleTalk.id})`);
+
+            // TODO: In future, we might want to ask user before deleting
+            // For now we keep the talk, to prevent deleting some notes from the user on accident
+            // With this we can probably restore the talk if needed
+            // try {
+            //     await deleteTalkFromStorage(staleTalk.id);
+            // } catch (error) {
+            //     console.error(`Error deleting stale talk ${staleTalk.id}:`, error);
+            // }
+        }
+
+        // Update state with combined talks (user + api)
+        const updatedTalks = [...userTalks, ...newApiTalks];
+        setTalks((prevTalks) => prevTalks.filter((talk) => talk.conferenceId !== conferenceId).concat(updatedTalks));
+
+        // Refresh active talk in case it was affected
+        await refreshActiveTalk();
+    };
+
+    const updateApiActivities = async (conferenceId: string, apiActivities: ApiActivity[]): Promise<void> => {
+        const currentActivities = activities.filter((activity) => activity.conferenceId === conferenceId);
+        const currentApiActivities = currentActivities.filter((activity) => activity.source === "api");
+        const userActivities = currentActivities.filter((activity) => activity.source === "user");
+
+        // Convert API activities to our Activity format
+        const newApiActivities: Activity[] = apiActivities.map((apiActivity) => {
+            // Try to find existing activity by API ID
+            const existingActivity = currentApiActivities.find((activity) => activity.apiId === apiActivity.id);
+
+            return {
+                id: existingActivity?.id || generateId(), // Keep existing ID if found
+                conferenceId,
+                title: apiActivity.title,
+                startTime: new Date(apiActivity.startTime),
+                duration: apiActivity.duration,
+                isUserSelected: existingActivity?.isUserSelected || false, // Preserve user selection
+                location: apiActivity.location,
+                description: apiActivity.description,
+                source: "api" as const,
+                apiId: apiActivity.id,
+            };
+        });
+
+        // Save all API activities
+        for (const activity of newApiActivities) {
+            await saveActivity(activity);
+        }
+
+        // Remove API activities that are no longer in the API response
+        const apiActivityIds = new Set(apiActivities.map((a) => a.id));
+        const staleActivities = currentApiActivities.filter(
+            (activity) => activity.apiId && !apiActivityIds.has(activity.apiId)
+        );
+
+        for (const staleActivity of staleActivities) {
+            console.log(`Removing stale API activity: ${staleActivity.title} (ID: ${staleActivity.id})`);
+            try {
+                await deleteActivity(staleActivity.id);
+            } catch (error) {
+                console.error(`Error deleting stale activity ${staleActivity.id}:`, error);
+            }
+        }
+
+        // Update state with combined activities (user + api)
+        const updatedActivities = [...userActivities, ...newApiActivities];
+        setActivities((prevActivities) =>
+            prevActivities.filter((activity) => activity.conferenceId !== conferenceId).concat(updatedActivities)
+        );
+    };
+
+    const testApiEndpoint = async (
+        apiUrl: string,
+        transformerId?: string
+    ): Promise<{ success: boolean; error?: string }> => {
+        try {
+            const result = await conferenceApiService.testApiEndpoint(apiUrl, transformerId);
+            return {
+                success: result.success,
+                error: result.error,
+            };
+        } catch (error: any) {
+            return {
+                success: false,
+                error: error.message || "Failed to test API endpoint",
+            };
+        }
+    };
+
+    const runAutoUpdates = async (): Promise<void> => {
+        try {
+            console.log("Running automatic conference updates on app startup");
+            await autoUpdateService.updateConferences(conferences, async (conferenceId: string) => {
+                await syncConferenceAgenda(conferenceId);
+            });
+        } catch (autoUpdateError) {
+            console.error("Error during auto-update:", autoUpdateError);
+            // Don't throw - auto-update failures shouldn't crash the app
+        }
     };
 
     // Talk Management
@@ -376,6 +580,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
             title,
             startTime: new Date(),
             isUserSelected: true,
+            source: "user",
         };
 
         await saveTalk(newTalk);
@@ -392,7 +597,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         startTime: Date,
         duration: number,
         speakers?: Speaker[],
-        stage?: string,
+        location?: string,
         description?: string
     ): Promise<Talk> => {
         if (!currentConference) {
@@ -408,8 +613,9 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
             duration,
             isUserSelected: false,
             speakers,
-            stage,
+            location,
             description,
+            source: "user",
         };
 
         await saveTalk(newTalk);
@@ -421,6 +627,30 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         // Users must manually select them to make them eligible for becoming active
 
         return newTalk;
+    };
+
+    const deleteTalkById = async (talkId: string): Promise<void> => {
+        if (!talkId) {
+            throw new Error("Talk ID is required");
+        }
+
+        // Check if this is the active talk and clear it if so
+        if (activeTalk && activeTalk.id === talkId) {
+            setActiveTalk(null);
+        }
+
+        // Get all notes for this talk and delete them
+        const talkNotes = notes.filter((note) => note.talkId === talkId);
+        for (const note of talkNotes) {
+            await deleteNoteFromStorage(note.id);
+        }
+
+        // Delete the talk from storage
+        await deleteTalkFromStorage(talkId);
+
+        // Update state - remove the talk and its notes
+        setTalks((prevTalks) => prevTalks.filter((talk) => talk.id !== talkId));
+        setNotes((prevNotes) => prevNotes.filter((note) => note.talkId !== talkId));
     };
 
     const endCurrentTalk = async (): Promise<void> => {
@@ -454,9 +684,79 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         return storedTalks;
     }, []);
 
-    const addImageNote = async (fromGallery: boolean): Promise<string | null> => {
-        if (!activeTalk) {
-            throw new Error("No active talk to add note to");
+    // Activity Management
+    const createActivity = async (
+        title: string,
+        startTime: Date,
+        duration?: number,
+        location?: string,
+        description?: string
+    ): Promise<Activity> => {
+        if (!currentConference) {
+            console.error("Conference is null or undefined");
+            throw new Error("No current conference exists");
+        }
+
+        const newActivity: Activity = {
+            id: generateId(),
+            conferenceId: currentConference.id,
+            title,
+            startTime,
+            duration,
+            isUserSelected: false,
+            location,
+            description,
+            source: "user",
+        };
+
+        await saveActivity(newActivity);
+
+        // Update state
+        setActivities((prevActivities) => [...prevActivities, newActivity]);
+
+        return newActivity;
+    };
+
+    const getAllActivities = useCallback(async (): Promise<Activity[]> => {
+        const storedActivities = await getActivities();
+        setActivities(storedActivities);
+        return storedActivities;
+    }, []);
+
+    const toggleActivitySelection = async (activityId: string): Promise<void> => {
+        const activity = activities.find((a) => a.id === activityId);
+        if (!activity) {
+            throw new Error("Activity not found");
+        }
+
+        const updatedActivity: Activity = {
+            ...activity,
+            isUserSelected: !activity.isUserSelected,
+        };
+
+        await saveActivity(updatedActivity);
+
+        // Update state
+        setActivities((prevActivities) => prevActivities.map((a) => (a.id === activityId ? updatedActivity : a)));
+    };
+
+    const getUserSelectedActivities = (): Activity[] => {
+        return activities.filter((activity) => activity.isUserSelected === true);
+    };
+
+    const getAgendaActivities = (): Activity[] => {
+        return activities.filter((activity) => activity.conferenceId === currentConference?.id);
+    };
+
+    const addImageNote = async (talkId: string, fromGallery: boolean): Promise<string | null> => {
+        if (!talkId) {
+            throw new Error("Talk ID is required to add an image");
+        }
+
+        // Validate talk exists
+        const talkExists = talks.some((t) => t.id === talkId);
+        if (!talkExists) {
+            throw new Error("Talk not found");
         }
 
         let result: ImagePicker.ImagePickerResult | null = null;
@@ -500,16 +800,22 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         return savedImagePath;
     };
 
-    const addAudioNote = async (): Promise<Note | null> => {
-        if (!activeTalk) {
-            throw new Error("No active talk to add note to");
+    const addAudioNote = async (talkId: string): Promise<void> => {
+        if (!talkId) {
+            throw new Error("Talk ID is required to start audio recording");
+        }
+
+        // Validate talk exists
+        const talkExists = talks.some((t) => t.id === talkId);
+        if (!talkExists) {
+            throw new Error("Talk not found");
         }
 
         // Request audio recording permissions
         const { status } = await Audio.requestPermissionsAsync();
         if (status !== "granted") {
             console.error("Audio recording permission not granted");
-            return null;
+            return;
         }
 
         try {
@@ -520,16 +826,26 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
             setIsRecording(true);
 
             // Wait for stop recording action (this will be handled externally)
-            return null;
+            return;
         } catch (error) {
             console.error("Error starting audio recording:", error);
-            return null;
+            return;
         }
     };
 
     // Function to stop audio recording and return the URI
-    const stopAudioRecording = async (): Promise<string | null> => {
-        if (!recording || !isRecording || !activeTalk) {
+    const stopAudioRecording = async (talkId: string): Promise<string | null> => {
+        if (!talkId) {
+            throw new Error("Talk ID is required to stop audio recording");
+        }
+
+        // Validate talk exists
+        const talkExists = talks.some((t) => t.id === talkId);
+        if (!talkExists) {
+            throw new Error("Talk not found");
+        }
+
+        if (!recording || !isRecording) {
             return null;
         }
 
@@ -566,14 +882,20 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
     // Function to create a note with combined content (text, images, audio)
     const addNote = async (
+        talkId: string,
         text: string,
         images: NoteImage[],
-        audioRecordings: string[],
-        talkId?: string
+        audioRecordings: string[]
     ): Promise<Note> => {
-        const targetTalkId = talkId || activeTalk?.id;
+        const targetTalkId = talkId;
         if (!targetTalkId) {
-            throw new Error("No talk to add note to");
+            throw new Error("Talk ID is required to add note");
+        }
+
+        // Validate talk exists
+        const targetTalk = talks.find((t) => t.id === targetTalkId);
+        if (!targetTalk) {
+            throw new Error("Talk not found");
         }
 
         // Process images to ensure they're saved to document directory (not cache)
@@ -611,12 +933,17 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
             })
         );
 
-        // Create the new note with all content
+        // add relativeTimeSeconds if the talk is currently active
         const currentTime = new Date();
-        const targetTalk = activeTalk?.id === targetTalkId ? activeTalk : talks.find((t) => t.id === targetTalkId);
-        const relativeTimeSeconds = targetTalk
-            ? Math.max(0, Math.floor((currentTime.getTime() - targetTalk.startTime.getTime()) / 1000))
-            : 0;
+        let relativeTimeSeconds = undefined;
+        if (targetTalk) {
+            const startMs = targetTalk.startTime.getTime();
+            const durationMs = targetTalk.duration ? targetTalk.duration * 60_000 : Infinity; // duration in ms
+            const endMs = startMs + durationMs;
+            if (currentTime.getTime() >= startMs && currentTime.getTime() <= endMs) {
+                relativeTimeSeconds = Math.max(0, Math.floor((currentTime.getTime() - startMs) / 1000));
+            }
+        }
 
         const newNote: Note = {
             id: generateId(),
@@ -690,6 +1017,13 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         setNotes((prevNotes) => prevNotes.filter((note) => note.id !== noteId));
     };
 
+    const restoreNoteById = async (note: Note): Promise<void> => {
+        // Save the note back to storage
+        await saveNote(note);
+        // Update state
+        setNotes((prevNotes) => [...prevNotes, note]);
+    };
+
     const deleteImage = async (imagePath: string): Promise<void> => {
         await deleteImageFromStorage(imagePath);
     };
@@ -749,14 +1083,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         return markdownPath;
     };
 
-    const saveExportOptionsToContext = async (options: ExportOptions): Promise<void> => {
-        await saveExportOptionsToStorage(options);
-    };
-
-    const getExportOptionsFromContext = async (): Promise<ExportOptions | null> => {
-        return await getExportOptionsFromStorage();
-    };
-
     // Talk Selection Functions
     const toggleTalkSelection = async (talkId: string): Promise<void> => {
         const talk = talks.find((t) => t.id === talkId);
@@ -784,7 +1110,12 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     };
 
     // Evaluation Functions
-    const saveEvaluation = async (talkId: string, rating: number, summary: string): Promise<void> => {
+    const saveEvaluation = async (
+        talkId: string,
+        rating: number,
+        summary?: string,
+        feedback?: ProgrammierConFeedback
+    ): Promise<void> => {
         const talk = talks.find((t) => t.id === talkId);
         if (!talk) {
             throw new Error("Talk not found");
@@ -794,6 +1125,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
             ...talk,
             rating,
             summary,
+            feedback,
         };
 
         await saveTalk(updatedTalk);
@@ -857,12 +1189,16 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         switchActiveConference,
         getConferences: getConferencesFromContext,
         hasConferences: hasConferencesInStorage,
+        syncConferenceAgenda,
+        testApiEndpoint,
+        runAutoUpdates,
 
         // Talk Management
         talks,
         activeTalk,
         createTalk,
         createAgendaTalk,
+        deleteTalk: deleteTalkById,
         endTalk,
         endCurrentTalk,
         getAllTalks,
@@ -873,6 +1209,14 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         shouldShowEvaluationModal,
         refreshActiveTalk,
 
+        // Activity Management
+        activities,
+        createActivity,
+        getAllActivities,
+        toggleActivitySelection,
+        getUserSelectedActivities,
+        getAgendaActivities,
+
         // Note Management
         notes,
         addImageNote,
@@ -881,14 +1225,13 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         addNote,
         updateNote,
         deleteNote: deleteNoteById,
+        restoreNote: restoreNoteById,
         deleteImage,
         getNotesForTalk,
 
         // Export Functionality
         exportToPDF,
         exportToMarkdown,
-        saveExportOptions: saveExportOptionsToContext,
-        getExportOptions: getExportOptionsFromContext,
 
         // States
         isLoading,

@@ -66,6 +66,9 @@ npm run postinstall        # Apply patches with patch-package
 
 ## Development Guidelines
 
+### Screen Layout
+- If you create or edit a screen and need to add SafeAreaInsets use the installed library `react-native-safe-area-context`
+
 ### Expo Development Warnings
 - Never run "expo prebuild --clean" - it removes custom native modules
 

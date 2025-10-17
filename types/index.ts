@@ -7,6 +7,9 @@ export interface Conference {
     description?: string;
     createdAt: Date;
     updatedAt: Date;
+    apiUrl?: string;
+    apiTransformer?: string;
+    lastApiSync?: Date;
 }
 
 export interface Speaker {
@@ -15,19 +18,35 @@ export interface Speaker {
     bio?: string;
 }
 
-export interface Talk {
+export interface AgendaItem {
     id: string;
     conferenceId: string;
+    apiId?: string; // External ID from the API (for matching during updates)
+    source: "user" | "api";
     title: string;
     startTime: Date;
     duration?: number; // Duration in minutes
     isUserSelected?: boolean;
-    speakers?: Speaker[];
-    stage?: string;
+    location?: string;
     description?: string;
-    rating?: number; // 1-5 stars for talk evaluation
-    summary?: string; // Evaluation summary/remaining thoughts
 }
+
+export interface Talk extends AgendaItem {
+    speakers?: Speaker[];
+    rating?: number; // 1-5 stars for talk evaluation
+    summary?: string;
+    feedback?: ProgrammierConFeedback;
+}
+
+export interface ProgrammierConFeedback {
+    ratingOverall?: number; // 1-5 stars
+    ratingContent?: number; // 1-5 stars
+    ratingSpeaker?: number; // 1-5 stars
+    feedback?: string;
+    shareConsent?: boolean; // Whether the user consents to share feedback with organizers
+}
+
+export interface Activity extends AgendaItem {}
 
 export interface NoteImage {
     uri: string;

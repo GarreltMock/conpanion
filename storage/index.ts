@@ -1,15 +1,15 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as FileSystem from "expo-file-system";
 import { zip } from "react-native-zip-archive";
-import { Conference, Talk, Note, ExportOptions } from "../types";
+import { Conference, Talk, Note, ExportOptions, Activity } from "../types";
 import { getAbsolutePath, generateId } from "./helper";
 
 // Storage keys
 const CONFERENCES_KEY = "conpanion_conferences";
 const TALKS_KEY = "conpanion_talks";
+const ACTIVITIES_KEY = "conpanion_activities";
 const NOTES_KEY = "conpanion_notes";
 const ACTIVE_CONFERENCE_KEY = "conpanion_active_conference";
-const EXPORT_OPTIONS_KEY = "conpanion_export_options";
 
 // File system directories
 export const IMAGES_DIRECTORY = FileSystem.documentDirectory + "images/";
@@ -180,6 +180,7 @@ export const getConferences = async (): Promise<Conference[]> => {
                 endDate: new Date(conf.endDate),
                 createdAt: new Date(conf.createdAt),
                 updatedAt: new Date(conf.updatedAt),
+                lastApiSync: conf.lastApiSync ? new Date(conf.lastApiSync) : undefined,
             }));
         }
         return [];
@@ -268,18 +269,7 @@ export const initializeDefaultConference = async (): Promise<Conference> => {
     const conferences = await getConferences();
 
     if (conferences.length === 0) {
-        const now = new Date();
-        const endDate = new Date();
-        endDate.setDate(now.getDate() + 3); // Default 3-day conference
-
-        const defaultConference: Conference = {
-            id: generateId(),
-            name: "My Conference",
-            startDate: now,
-            endDate: endDate,
-            createdAt: now,
-            updatedAt: now,
-        };
+        const defaultConference = getProgrammiercon();
 
         // Create conference directories first
         await initializeConferenceDirectories(defaultConference.id);
@@ -316,23 +306,44 @@ export const initializeDefaultConference = async (): Promise<Conference> => {
     }
 
     // This should never happen, but just in case, create a fresh default
-    const now = new Date();
-    const endDate = new Date();
-    endDate.setDate(now.getDate() + 3);
-
-    const defaultConference: Conference = {
-        id: generateId(),
-        name: "Default Conference",
-        startDate: now,
-        endDate: endDate,
-        createdAt: now,
-        updatedAt: now,
-    };
+    const defaultConference = getProgrammiercon();
 
     await initializeConferenceDirectories(defaultConference.id);
     await saveConference(defaultConference);
     await setActiveConferenceId(defaultConference.id);
     return defaultConference;
+};
+
+// // keep here for after the conference
+// const getDefaultConference = (): Conference => {
+//     const now = new Date();
+//     const endDate = new Date();
+//     endDate.setDate(now.getDate() + 3);
+
+//     return {
+//         id: generateId(),
+//         name: "Default Conference",
+//         startDate: now,
+//         endDate: endDate,
+//         createdAt: now,
+//         updatedAt: now,
+//     };
+// };
+
+const getProgrammiercon = (): Conference => {
+    const now = new Date();
+
+    return {
+        id: generateId(),
+        name: "programmier.con",
+        startDate: new Date("2025-10-29T00:00:00"),
+        endDate: new Date("2025-10-30T23:59:59"),
+        location: "Bad Nauheim",
+        createdAt: now,
+        updatedAt: now,
+        apiTransformer: "programmiercon",
+        apiUrl: "https://admin.programmier.bar/conference/1fc1201a-7b8e-4313-b1b6-2c41471a69c7",
+    };
 };
 
 // Talk storage functions
@@ -346,6 +357,7 @@ export const getTalks = async (): Promise<Talk[]> => {
                 ...talk,
                 startTime: new Date(talk.startTime),
                 duration: talk.duration,
+                source: talk.source || "user", // Default to 'user' for existing talks
             }));
         }
         return [];
@@ -379,6 +391,54 @@ export const deleteTalk = async (talkId: string): Promise<void> => {
         await AsyncStorage.setItem(TALKS_KEY, JSON.stringify(updatedTalks));
     } catch (error) {
         console.error("Error deleting talk:", error);
+    }
+};
+
+// Activity storage functions
+export const getActivities = async (): Promise<Activity[]> => {
+    try {
+        const activitiesJson = await AsyncStorage.getItem(ACTIVITIES_KEY);
+        if (activitiesJson) {
+            // Parse stored JSON and convert date strings back to Date objects
+            const parsedActivities = JSON.parse(activitiesJson);
+            return parsedActivities.map((activity: any) => ({
+                ...activity,
+                startTime: new Date(activity.startTime),
+                duration: activity.duration,
+                source: activity.source || "user", // Default to 'user' for existing activities
+            }));
+        }
+        return [];
+    } catch (error) {
+        console.error("Error getting activities:", error);
+        return [];
+    }
+};
+
+export const saveActivity = async (activity: Activity): Promise<void> => {
+    try {
+        const activities = await getActivities();
+        const index = activities.findIndex((a) => a.id === activity.id);
+
+        if (index !== -1) {
+            activities[index] = activity;
+        } else {
+            activities.push(activity);
+        }
+
+        await AsyncStorage.setItem(ACTIVITIES_KEY, JSON.stringify(activities));
+    } catch (error) {
+        console.error("Error saving activity:", error);
+    }
+};
+
+export const deleteActivity = async (activityId: string): Promise<void> => {
+    try {
+        const activities = await getActivities();
+        const updatedActivities = activities.filter((activity) => activity.id !== activityId);
+        await AsyncStorage.setItem(ACTIVITIES_KEY, JSON.stringify(updatedActivities));
+    } catch (error) {
+        console.error("Error deleting activity:", error);
     }
 };
 
@@ -464,28 +524,6 @@ export const deleteNote = async (noteId: string): Promise<void> => {
     }
 };
 
-// Export options storage functions
-export const getExportOptions = async (): Promise<ExportOptions | null> => {
-    try {
-        const optionsJson = await AsyncStorage.getItem(EXPORT_OPTIONS_KEY);
-        if (optionsJson) {
-            return JSON.parse(optionsJson);
-        }
-        return null;
-    } catch (error) {
-        console.error("Error getting export options:", error);
-        return null;
-    }
-};
-
-export const saveExportOptions = async (options: ExportOptions): Promise<void> => {
-    try {
-        await AsyncStorage.setItem(EXPORT_OPTIONS_KEY, JSON.stringify(options));
-    } catch (error) {
-        console.error("Error saving export options:", error);
-    }
-};
-
 // PDF and Markdown generation
 export const generatePDF = async (
     conference: Conference,
@@ -515,7 +553,7 @@ export const generateMarkdown = async (
     const baseFilename = options.filename || `${conference.name.replace(/\s+/g, "-")}-${Date.now()}`;
     const tempDir = `${EXPORTS_DIRECTORY}temp_${Date.now()}/`;
     const imagesDir = `${tempDir}images/`;
-    
+
     // Create temporary directories
     await FileSystem.makeDirectoryAsync(tempDir, { intermediates: true });
     await FileSystem.makeDirectoryAsync(imagesDir, { intermediates: true });
@@ -535,18 +573,18 @@ export const generateMarkdown = async (
             for (const note of talkNotes) {
                 for (const image of note.images) {
                     if (!imageMapping.has(image.uri)) {
-                        const extension = image.uri.split('.').pop() || 'jpg';
+                        const extension = image.uri.split(".").pop() || "jpg";
                         const newFilename = `image_${imageCounter}.${extension}`;
                         imageMapping.set(image.uri, newFilename);
                         imageCounter++;
-                        
+
                         // Copy image to temp directory
                         try {
                             const sourceAbsolutePath = getAbsolutePath(image.uri);
                             const destPath = `${imagesDir}${newFilename}`;
                             await FileSystem.copyAsync({
                                 from: sourceAbsolutePath,
-                                to: destPath
+                                to: destPath,
                             });
                         } catch (error) {
                             console.error(`Error copying image ${image.uri}:`, error);
@@ -584,8 +622,8 @@ export const generateMarkdown = async (
         }
         markdown += `\n`;
 
-        if (talk.stage) {
-            markdown += `**Stage:** ${talk.stage}\n`;
+        if (talk.location) {
+            markdown += `**Location:** ${talk.location}\n`;
         }
 
         if (talk.description) {

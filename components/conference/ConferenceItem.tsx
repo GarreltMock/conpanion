@@ -16,7 +16,6 @@ interface ConferenceItemProps {
     onPress?: () => void;
     onExport?: () => void;
     onEdit?: () => void;
-    onDelete?: () => void;
 }
 
 export const ConferenceItem: React.FC<ConferenceItemProps> = ({
@@ -25,7 +24,6 @@ export const ConferenceItem: React.FC<ConferenceItemProps> = ({
     onPress,
     onExport,
     onEdit,
-    onDelete,
 }) => {
     const { talks } = useApp();
     const { t, locale } = useI18n();
@@ -56,16 +54,21 @@ export const ConferenceItem: React.FC<ConferenceItemProps> = ({
     const conferenceTalks = talks.filter((talk) => talk.conferenceId === conference.id);
     const dateFormat = "MMM d, yyyy";
     const tintColor = useThemeColor({}, "tint");
-    const mutedColor = useThemeColor({}, "tabIconDefault");
+    const tintContentColor = useThemeColor({}, "tintContent");
+    const iconColor = useThemeColor({}, "icon");
+    const mutedColor = useThemeColor({}, "muted");
     const backgroundColor = useThemeColor({}, "background");
-    const errorColor = useThemeColor({}, "error");
     const borderLightColor = useThemeColor({}, "borderLight");
     const backgroundOverlayLightColor = useThemeColor({}, "backgroundOverlayLight");
 
     const getStatusBadge = (status: string) => {
         return (
             <View style={[styles.statusBadge, { backgroundColor: status === "ongoing" ? tintColor : mutedColor }]}>
-                <ThemedText style={[styles.statusText, { color: backgroundColor }]}>{t(`status.${status}`)}</ThemedText>
+                <ThemedText
+                    style={[styles.statusText, { color: status === "ongoing" ? tintContentColor : backgroundColor }]}
+                >
+                    {t(`status.${status}`)}
+                </ThemedText>
             </View>
         );
     };
@@ -108,22 +111,17 @@ export const ConferenceItem: React.FC<ConferenceItemProps> = ({
                 <View style={[styles.actions, { borderTopColor: backgroundOverlayLightColor }]}>
                     {onExport && (
                         <TouchableOpacity style={styles.actionButton} onPress={onExport}>
-                            <Ionicons name="share-outline" size={20} color={tintColor} />
+                            <Ionicons name="share-outline" size={20} color={iconColor} />
                             <ThemedText style={styles.actionText}>{t("common.actions.export")}</ThemedText>
                         </TouchableOpacity>
                     )}
-                    {onEdit && (
+                    {/* TODO: after programmier.con */}
+                    {/* {onEdit && (
                         <TouchableOpacity style={styles.actionButton} onPress={onEdit}>
-                            <Ionicons name="pencil-outline" size={20} color={tintColor} />
+                            <Ionicons name="pencil-outline" size={20} color={iconColor} />
                             <ThemedText style={styles.actionText}>{t("common.edit")}</ThemedText>
                         </TouchableOpacity>
-                    )}
-                    {onDelete && (
-                        <TouchableOpacity style={styles.actionButton} onPress={onDelete}>
-                            <Ionicons name="trash-outline" size={20} color={errorColor} />
-                            <ThemedText style={styles.actionText}>{t("common.delete")}</ThemedText>
-                        </TouchableOpacity>
-                    )}
+                    )} */}
                 </View>
             </ThemedView>
         </TouchableOpacity>
@@ -134,8 +132,6 @@ const styles = StyleSheet.create({
     container: {
         borderRadius: 12,
         padding: 16,
-        marginVertical: 8,
-        marginHorizontal: 16,
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
         shadowRadius: 4,

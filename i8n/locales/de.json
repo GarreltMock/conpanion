@@ -15,7 +15,7 @@
         "actions": {
             "add": "Hinzufügen",
             "create": "Erstellen",
-            "export": "Exportieren",
+            "export": "Notizen exportieren",
             "selectAll": "Alle auswählen",
             "selectNone": "Keine auswählen"
         },
@@ -43,9 +43,9 @@
         "profile": "Profil",
         "settings": "Einstellungen",
         "tabs": {
-            "notes": "Notizen",
-            "talks": "Vorträge",
-            "conferences": "Konferenzen"
+            "notes": "Vortrag",
+            "talks": "Agenda",
+            "conference": "Konferenz"
         }
     },
     "errors": {
@@ -65,12 +65,14 @@
         "urlOpenFailed": "URL konnte nicht geöffnet werden",
         "transformationFailed": "Bild konnte nicht mit den gewählten Ecken transformiert werden.",
         "networkError": "Netzwerkfehler. Bitte überprüfen Sie Ihre Verbindung.",
-        "unknownError": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut."
+        "unknownError": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut.",
+        "apiNotConfigured": "Keine API-URL für diese Konferenz konfiguriert",
+        "syncFailed": "Konferenz-Agenda konnte nicht synchronisiert werden"
     },
     "notes": {
         "noActiveTalk": "Kein aktiver Vortrag",
-        "createTalkPrompt": "Erstellen Sie einen neuen Vortrag, um Notizen zu machen",
-        "noNotesYet": "Noch keine Notizen. Beginnen Sie mit Notizen für diesen Vortrag.",
+        "createTalkPrompt": "Wenn ein Vortrag in deiner Agenda startet, wird er hier angezeigt",
+        "noNotesYet": "Noch keine Notizen",
         "note": "Notiz",
         "notes": "Notizen",
         "input": {
@@ -93,15 +95,15 @@
         "actions": {
             "new": "Neuer Vortrag",
             "switch": "Vortrag wechseln",
-            "addToMyTalks": "Zu meinen Vorträgen hinzufügen",
+            "addToUserAgenda": "Zu deiner Agenda hinzufügen",
             "rateTalk": "Vortrag bewerten"
         },
-        "myTalks": "Meine Vorträge",
+        "userAgenda": "Deine Vorträge",
         "fullAgenda": "Vollständige Agenda",
         "noTalksSelected": "Keine Vorträge ausgewählt",
-        "browseTalks": "Durchsuchen Sie die Agenda, um Vorträge zu markieren",
+        "browseTalks": "Durchsuch die Agenda, um Vorträge zu markieren",
+        "exploreAgenda": "Agenda erkunden",
         "noTalksScheduled": "Keine Vorträge für diesen Tag geplant",
-        "createTalkToStart": "Erstellen Sie einen neuen Vortrag, um Notizen zu machen",
         "talkDetails": "Vortrag Details",
         "addSummary": "Zusammenfassung hinzufügen",
         "userSummary": "Benutzer-Zusammenfassung",
@@ -109,11 +111,22 @@
         "speakers": "Sprecher",
         "location": "Ort",
         "description": "Beschreibung",
-        "evaluation": "Bewertung",
-        "nextTalk": "Nächster Vortrag: {{title}}",
-        "summary": "Zusammenfassung",
-        "keepTakingNotes": "Fortsetzen",
-        "addTalk": "Neuer Vortrag"
+        "evaluation": {
+            "title": "Bewertung",
+            "nextTalk": "Next",
+            "summary": "Feedback",
+            "shareConsent": "(optional) Ich willige ein, dass mein Feedback z. B. auf Social-Media-Kanälen oder Newsletter der programmier.bar veröffentlicht werden darf.",
+            "keepTakingNotes": "Fortsetzen",
+            "content": "Inhalt",
+            "speaker": "Sprecher",
+            "overall": "Gesamt",
+            "completeAllRatings": "Bitte bewerte alle Kategorien"
+        },
+        "addTalk": "Neuer Vortrag",
+        "otherDay": "Andere",
+        "deleteWarning": "Dies wird den Vortrag und alle Notizen löschen. Dies kann nicht rückgängig gemacht werden.",
+        "deleteSuccess": "Vortrag erfolgreich gelöscht",
+        "deleteFailed": "Fehler beim Löschen des Vortrags"
     },
     "conferences": {
         "title": "Konferenzen",
@@ -128,7 +141,37 @@
         "created": "Erstellt",
         "myConference": "Meine Konferenz",
         "deleteWarning": "Dies wird alle Vorträge und Notizen löschen, die mit dieser Konferenz verbunden sind und kann nicht rückgängig gemacht werden.",
-        "deleteFailed": "Konferenz konnte nicht gelöscht werden"
+        "deleteFailed": "Konferenz konnte nicht gelöscht werden",
+        "syncAgenda": "Agenda aktualisieren",
+        "syncing": "Aktualisiere...",
+        "syncingDescription": "Lade die neueste Agenda von der API",
+        "syncSuccess": "Konferenz-Agenda erfolgreich aktualisiert",
+        "lastSync": "Zuletzt aktualisiert",
+        "neverSynced": "Nie",
+        "allConferences": "Alle Konferenzen",
+        "dashboard": {
+            "title": "Konferenz",
+            "conference": {
+                "title": "Aktive Konferenz",
+                "noActive": "Keine aktive Konferenz ausgewählt",
+                "allConferences": "Alle Konferenzen",
+                "updates": "Konferenz Updates",
+                "feedback": "Feedback",
+                "map": "Karte",
+                "quiz": "Quiz",
+                "codeOfConduct": "Verhaltensregeln",
+                "photoAndVideoPolicy": "Foto- und Video-Richtlinien"
+            },
+            "socials": {
+                "title": "Social Media",
+                "discord": "Discord",
+                "spotify": "Spotify",
+                "website": "Webseite"
+            },
+            "podcast": {
+                "title": "Podcasts zur Konferenz"
+            }
+        }
     },
     "forms": {
         "conference": {
@@ -139,12 +182,21 @@
             "descriptionOptional": "Beschreibung (Optional)",
             "descriptionPlaceholder": "Konferenz Beschreibung eingeben",
             "dateRangeRequired": "Zeitraum *",
-            "status": "Status"
+            "status": "Status",
+            "apiConfiguration": "API Konfiguration (Optional)",
+            "apiUrl": "API URL",
+            "apiUrlPlaceholder": "https://api.example.com/agenda",
+            "dataFormat": "Datenformat",
+            "apiConfigurationHelp": "Konfigurieren Sie einen API-Endpunkt, um die Konferenz-Agenda automatisch zu synchronisieren. Das System wird die Vortragsinformationen von der angegebenen URL abrufen.",
+            "saveChanges": "Speichern",
+            "conferenceNameRequired": "Konferenz Name ist erforderlich",
+            "conferenceIdMissing": "Konferenz ID fehlt",
+            "updateFailed": "Konferenz konnte nicht aktualisiert werden"
         },
         "talk": {
             "titleRequired": "Bitte geben Sie einen Vortragstitel ein",
             "titlePlaceholder": "Vortrag Titel eingeben",
-            "stageOptional": "Bühne (optional)",
+            "locationOptional": "Ort (optional)",
             "descriptionOptional": "Beschreibung (optional)",
             "startTime": "Startzeit",
             "duration": "Dauer",
@@ -158,14 +210,25 @@
             "bioOptional": "Biografie (optional)"
         },
         "export": {
-            "title": "{{conference}} exportieren",
-            "formatTitle": "Export Format",
+            "defaultFilename": "konferenz-export",
+            "title": "Export",
+            "format": {
+                "title": "Export Format",
+                "pdf": "PDF",
+                "markdown": "Markdown"
+            },
             "includeImages": "Bilder einschließen",
-            "filenameLabel": "Dateiname",
+            "filename": "Dateiname",
             "filenamePlaceholder": "Export Dateiname eingeben",
-            "filenameHelper": "Export wird gespeichert als {{filename}}.{{format}}",
-            "selectTalks": "Vorträge zum Einschließen auswählen",
-            "noTalks": "Keine Vorträge in dieser Konferenz gefunden"
+            "selectTalks": "Vorträge zum Export auswählen",
+            "selectAll": "Alle auswählen",
+            "selectNone": "Keine auswählen",
+            "noTalks": "Keine Vorträge in dieser Konferenz gefunden",
+            "exporting": "Exportiere...",
+            "errors": {
+                "filenameRequired": "Dateiname ist erforderlich",
+                "exportFailed": "Export fehlgeschlagen"
+            }
         },
         "validation": {
             "nameRequired": "Konferenz Name ist erforderlich",
@@ -174,8 +237,11 @@
     },
     "modals": {
         "newConference": "Neue Konferenz",
+        "editConference": "Bearbeiten",
         "newTalk": "Neuer Vortrag",
         "newAgendaTalk": "Neuer Vortrag",
+        "newActivity": "Neue Aktivität",
+        "thisIsNoTalk": "Das ist kein Vortrag",
         "editImage": "Bild bearbeiten"
     },
     "onboarding": {
@@ -194,6 +260,7 @@
     },
     "help": {
         "createScheduledTalk": "Erstellen Sie einen geplanten Vortrag für Ihre Agenda. Der Vortrag wird aktiv, wenn seine Startzeit erreicht ist.",
+        "createScheduledActivity": "Erstellen Sie eine geplante Aktivität wie Mittagessen, Registrierung oder Networking.",
         "dragCorners": "Ziehen Sie die Ecken, um die Dokumentgrenzen anzupassen",
         "keepTakingNotes": "Dies erstellt einen neuen Vortrag und setzt ihn als aktiven Vortrag für Notizen."
     },
@@ -211,5 +278,19 @@
     "share": {
         "conferenceExport": "Konferenz Export",
         "shareMessage": "Hier ist Ihr Konferenz-Export von Conpanion"
+    },
+    "settings": {
+        "title": "Einstellungen",
+        "app": {
+            "title": "App",
+            "darkMode": "Dunkler Modus",
+            "language": "Sprache"
+        },
+        "legal": {
+            "title": "About",
+            "dataPrivacy": "Datenschutz",
+            "impressum": "Impressum",
+            "contactSupport": "Support kontaktieren"
+        }
     }
 }

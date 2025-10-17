@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useMemo, useEffect } from "react";
 import {
     StyleSheet,
     FlatList,
@@ -6,9 +6,10 @@ import {
     TouchableOpacity,
     ActivityIndicator,
     useWindowDimensions,
-    Text,
     ScrollView,
+    Text,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router, useFocusEffect } from "expo-router";
 import { format, differenceInDays, addDays, isSameDay } from "date-fns";
 import { enUS, de } from "date-fns/locale";
@@ -19,18 +20,26 @@ import { ThemedText } from "@/components/ThemedText";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { useApp } from "@/context/AppContext";
 import { useI18n } from "@/hooks/useI18n";
-import { Talk } from "@/types";
+import { Talk, Activity } from "@/types";
 import { useThemeColor } from "@/hooks/useThemeColor";
+import { trackTalkAddedToAgenda, trackTalkRemovedFromAgenda } from "@/utils/analytics";
+
+type AgendaItem = (Talk & { itemType: "talk" }) | (Activity & { itemType: "activity" });
 
 export default function TalksScreen() {
+    const insets = useSafeAreaInsets();
     const {
         currentConference,
         activeTalk,
         getAllTalks,
+        getAllActivities,
         isLoading,
         getUserSelectedTalks,
+        getUserSelectedActivities,
         getAgendaTalks,
+        getAgendaActivities,
         toggleTalkSelection,
+        toggleActivitySelection,
     } = useApp();
 
     const { t, locale } = useI18n();
@@ -49,23 +58,42 @@ export default function TalksScreen() {
     const [index, setIndex] = useState(0);
     const [selectedDay, setSelectedDay] = useState(0); // Index of selected conference day
     const [routes] = useState([
-        { key: "myTalks", title: t("talks.myTalks") },
+        { key: "userAgenda", title: t("talks.userAgenda") },
         { key: "agenda", title: t("talks.fullAgenda") },
     ]);
 
     const layout = useWindowDimensions();
     const tintColor = useThemeColor({}, "tint");
+    const tintContentColor = useThemeColor({}, "tintContent");
+    const iconColor = useThemeColor({}, "icon");
+    const highlightColor = useThemeColor({}, "highlight");
     const textColor = useThemeColor({}, "text");
     const backgroundColor = useThemeColor({}, "background");
     const headerBackgroundColor = useThemeColor({}, "headerBackground");
     const borderLight = useThemeColor({}, "borderLight");
     const borderColor = useThemeColor({}, "border");
+    const backgroundOverlayLightColor = useThemeColor({}, "backgroundOverlayLight");
+
+    // Helper function to combine talks and activities with type info
+    const combineAgendaItems = useCallback((talks: Talk[], activities: Activity[]): AgendaItem[] => {
+        const talksWithType: AgendaItem[] = talks.map((talk) => ({ ...talk, itemType: "talk" as const }));
+        const activitiesWithType: AgendaItem[] = activities.map((activity) => ({
+            ...activity,
+            itemType: "activity" as const,
+        }));
+        return [...talksWithType, ...activitiesWithType].sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
+    }, []);
 
     // Generate conference days and set current day as default
     const conferenceDays = useMemo(() => {
         if (!currentConference) return [];
 
-        const days = [];
+        const days: {
+            index: number;
+            date: Date | null;
+            label: string;
+            isOtherDay: boolean;
+        }[] = [];
         const durationInDays = differenceInDays(currentConference.endDate, currentConference.startDate) + 1;
 
         for (let i = 0; i < durationInDays; i++) {
@@ -74,17 +102,40 @@ export default function TalksScreen() {
                 index: i,
                 date: day,
                 label: format(day, "EEEE, MMMM d", { locale: dateFnsLocale }),
+                isOtherDay: false,
+            });
+        }
+
+        // Check if there are user-created talks or activities outside the conference days
+        const allUserSelectedTalks = getUserSelectedTalks().filter(
+            (talk) => talk.conferenceId === currentConference.id
+        );
+        const allUserSelectedActivities = getUserSelectedActivities().filter(
+            (activity) => activity.conferenceId === currentConference.id
+        );
+        const allUserSelectedItems = combineAgendaItems(allUserSelectedTalks, allUserSelectedActivities);
+        const hasOtherDayItems = allUserSelectedItems.some((item) => {
+            return !days.some((day) => day.date && isSameDay(item.startTime, day.date));
+        });
+
+        // Add "Other" day if there are items outside conference days
+        if (hasOtherDayItems) {
+            days.push({
+                index: days.length,
+                date: null, // Special case for "Other" day
+                label: t("talks.otherDay"),
+                isOtherDay: true,
             });
         }
 
         return days;
-    }, [currentConference, dateFnsLocale]);
+    }, [currentConference, dateFnsLocale, getUserSelectedTalks, getUserSelectedActivities, t, combineAgendaItems]);
 
     // Set current day as default when conference days change
-    useMemo(() => {
+    useEffect(() => {
         if (conferenceDays.length > 0) {
             const today = new Date();
-            const currentDayIndex = conferenceDays.findIndex((day) => isSameDay(day.date, today));
+            const currentDayIndex = conferenceDays.findIndex((day) => day.date && isSameDay(day.date, today));
             if (currentDayIndex !== -1) {
                 setSelectedDay(currentDayIndex);
             }
@@ -94,52 +145,84 @@ export default function TalksScreen() {
     // Reload talks when the screen comes into focus
     useFocusEffect(
         useCallback(() => {
-            const loadTalks = async () => {
+            const loadData = async () => {
                 try {
                     setRefreshing(true);
                     await getAllTalks();
+                    await getAllActivities();
                 } catch (error) {
-                    console.error("Error loading talks:", error);
+                    console.error("Error loading data:", error);
                 } finally {
                     setRefreshing(false);
                 }
             };
-            loadTalks();
+            loadData();
             return () => {
                 // Cleanup if needed
             };
-        }, [getAllTalks])
+        }, [getAllTalks, getAllActivities])
     );
 
     const handleRefresh = useCallback(async () => {
         try {
             setRefreshing(true);
             await getAllTalks();
+            await getAllActivities();
         } catch (error) {
-            console.error("Error loading talks:", error);
+            console.error("Error loading data:", error);
         } finally {
             setRefreshing(false);
         }
-    }, [getAllTalks]);
+    }, [getAllTalks, getAllActivities]);
 
     const handleNewTalk = () => {
-        router.push("/modals/new-agenda-talk");
+        router.push("/modals/new-agenda-item");
     };
 
     const handleTalkPress = (talkId: string) => {
         router.push(`/talk?id=${talkId}`);
     };
 
-    const renderTalkItem = ({ item }: { item: Talk }) => {
-        const isActive = activeTalk?.id === item.id;
+    const renderAgendaItem = ({ item }: { item: AgendaItem }) => {
+        const isTalk = item.itemType === "talk";
+        const talk = isTalk ? (item as Talk) : null;
+        const isActive = isTalk && activeTalk?.id === item.id;
+
+        // Check if talk is in the past
+        const isPastTalk = isTalk && item.startTime < new Date();
+
+        // Show rate button if: user selected, in the past, and not already rated
+        const showRateButton = isTalk && item.isUserSelected && isPastTalk && !talk?.rating;
+
+        // Extract hour and minute from startTime
+        const timeString = format(item.startTime, "HH:mm", { locale: dateFnsLocale });
+        const [hours, minutes] = timeString.split(":");
 
         const handleBookmarkPress = async (e: any) => {
             e.stopPropagation();
             try {
-                await toggleTalkSelection(item.id);
+                if (isTalk) {
+                    const wasSelected = item.isUserSelected;
+                    await toggleTalkSelection(item.id);
+
+                    // Track the agenda action
+                    if (wasSelected) {
+                        await trackTalkRemovedFromAgenda(item.id);
+                    } else {
+                        await trackTalkAddedToAgenda(item.id);
+                    }
+                } else {
+                    await toggleActivitySelection(item.id);
+                }
             } catch (error) {
-                console.error("Error toggling talk selection:", error);
+                console.error(`Error toggling ${isTalk ? "talk" : "activity"} selection:`, error);
             }
+        };
+
+        const handleRateTalk = (e: any) => {
+            e.stopPropagation();
+            // Open the evaluation modal
+            router.push(`/modals/talk-evaluation?talkId=${item.id}&source=talk-list`);
         };
 
         return (
@@ -147,32 +230,69 @@ export default function TalksScreen() {
                 style={[
                     styles.talkItem,
                     { borderColor: borderLight },
+                    !isTalk && { backgroundColor: borderLight },
                     isActive && { borderColor: tintColor, borderWidth: 2 },
                 ]}
-                onPress={() => handleTalkPress(item.id)}
+                onPress={isTalk ? () => handleTalkPress(item.id) : undefined}
                 activeOpacity={0.7}
+                disabled={!isTalk}
             >
-                <View style={styles.talkItemContent}>
-                    <View style={styles.leftCol}>
+                <View
+                    style={[
+                        styles.talkItemContent,
+                        showRateButton && { borderWidth: 1, borderColor: backgroundOverlayLightColor },
+                    ]}
+                >
+                    {/* Time Display Block */}
+                    <View style={[styles.timeBlock, { backgroundColor: backgroundOverlayLightColor }]}>
+                        <ThemedText style={styles.timeBlockHours}>{hours}</ThemedText>
+                        <ThemedText style={styles.timeBlockMinutes}>{minutes}</ThemedText>
+                    </View>
+
+                    <View style={[styles.leftCol, !isTalk && { paddingVertical: 6 }]}>
                         <View style={styles.titleRow}>
                             <ThemedText style={styles.talkTitle}>{item.title}</ThemedText>
                         </View>
-                        <ThemedText style={styles.talkDate}>
-                            {`${format(item.startTime, "MMM d, yyyy • HH:mm", { locale: dateFnsLocale })}${
-                                item.duration ? ` (${item.duration} min)` : ""
-                            }`}
-                        </ThemedText>
+                        <View style={[styles.metaContainer, !isTalk && { marginTop: 0 }]}>
+                            {conferenceDays[selectedDay]?.isOtherDay && (
+                                <View style={styles.timeRow}>
+                                    <IconSymbol name="calendar" size={14} color={iconColor} style={styles.timeIcon} />
+                                    <ThemedText style={styles.talkDate}>
+                                        {format(item.startTime, "MMM d, yyyy", { locale: dateFnsLocale })}
+                                    </ThemedText>
+                                </View>
+                            )}
+                            {item.duration && (
+                                <View style={styles.timeRow}>
+                                    <IconSymbol name="clock" size={14} color={iconColor} style={styles.timeIcon} />
+                                    <ThemedText style={styles.talkDate}>{item.duration} min</ThemedText>
+                                </View>
+                            )}
+                            {item.location && (
+                                <View style={styles.locationRow}>
+                                    <IconSymbol
+                                        name="location"
+                                        size={14}
+                                        color={iconColor}
+                                        style={styles.locationIcon}
+                                    />
+                                    <ThemedText style={styles.locationText}>{item.location}</ThemedText>
+                                </View>
+                            )}
+                        </View>
                     </View>
 
-                    <View style={styles.middleCol}>
-                        {isActive && (
-                            <View style={[styles.activeIndicator, { backgroundColor: tintColor }]}>
-                                <ThemedText style={styles.activeText} lightColor="#fff" darkColor={backgroundColor}>
-                                    {t("status.active")}
-                                </ThemedText>
-                            </View>
-                        )}
-                    </View>
+                    {isTalk && (
+                        <View style={styles.middleCol}>
+                            {isActive && (
+                                <View style={[styles.activeIndicator, { backgroundColor: tintColor }]}>
+                                    <ThemedText style={[styles.activeText, { color: tintContentColor }]}>
+                                        {t("status.active")}
+                                    </ThemedText>
+                                </View>
+                            )}
+                        </View>
+                    )}
 
                     <View style={styles.rightCol}>
                         <TouchableOpacity
@@ -183,81 +303,129 @@ export default function TalksScreen() {
                             <IconSymbol
                                 size={20}
                                 name={item.isUserSelected ? "bookmark.fill" : "bookmark"}
-                                color={tintColor}
+                                color={highlightColor}
                             />
                         </TouchableOpacity>
 
-                        {item.rating ? (
+                        {isTalk && !!talk?.rating && (
                             <View style={styles.ratingContainer}>
-                                <ThemedText style={styles.ratingText}>{item.rating}/5</ThemedText>
+                                <ThemedText style={styles.ratingText}>{talk.rating}/5</ThemedText>
                                 <IconSymbol name="star.fill" size={12} color="#FFD700" />
                             </View>
-                        ) : (
-                            <></>
                         )}
                     </View>
                 </View>
+
+                {showRateButton && (
+                    <View style={[styles.actions]}>
+                        <TouchableOpacity style={styles.actionButton} onPress={handleRateTalk}>
+                            <IconSymbol name="star" size={20} color={iconColor} />
+                            <ThemedText style={styles.actionText}>{t("talks.actions.rateTalk")}</ThemedText>
+                        </TouchableOpacity>
+                    </View>
+                )}
             </TouchableOpacity>
         );
     };
 
-    const renderTalksList = (talksData: Talk[], emptyTitle: string, emptyDescription: string) => (
+    const renderAgendaList = (agendaData: AgendaItem[], emptyTitle: string, emptyAction?: React.ReactNode) => (
         <FlatList
-            data={talksData}
-            keyExtractor={(item) => item.id}
-            renderItem={renderTalkItem}
+            data={agendaData}
+            keyExtractor={(item) => `${item.itemType}-${item.id}`}
+            renderItem={renderAgendaItem}
             contentContainerStyle={styles.talksList}
             refreshing={refreshing}
             onRefresh={handleRefresh}
             ListEmptyComponent={() => (
                 <View style={styles.emptyContainer}>
                     <ThemedText style={styles.emptyTitle}>{emptyTitle}</ThemedText>
-                    <ThemedText style={styles.emptyDescription}>{emptyDescription}</ThemedText>
+                    {emptyAction}
                 </View>
             )}
         />
     );
 
-    const MyTalksRoute = () => {
+    const UserAgendaRoute = () => {
         const allUserSelectedTalks = getUserSelectedTalks().filter(
             (talk) => talk.conferenceId === currentConference?.id
         );
+        const allUserSelectedActivities = getUserSelectedActivities().filter(
+            (activity) => activity.conferenceId === currentConference?.id
+        );
 
-        // Filter talks by selected day
-        const filteredTalks = useMemo(() => {
-            if (conferenceDays.length === 0) return allUserSelectedTalks;
+        // Filter by selected day
+        const filteredItems = useMemo(() => {
+            const combinedItems = combineAgendaItems(allUserSelectedTalks, allUserSelectedActivities);
 
-            const selectedDate = conferenceDays[selectedDay]?.date;
-            if (!selectedDate) return allUserSelectedTalks;
+            if (conferenceDays.length === 0) return combinedItems;
 
-            return allUserSelectedTalks.filter((talk) => isSameDay(talk.startTime, selectedDate));
-        }, [allUserSelectedTalks]);
+            const selectedConferenceDay = conferenceDays[selectedDay];
+            if (!selectedConferenceDay) return combinedItems;
 
-        const sortedTalks = filteredTalks.sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
+            // Handle "Other" day filter
+            if (selectedConferenceDay.isOtherDay) {
+                return combinedItems.filter((item) => {
+                    // Show items that don't match any conference day
+                    return !conferenceDays
+                        .filter((day) => !day.isOtherDay && day.date)
+                        .some((day) => day.date && isSameDay(item.startTime, day.date));
+                });
+            }
 
-        return renderTalksList(sortedTalks, t("talks.noTalksSelected"), t("talks.browseTalks"));
+            // Handle regular conference days
+            const selectedDate = selectedConferenceDay.date;
+            if (!selectedDate) return combinedItems;
+
+            return combinedItems.filter((item) => isSameDay(item.startTime, selectedDate));
+        }, [allUserSelectedTalks, allUserSelectedActivities]); // eslint-disable-line react-hooks/exhaustive-deps
+
+        const exploreAgendaButton = (
+            <TouchableOpacity style={styles.exploreAgendaButton} onPress={() => setIndex(1)} activeOpacity={0.7}>
+                <ThemedText style={[styles.exploreAgendaText, { color: highlightColor }]}>
+                    {t("talks.exploreAgenda")}
+                </ThemedText>
+                <IconSymbol name="arrow.right" size={16} color={highlightColor} style={styles.exploreArrow} />
+            </TouchableOpacity>
+        );
+
+        return renderAgendaList(filteredItems, t("talks.noTalksSelected"), exploreAgendaButton);
     };
 
     const AgendaRoute = () => {
         const allAgendaTalks = getAgendaTalks();
+        const allAgendaActivities = getAgendaActivities();
 
-        // Filter talks by selected day
-        const filteredTalks = useMemo(() => {
-            if (conferenceDays.length === 0) return allAgendaTalks;
+        // Filter by selected day
+        const filteredItems = useMemo(() => {
+            const combinedItems = combineAgendaItems(allAgendaTalks, allAgendaActivities);
 
-            const selectedDate = conferenceDays[selectedDay]?.date;
-            if (!selectedDate) return allAgendaTalks;
+            if (conferenceDays.length === 0) return combinedItems;
 
-            return allAgendaTalks.filter((talk) => isSameDay(talk.startTime, selectedDate));
-        }, [allAgendaTalks]);
+            const selectedConferenceDay = conferenceDays[selectedDay];
+            if (!selectedConferenceDay) return combinedItems;
 
-        const sortedTalks = filteredTalks.sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
+            // Handle "Other" day filter
+            if (selectedConferenceDay.isOtherDay) {
+                return combinedItems.filter((item) => {
+                    // Show items that don't match any conference day
+                    return !conferenceDays
+                        .filter((day) => !day.isOtherDay && day.date)
+                        .some((day) => day.date && isSameDay(item.startTime, day.date));
+                });
+            }
 
-        return renderTalksList(sortedTalks, t("talks.noTalksScheduled"), t("talks.createTalkToStart"));
+            // Handle regular conference days
+            const selectedDate = selectedConferenceDay.date;
+            if (!selectedDate) return combinedItems;
+
+            return combinedItems.filter((item) => isSameDay(item.startTime, selectedDate));
+        }, [allAgendaTalks, allAgendaActivities]); // eslint-disable-line react-hooks/exhaustive-deps
+
+        return renderAgendaList(filteredItems, t("talks.noTalksScheduled"));
     };
 
     const renderScene = SceneMap({
-        myTalks: MyTalksRoute,
+        userAgenda: UserAgendaRoute,
         agenda: AgendaRoute,
     });
 
@@ -282,7 +450,17 @@ export default function TalksScreen() {
 
     return (
         <ThemedView style={styles.container}>
-            <View style={[styles.header, { borderBottomColor: borderLight, backgroundColor: headerBackgroundColor }]}>
+            <View
+                style={[
+                    styles.header,
+                    {
+                        borderBottomColor: borderLight,
+                        backgroundColor: headerBackgroundColor,
+                        paddingTop: insets.top + 10,
+                        height: insets.top + 64,
+                    },
+                ]}
+            >
                 <View>
                     <ThemedText style={styles.conferenceLabel}>{t("talks.title")}</ThemedText>
                     <ThemedText style={styles.conferenceName}>
@@ -290,18 +468,19 @@ export default function TalksScreen() {
                     </ThemedText>
                 </View>
 
-                <TouchableOpacity
+                {/* TODO: after programmier.con */}
+                {/* <TouchableOpacity
                     style={[styles.newTalkButton, { backgroundColor: tintColor }]}
                     onPress={handleNewTalk}
                     activeOpacity={0.8}
                 >
-                    <IconSymbol name="plus" size={18} color={backgroundColor} />
-                    <Text style={[styles.buttonText, { color: backgroundColor }]}>{t("talks.addTalk")}</Text>
-                </TouchableOpacity>
+                    <IconSymbol name="plus" size={18} color={tintContentColor} />
+                    <Text style={[styles.buttonText, { color: tintContentColor }]}>{t("talks.addTalk")}</Text>
+                </TouchableOpacity> */}
             </View>
 
             {/* Sticky Day Selection - Between tabs and content */}
-            {conferenceDays.length > 0 && (
+            {conferenceDays.length > 1 && (
                 <View style={[styles.stickyDaySelectionContainer]}>
                     <ScrollView
                         horizontal
@@ -322,10 +501,14 @@ export default function TalksScreen() {
                                 <Text
                                     style={[
                                         styles.dayButtonText,
-                                        { color: selectedDay === day.index ? backgroundColor : textColor },
+                                        { color: selectedDay === day.index ? tintContentColor : textColor },
                                     ]}
                                 >
-                                    {format(day.date, "EEE d", { locale: dateFnsLocale })}
+                                    {day.isOtherDay
+                                        ? day.label
+                                        : day.date
+                                        ? format(day.date, "EEE d", { locale: dateFnsLocale })
+                                        : ""}
                                 </Text>
                             </TouchableOpacity>
                         ))}
@@ -339,7 +522,6 @@ export default function TalksScreen() {
                 renderTabBar={renderTabBar}
                 onIndexChange={setIndex}
                 initialLayout={{ width: layout.width }}
-                swipeEnabled={false}
             />
         </ThemedView>
     );
@@ -358,13 +540,12 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         justifyContent: "space-between",
         alignItems: "center",
-        paddingHorizontal: 10,
-        paddingTop: 60,
+        paddingHorizontal: 16,
         paddingBottom: 8,
-        marginBottom: 6,
         borderBottomWidth: 1,
     },
     conferenceLabel: {
+        marginTop: -10,
         fontSize: 12,
         opacity: 0.7,
     },
@@ -388,7 +569,6 @@ const styles = StyleSheet.create({
         paddingBottom: 16,
     },
     talkItem: {
-        flexDirection: "row",
         alignItems: "center",
         marginHorizontal: 16,
         marginTop: 12,
@@ -399,11 +579,36 @@ const styles = StyleSheet.create({
         flex: 1,
         display: "flex",
         flexDirection: "row",
+        borderRadius: 12,
+    },
+    timeBlock: {
+        width: 64,
+        paddingVertical: 12,
+        paddingHorizontal: 8,
+        alignItems: "center",
+        justifyContent: "center",
+        borderTopLeftRadius: 12,
+        borderBottomLeftRadius: 12,
+    },
+    timeBlockHours: {
+        fontSize: 24,
+        fontWeight: "700",
+        lineHeight: 28,
+        fontVariant: ["tabular-nums"],
+    },
+    timeBlockMinutes: {
+        fontSize: 24,
+        fontWeight: "700",
+        lineHeight: 28,
+        fontVariant: ["tabular-nums"],
+        opacity: 0.6,
     },
     leftCol: {
         padding: 16,
+        paddingLeft: 12,
         flex: 1,
         flexDirection: "column",
+        justifyContent: "center",
     },
     middleCol: {
         justifyContent: "center",
@@ -426,7 +631,7 @@ const styles = StyleSheet.create({
     talkDate: {
         fontSize: 14,
         opacity: 0.7,
-        flex: 1,
+        lineHeight: 20,
     },
     activeIndicator: {
         paddingHorizontal: 8,
@@ -470,6 +675,20 @@ const styles = StyleSheet.create({
         textAlign: "center",
         opacity: 0.7,
     },
+    exploreAgendaButton: {
+        paddingHorizontal: 20,
+        paddingVertical: 12,
+        flexDirection: "row",
+        alignItems: "center",
+        alignSelf: "center",
+    },
+    exploreAgendaText: {
+        fontSize: 16,
+        fontWeight: "600",
+    },
+    exploreArrow: {
+        marginLeft: 8,
+    },
     daySelectionContainer: {
         backgroundColor: "transparent",
         paddingVertical: 12,
@@ -480,7 +699,7 @@ const styles = StyleSheet.create({
     },
     dayButtonsContainer: {
         flexDirection: "row",
-        marginBottom: 4,
+        marginVertical: 4,
         paddingHorizontal: 16,
     },
     dayButtonsContent: {
@@ -502,5 +721,56 @@ const styles = StyleSheet.create({
         fontSize: 12,
         opacity: 0.6,
         fontStyle: "italic",
+    },
+    metaContainer: {
+        marginTop: 6,
+        flexDirection: "row",
+        gap: 12,
+    },
+    locationRow: {
+        flexDirection: "row",
+        alignItems: "center",
+    },
+    locationText: {
+        fontSize: 14,
+        opacity: 0.7,
+        lineHeight: 20,
+    },
+
+    locationIcon: {
+        width: 14,
+        height: 14,
+        marginRight: 2,
+    },
+    timeRow: {
+        flexDirection: "row",
+        alignItems: "center",
+    },
+    timeIcon: {
+        width: 14,
+        height: 14,
+        marginRight: 4,
+    },
+    actions: {
+        width: "100%",
+        flexDirection: "row",
+        justifyContent: "flex-end",
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+    },
+    actionBorder: {
+        position: "absolute",
+        left: 16,
+        width: "100%",
+        borderTopWidth: 1,
+    },
+    actionButton: {
+        flexDirection: "row",
+        alignItems: "center",
+        marginLeft: 16,
+    },
+    actionText: {
+        marginLeft: 4,
+        fontSize: 14,
     },
 });

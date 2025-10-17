@@ -1,4 +1,4 @@
-package com.anonymous.conpanion
+package de.programmierbar.conference
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build
