@@ -26,7 +26,6 @@ export const FirstTimeConferencePrompt: React.FC = () => {
     const placeholderColor = useThemeColor({}, "muted");
     const errorColor = useThemeColor({}, "error");
     const borderColor = useThemeColor({}, "border");
-    const whiteColor = useThemeColor({}, "white");
 
     const handleCreateConference = async () => {
         if (!name.trim()) {
@@ -191,7 +190,7 @@ export const FirstTimeConferencePrompt: React.FC = () => {
                         onPress={handleCreateConference}
                         disabled={isSubmitting}
                     >
-                        <ThemedText style={[styles.createButtonText, { color: whiteColor }]}>
+                        <ThemedText style={[styles.createButtonText, { color: textColor }]}>
                             {isSubmitting ? "Creating..." : "Create My First Conference"}
                         </ThemedText>
                     </TouchableOpacity>

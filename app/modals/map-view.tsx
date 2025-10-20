@@ -22,7 +22,7 @@ export default function MapViewModal() {
     const { t } = useI18n();
 
     // Theme colors
-    const whiteColor = useThemeColor({}, "white");
+    const textColor = useThemeColor({}, "text");
     const backgroundColor = useThemeColor({}, "background");
     const tintColor = useThemeColor({}, "tint");
     const tintContentColor = useThemeColor({}, "tintContent");
@@ -46,7 +46,7 @@ export default function MapViewModal() {
                 <View style={styles.header}>
                     <ThemedText style={styles.title}>{t("conferences.dashboard.conference.map")}</ThemedText>
                     <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
-                        <IconSymbol name="xmark" size={24} color={whiteColor} />
+                        <IconSymbol name="xmark" size={24} color={textColor} />
                     </TouchableOpacity>
                 </View>
 

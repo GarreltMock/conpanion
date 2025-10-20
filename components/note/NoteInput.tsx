@@ -422,7 +422,7 @@ export const NoteInput: React.FC<NoteInputProps> = ({
                                 />
                                 {image.isProcessing && (
                                     <View style={styles.loadingOverlay}>
-                                        <ActivityIndicator size="small" color={whiteColor} />
+                                        <ActivityIndicator size="small" color={textColor} />
                                     </View>
                                 )}
                             </TouchableOpacity>

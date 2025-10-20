@@ -38,7 +38,7 @@ export const NoteItem: React.FC<NoteItemProps> = ({ note, onDelete, onRestore, r
     const containerRef = useRef<View>(null);
 
     const tintColor = useThemeColor({}, "tint");
-    const whiteColor = useThemeColor({}, "white");
+    const tintContentColor = useThemeColor({}, "tintContent");
     const textColor = useThemeColor({}, "text");
     const errorColor = useThemeColor({}, "error");
     const borderLightColor = useThemeColor({}, "borderLight");
@@ -239,7 +239,7 @@ export const NoteItem: React.FC<NoteItemProps> = ({ note, onDelete, onRestore, r
                                 )}
                                 {image.links && image.links.length > 0 && (
                                     <View style={[styles.linkIndicator, { backgroundColor: `${tintColor}CC` }]}>
-                                        <IconSymbol name="link" size={12} color={whiteColor} />
+                                        <IconSymbol name="link" size={12} color={tintContentColor} />
                                     </View>
                                 )}
                             </TouchableOpacity>
@@ -284,7 +284,7 @@ export const NoteItem: React.FC<NoteItemProps> = ({ note, onDelete, onRestore, r
                                     <IconSymbol
                                         name={isPlaying && playingIndex === index ? "pause.fill" : "play.fill"}
                                         size={14}
-                                        color={whiteColor}
+                                        color={tintContentColor}
                                     />
                                 </View>
                                 <ThemedText style={styles.audioLabel}>Audio Recording {index + 1}</ThemedText>
