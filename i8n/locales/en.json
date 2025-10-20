@@ -96,7 +96,8 @@
             "new": "New Talk",
             "switch": "Switch Talk",
             "addToUserAgenda": "Add to your Agenda",
-            "rateTalk": "Rate Talk"
+            "rateTalk": "Rate Talk",
+            "askQuestion": "Ask Question"
         },
         "userAgenda": "Your Talks",
         "fullAgenda": "Full Agenda",

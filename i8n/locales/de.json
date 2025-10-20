@@ -96,7 +96,8 @@
             "new": "Neuer Vortrag",
             "switch": "Vortrag wechseln",
             "addToUserAgenda": "Zu deiner Agenda hinzufügen",
-            "rateTalk": "Vortrag bewerten"
+            "rateTalk": "Vortrag bewerten",
+            "askQuestion": "Frage stellen"
         },
         "userAgenda": "Deine Vorträge",
         "fullAgenda": "Vollständige Agenda",

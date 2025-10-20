@@ -1,34 +1,35 @@
 {
-  "expo": {
-    "name": "programmier.con",
-    "slug": "programmier-con",
-    "version": "1.0.0",
-    "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
-    "scheme": "myapp",
-    "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
-    "ios": {
-      "supportsTablet": false,
-      "bundleIdentifier": "de.programmierbar.conference"
-    },
-    "android": {
-      "package": "de.programmierbar.conference"
-    },
-    "plugins": [
-      "expo-router",
-      "expo-localization"
-    ],
-    "experiments": {
-      "typedRoutes": true
-    },
-    "extra": {
-      "router": {
-        "origin": false
-      },
-      "eas": {
-        "projectId": "c9777eff-97ed-4c63-a9d9-06fb57e29576"
-      }
+    "expo": {
+        "name": "programmier.con",
+        "slug": "programmier-con",
+        "version": "1.0.0",
+        "orientation": "portrait",
+        "icon": "./assets/images/icon.png",
+        "scheme": "myapp",
+        "userInterfaceStyle": "automatic",
+        "newArchEnabled": true,
+        "ios": {
+            "supportsTablet": false,
+            "bundleIdentifier": "de.programmierbar.conference"
+        },
+        "android": {
+            "package": "de.programmierbar.conference",
+            "adaptiveIcon": {
+                "foregroundImage": "./assets/images/icon.png",
+                "backgroundColor": "#000000"
+            }
+        },
+        "plugins": ["expo-router", "expo-localization"],
+        "experiments": {
+            "typedRoutes": true
+        },
+        "extra": {
+            "router": {
+                "origin": false
+            },
+            "eas": {
+                "projectId": "c9777eff-97ed-4c63-a9d9-06fb57e29576"
+            }
+        }
     }
-  }
 }

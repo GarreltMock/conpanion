@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { View, StyleSheet, Pressable, Text } from "react-native";
 import { format } from "date-fns";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
 
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
@@ -18,7 +19,10 @@ interface TalkHeaderProps {
 
 export const TalkHeader: React.FC<TalkHeaderProps> = ({ conferenceName, talk, onPress }) => {
     const { t } = useI18n();
+
     const insets = useSafeAreaInsets();
+    const router = useRouter();
+
     const tintColor = useThemeColor({}, "tint");
     const tintContentColor = useThemeColor({}, "tintContent");
     const headerBackgroundColor = useThemeColor({}, "headerBackground");
@@ -52,8 +56,19 @@ export const TalkHeader: React.FC<TalkHeaderProps> = ({ conferenceName, talk, on
         onPress();
     };
 
+    const handleAskQuestion = () => {
+        router.push({
+            pathname: "/modals/webview",
+            params: {
+                url: "https://l.programmier.bar/pc-qa",
+                title: t("talks.actions.askQuestion"),
+                talkId: talk?.id,
+            },
+        });
+    };
+
     // Calculate talk state once
-    const isScheduledTalk = talk?.duration !== undefined;
+    // const isScheduledTalk = talk?.duration !== undefined;
     const isTalkActive = talk?.duration
         ? new Date(talk.startTime.getTime() + talk.duration * 60 * 1000) > currentTime
         : true;
@@ -134,7 +149,25 @@ export const TalkHeader: React.FC<TalkHeaderProps> = ({ conferenceName, talk, on
                     </Pressable>
                 )} */}
 
-                {!!talk && (!isScheduledTalk || !isTalkActive) && (
+                {!talk ? (
+                    <></>
+                ) : isTalkActive ? (
+                    <Pressable
+                        style={({ pressed }) => [
+                            styles.newTalkButton,
+                            {
+                                backgroundColor: "transparent",
+                                borderWidth: 1,
+                                borderColor: borderLightColor,
+                                opacity: pressed ? 0.8 : 1,
+                            },
+                        ]}
+                        onPress={handleAskQuestion}
+                    >
+                        <IconSymbol name="questionmark" size={18} color={textColor} />
+                        <Text style={[styles.buttonText, { color: textColor }]}>{t("talks.actions.askQuestion")}</Text>
+                    </Pressable>
+                ) : (
                     <Pressable
                         style={({ pressed }) => [
                             styles.newTalkButton,

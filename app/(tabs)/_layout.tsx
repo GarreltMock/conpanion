@@ -47,7 +47,7 @@ export default function TabLayout() {
                 name="index"
                 options={{
                     title: t("navigation.tabs.notes"),
-                    tabBarIcon: ({ color }) => <IconSymbol size={28} name="note.text" color={color} />,
+                    tabBarIcon: ({ color }) => <IconSymbol size={28} name="text.bubble" color={color} />,
                 }}
             />
             <Tabs.Screen
@@ -61,7 +61,7 @@ export default function TabLayout() {
                 name="conference"
                 options={{
                     title: t("navigation.tabs.conference"),
-                    tabBarIcon: ({ color }) => <IconSymbol size={28} name="squares.below.rectangle" color={color} />,
+                    tabBarIcon: ({ color }) => <IconSymbol size={28} name="calendar.and.person" color={color} />,
                 }}
             />
         </Tabs>

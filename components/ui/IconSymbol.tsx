@@ -23,7 +23,7 @@ const MAPPING = {
     "arrow.up": "arrow-upward",
     "camera.fill": "camera-alt",
     "mic.fill": "mic",
-    "note.text": "speaker-notes",
+    "text.bubble": "speaker-notes",
     "list.bullet": "list",
     pencil: "edit",
     trash: "delete",
@@ -51,8 +51,9 @@ const MAPPING = {
     "wand.and.stars": "auto-fix-high",
     link: "link",
     "arrow.right.circle": "arrow-circle-right",
-    "squares.below.rectangle": "display-settings",
+    "calendar.and.person": "calendar-month",
     gearshape: "settings",
+    questionmark: "help-outline",
 } as Partial<
     Record<import("expo-symbols").SymbolViewProps["name"], React.ComponentProps<typeof MaterialIcons>["name"]>
 >;
