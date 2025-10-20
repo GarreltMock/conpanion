@@ -11,6 +11,7 @@ import { useThemeColor } from "@/hooks/useThemeColor";
 import { useI18n } from "@/hooks/useI18n";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useImageZoomPan } from "@/hooks/useImageZoomPan";
+import { Colors } from "@/constants/Colors";
 
 const MAP_IMAGES = {
     eg: require("@/assets/images/map/map_eg.png"),
@@ -22,6 +23,7 @@ export default function MapViewModal() {
     const { t } = useI18n();
 
     // Theme colors
+    const darkBackgroundColor = Colors.dark.background;
     const textColor = useThemeColor({}, "text");
     const backgroundColor = useThemeColor({}, "background");
     const tintColor = useThemeColor({}, "tint");
@@ -54,7 +56,7 @@ export default function MapViewModal() {
                     <Animated.View style={styles.imageContainer}>
                         <Animated.Image
                             source={MAP_IMAGES[selectedFloor]}
-                            style={[styles.image, animatedImageStyle]}
+                            style={[styles.image, animatedImageStyle, { backgroundColor: darkBackgroundColor }]}
                             resizeMode="contain"
                         />
                     </Animated.View>
