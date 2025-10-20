@@ -56,11 +56,18 @@ export const TalkHeader: React.FC<TalkHeaderProps> = ({ conferenceName, talk, on
         onPress();
     };
 
+    const validSuffixes = ["arena", "studio"];
     const handleAskQuestion = () => {
+        console.log(talk?.location);
+        const suffix =
+            talk?.location && validSuffixes.includes(talk.location.toLowerCase())
+                ? `-${talk.location.toLowerCase()}`
+                : "-arena";
+
         router.push({
             pathname: "/modals/webview",
             params: {
-                url: "https://l.programmier.bar/pc-qa",
+                url: `https://l.programmier.bar/pc-qa${suffix}`,
                 title: t("talks.actions.askQuestion"),
                 talkId: talk?.id,
             },
