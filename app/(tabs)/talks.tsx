@@ -23,6 +23,7 @@ import { useI18n } from "@/hooks/useI18n";
 import { Talk, Activity } from "@/types";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { trackTalkAddedToAgenda, trackTalkRemovedFromAgenda } from "@/utils/analytics";
+import { AgendaItem as AgendaItemComponent } from "@/components/talks/AgendaItem";
 
 type AgendaItem = (Talk & { itemType: "talk" }) | (Activity & { itemType: "activity" });
 
@@ -65,14 +66,12 @@ export default function TalksScreen() {
     const layout = useWindowDimensions();
     const tintColor = useThemeColor({}, "tint");
     const tintContentColor = useThemeColor({}, "tintContent");
-    const iconColor = useThemeColor({}, "icon");
     const highlightColor = useThemeColor({}, "highlight");
     const textColor = useThemeColor({}, "text");
     const backgroundColor = useThemeColor({}, "background");
     const headerBackgroundColor = useThemeColor({}, "headerBackground");
     const borderLight = useThemeColor({}, "borderLight");
     const borderColor = useThemeColor({}, "border");
-    const backgroundOverlayLightColor = useThemeColor({}, "backgroundOverlayLight");
 
     // Helper function to combine talks and activities with type info
     const combineAgendaItems = useCallback((talks: Talk[], activities: Activity[]): AgendaItem[] => {
@@ -179,170 +178,141 @@ export default function TalksScreen() {
         router.push("/modals/new-agenda-item");
     };
 
-    const handleTalkPress = (talkId: string) => {
+    const handleTalkPress = useCallback((talkId: string) => {
         router.push(`/talk?id=${talkId}`);
-    };
+    }, []);
 
-    const renderAgendaItem = ({ item }: { item: AgendaItem }) => {
-        const isTalk = item.itemType === "talk";
-        const talk = isTalk ? (item as Talk) : null;
-        const isActive = isTalk && activeTalk?.id === item.id;
+    // Store latest context functions in refs to prevent unnecessary re-renders
+    const toggleTalkSelectionRef = React.useRef(toggleTalkSelection);
+    const toggleActivitySelectionRef = React.useRef(toggleActivitySelection);
 
-        // Check if talk is in the past
-        const isPastTalk = isTalk && item.startTime < new Date();
+    React.useEffect(() => {
+        toggleTalkSelectionRef.current = toggleTalkSelection;
+        toggleActivitySelectionRef.current = toggleActivitySelection;
+    }, [toggleTalkSelection, toggleActivitySelection]);
 
-        // Show rate button if: user selected, in the past, and not already rated
-        const showRateButton = isTalk && item.isUserSelected && isPastTalk && !talk?.rating;
+    const handleBookmarkPress = useCallback(
+        async (id: string, isTalk: boolean, wasSelected: boolean) => {
+            // Flag that we need to restore scroll after the re-render
+            shouldRestoreScroll.current = true;
 
-        // Extract hour and minute from startTime
-        const timeString = format(item.startTime, "HH:mm", { locale: dateFnsLocale });
-        const [hours, minutes] = timeString.split(":");
-
-        const handleBookmarkPress = async (e: any) => {
-            e.stopPropagation();
             try {
                 if (isTalk) {
-                    const wasSelected = item.isUserSelected;
-                    await toggleTalkSelection(item.id);
+                    await toggleTalkSelectionRef.current(id);
 
                     // Track the agenda action
                     if (wasSelected) {
-                        await trackTalkRemovedFromAgenda(item.id);
+                        await trackTalkRemovedFromAgenda(id);
                     } else {
-                        await trackTalkAddedToAgenda(item.id);
+                        await trackTalkAddedToAgenda(id);
                     }
                 } else {
-                    await toggleActivitySelection(item.id);
+                    await toggleActivitySelectionRef.current(id);
                 }
             } catch (error) {
                 console.error(`Error toggling ${isTalk ? "talk" : "activity"} selection:`, error);
             }
-        };
+        },
+        [] // Empty deps - function is now stable
+    );
 
-        const handleRateTalk = (e: any) => {
-            e.stopPropagation();
-            // Open the evaluation modal
-            router.push(`/modals/talk-evaluation?talkId=${item.id}&source=talk-list`);
-        };
+    const handleRateTalk = useCallback((talkId: string) => {
+        router.push(`/modals/talk-evaluation?talkId=${talkId}&source=talk-list`);
+    }, []);
+
+    // Refs to track scroll position for each list
+    const userAgendaScrollY = React.useRef(0);
+    const fullAgendaScrollY = React.useRef(0);
+    const userAgendaFlatListRef = React.useRef<FlatList>(null);
+    const fullAgendaFlatListRef = React.useRef<FlatList>(null);
+    const shouldRestoreScroll = React.useRef(false);
+
+    const renderAgendaList = (
+        agendaData: AgendaItem[],
+        emptyTitle: string,
+        emptyAction?: React.ReactNode,
+        listName?: string
+    ) => {
+        const isUserAgenda = listName === "UserAgenda";
+        const flatListRef = isUserAgenda ? userAgendaFlatListRef : fullAgendaFlatListRef;
+        const scrollYRef = isUserAgenda ? userAgendaScrollY : fullAgendaScrollY;
+
+        // Check if this tab is currently active
+        const isActiveTab = (isUserAgenda && index === 0) || (!isUserAgenda && index === 1);
+
+        // Create stable extraData
+        const extraDataKey = agendaData
+            .map((item) => `${item.id}:${item.isUserSelected}:${(item as Talk).rating || ""}`)
+            .join("|");
 
         return (
-            <TouchableOpacity
-                style={[
-                    styles.talkItem,
-                    { borderColor: borderLight },
-                    !isTalk && { backgroundColor: borderLight },
-                    isActive && { borderColor: tintColor, borderWidth: 2 },
-                ]}
-                onPress={isTalk ? () => handleTalkPress(item.id) : undefined}
-                activeOpacity={0.7}
-                disabled={!isTalk}
-            >
-                <View
-                    style={[
-                        styles.talkItemContent,
-                        showRateButton && { borderWidth: 1, borderColor: backgroundOverlayLightColor },
-                    ]}
-                >
-                    {/* Time Display Block */}
-                    <View style={[styles.timeBlock, { backgroundColor: backgroundOverlayLightColor }]}>
-                        <ThemedText style={styles.timeBlockHours}>{hours}</ThemedText>
-                        <ThemedText style={styles.timeBlockMinutes}>{minutes}</ThemedText>
-                    </View>
+            <FlatList
+                ref={flatListRef}
+                data={agendaData}
+                extraData={extraDataKey}
+                keyExtractor={(item) => `${item.itemType}-${item.id}`}
+                renderItem={renderAgendaItem}
+                contentContainerStyle={styles.talksList}
+                refreshing={refreshing}
+                onRefresh={handleRefresh}
+                removeClippedSubviews={false}
+                initialNumToRender={agendaData.length}
+                onScroll={(event) => {
+                    // Only track scroll for active tab
+                    if (isActiveTab && !shouldRestoreScroll.current) {
+                        scrollYRef.current = event.nativeEvent.contentOffset.y;
+                    }
+                }}
+                scrollEventThrottle={16}
+                onContentSizeChange={(_width, _height) => {
+                    if (shouldRestoreScroll.current && isActiveTab) {
+                        const savedScrollY = scrollYRef.current;
 
-                    <View style={[styles.leftCol, !isTalk && { paddingVertical: 6 }]}>
-                        <View style={styles.titleRow}>
-                            <ThemedText style={styles.talkTitle}>{item.title}</ThemedText>
-                        </View>
-                        <View style={[styles.metaContainer, !isTalk && { marginTop: 0 }]}>
-                            {conferenceDays[selectedDay]?.isOtherDay && (
-                                <View style={styles.timeRow}>
-                                    <IconSymbol name="calendar" size={14} color={iconColor} style={styles.timeIcon} />
-                                    <ThemedText style={styles.talkDate}>
-                                        {format(item.startTime, "MMM d, yyyy", { locale: dateFnsLocale })}
-                                    </ThemedText>
-                                </View>
-                            )}
-                            {item.duration && (
-                                <View style={styles.timeRow}>
-                                    <IconSymbol name="clock" size={14} color={iconColor} style={styles.timeIcon} />
-                                    <ThemedText style={styles.talkDate}>{item.duration} min</ThemedText>
-                                </View>
-                            )}
-                            {item.location && (
-                                <View style={styles.locationRow}>
-                                    <IconSymbol
-                                        name="location"
-                                        size={14}
-                                        color={iconColor}
-                                        style={styles.locationIcon}
-                                    />
-                                    <ThemedText style={styles.locationText}>{item.location}</ThemedText>
-                                </View>
-                            )}
-                        </View>
-                    </View>
+                        shouldRestoreScroll.current = false;
 
-                    {isTalk && (
-                        <View style={styles.middleCol}>
-                            {isActive && (
-                                <View style={[styles.activeIndicator, { backgroundColor: tintColor }]}>
-                                    <ThemedText style={[styles.activeText, { color: tintContentColor }]}>
-                                        {t("status.active")}
-                                    </ThemedText>
-                                </View>
-                            )}
-                        </View>
-                    )}
-
-                    <View style={styles.rightCol}>
-                        <TouchableOpacity
-                            style={styles.bookmarkButton}
-                            onPress={handleBookmarkPress}
-                            activeOpacity={0.7}
-                        >
-                            <IconSymbol
-                                size={20}
-                                name={item.isUserSelected ? "bookmark.fill" : "bookmark"}
-                                color={highlightColor}
-                            />
-                        </TouchableOpacity>
-
-                        {isTalk && !!talk?.rating && (
-                            <View style={styles.ratingContainer}>
-                                <ThemedText style={styles.ratingText}>{talk.rating}/5</ThemedText>
-                                <IconSymbol name="star.fill" size={12} color="#FFD700" />
-                            </View>
-                        )}
-                    </View>
-                </View>
-
-                {showRateButton && (
-                    <View style={[styles.actions]}>
-                        <TouchableOpacity style={styles.actionButton} onPress={handleRateTalk}>
-                            <IconSymbol name="star" size={20} color={iconColor} />
-                            <ThemedText style={styles.actionText}>{t("talks.actions.rateTalk")}</ThemedText>
-                        </TouchableOpacity>
+                        if (flatListRef.current && savedScrollY > 0) {
+                            flatListRef.current.scrollToOffset({
+                                offset: savedScrollY,
+                                animated: false,
+                            });
+                        }
+                    }
+                }}
+                ListEmptyComponent={() => (
+                    <View style={styles.emptyContainer}>
+                        <ThemedText style={styles.emptyTitle}>{emptyTitle}</ThemedText>
+                        {emptyAction}
                     </View>
                 )}
-            </TouchableOpacity>
+            />
         );
     };
 
-    const renderAgendaList = (agendaData: AgendaItem[], emptyTitle: string, emptyAction?: React.ReactNode) => (
-        <FlatList
-            data={agendaData}
-            keyExtractor={(item) => `${item.itemType}-${item.id}`}
-            renderItem={renderAgendaItem}
-            contentContainerStyle={styles.talksList}
-            refreshing={refreshing}
-            onRefresh={handleRefresh}
-            ListEmptyComponent={() => (
-                <View style={styles.emptyContainer}>
-                    <ThemedText style={styles.emptyTitle}>{emptyTitle}</ThemedText>
-                    {emptyAction}
-                </View>
-            )}
-        />
+    const renderAgendaItem = useCallback(
+        ({ item }: { item: AgendaItem }) => {
+            const isOtherDay = conferenceDays[selectedDay]?.isOtherDay || false;
+
+            return (
+                <AgendaItemComponent
+                    item={item}
+                    activeTalkId={activeTalk?.id || null}
+                    isOtherDay={isOtherDay}
+                    dateFnsLocale={dateFnsLocale}
+                    onTalkPress={handleTalkPress}
+                    onBookmarkPress={handleBookmarkPress}
+                    onRateTalk={handleRateTalk}
+                />
+            );
+        },
+        [
+            activeTalk?.id,
+            conferenceDays,
+            selectedDay,
+            dateFnsLocale,
+            handleTalkPress,
+            handleBookmarkPress,
+            handleRateTalk,
+        ]
     );
 
     const UserAgendaRoute = () => {
@@ -377,7 +347,9 @@ export default function TalksScreen() {
             if (!selectedDate) return combinedItems;
 
             return combinedItems.filter((item) => isSameDay(item.startTime, selectedDate));
-        }, [allUserSelectedTalks, allUserSelectedActivities]); // eslint-disable-line react-hooks/exhaustive-deps
+        }, [allUserSelectedTalks, allUserSelectedActivities]);
+
+        // Calculate isOtherDay once for this route
 
         const exploreAgendaButton = (
             <TouchableOpacity style={styles.exploreAgendaButton} onPress={() => setIndex(1)} activeOpacity={0.7}>
@@ -388,7 +360,7 @@ export default function TalksScreen() {
             </TouchableOpacity>
         );
 
-        return renderAgendaList(filteredItems, t("talks.noTalksSelected"), exploreAgendaButton);
+        return renderAgendaList(filteredItems, t("talks.noTalksSelected"), exploreAgendaButton, "UserAgenda");
     };
 
     const AgendaRoute = () => {
@@ -419,9 +391,9 @@ export default function TalksScreen() {
             if (!selectedDate) return combinedItems;
 
             return combinedItems.filter((item) => isSameDay(item.startTime, selectedDate));
-        }, [allAgendaTalks, allAgendaActivities]); // eslint-disable-line react-hooks/exhaustive-deps
+        }, [allAgendaTalks, allAgendaActivities]);
 
-        return renderAgendaList(filteredItems, t("talks.noTalksScheduled"));
+        return renderAgendaList(filteredItems, t("talks.noTalksScheduled"), undefined, "Agenda");
     };
 
     const renderScene = SceneMap({
@@ -522,6 +494,8 @@ export default function TalksScreen() {
                 renderTabBar={renderTabBar}
                 onIndexChange={setIndex}
                 initialLayout={{ width: layout.width }}
+                lazy
+                lazyPreloadDistance={0}
             />
         </ThemedView>
     );
@@ -568,95 +542,6 @@ const styles = StyleSheet.create({
         flexGrow: 1,
         paddingBottom: 16,
     },
-    talkItem: {
-        alignItems: "center",
-        marginHorizontal: 16,
-        marginTop: 12,
-        borderRadius: 12,
-        borderWidth: 1,
-    },
-    talkItemContent: {
-        flex: 1,
-        display: "flex",
-        flexDirection: "row",
-        borderRadius: 12,
-    },
-    timeBlock: {
-        width: 64,
-        paddingVertical: 12,
-        paddingHorizontal: 8,
-        alignItems: "center",
-        justifyContent: "center",
-        borderTopLeftRadius: 12,
-        borderBottomLeftRadius: 12,
-    },
-    timeBlockHours: {
-        fontSize: 24,
-        fontWeight: "700",
-        lineHeight: 28,
-        fontVariant: ["tabular-nums"],
-    },
-    timeBlockMinutes: {
-        fontSize: 24,
-        fontWeight: "700",
-        lineHeight: 28,
-        fontVariant: ["tabular-nums"],
-        opacity: 0.6,
-    },
-    leftCol: {
-        padding: 16,
-        paddingLeft: 12,
-        flex: 1,
-        flexDirection: "column",
-        justifyContent: "center",
-    },
-    middleCol: {
-        justifyContent: "center",
-    },
-    titleRow: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-    },
-    rightCol: {
-        flexDirection: "column",
-        justifyContent: "space-between",
-        alignItems: "flex-end",
-    },
-    talkTitle: {
-        fontSize: 18,
-        fontWeight: "600",
-        flex: 1,
-        marginRight: 8,
-    },
-    talkDate: {
-        fontSize: 14,
-        opacity: 0.7,
-        lineHeight: 20,
-    },
-    activeIndicator: {
-        paddingHorizontal: 8,
-        paddingVertical: 4,
-        borderRadius: 12,
-        marginLeft: 8,
-    },
-    activeText: {
-        fontSize: 12,
-        fontWeight: "600",
-    },
-    bookmarkButton: {
-        padding: 4,
-        paddingTop: 8,
-    },
-    ratingContainer: {
-        flexDirection: "row",
-        alignItems: "center",
-        marginRight: 7,
-    },
-    ratingText: {
-        fontSize: 12,
-        opacity: 0.7,
-        marginRight: 4,
-    },
     emptyContainer: {
         flex: 1,
         justifyContent: "center",
@@ -669,11 +554,6 @@ const styles = StyleSheet.create({
         fontWeight: "bold",
         marginBottom: 8,
         textAlign: "center",
-    },
-    emptyDescription: {
-        fontSize: 16,
-        textAlign: "center",
-        opacity: 0.7,
     },
     exploreAgendaButton: {
         paddingHorizontal: 20,
@@ -688,10 +568,6 @@ const styles = StyleSheet.create({
     },
     exploreArrow: {
         marginLeft: 8,
-    },
-    daySelectionContainer: {
-        backgroundColor: "transparent",
-        paddingVertical: 12,
     },
     stickyDaySelectionContainer: {
         backgroundColor: "transparent",
@@ -715,62 +591,5 @@ const styles = StyleSheet.create({
     dayButtonText: {
         fontSize: 14,
         fontWeight: "500",
-    },
-    selectedDayText: {
-        marginHorizontal: 16,
-        fontSize: 12,
-        opacity: 0.6,
-        fontStyle: "italic",
-    },
-    metaContainer: {
-        marginTop: 6,
-        flexDirection: "row",
-        gap: 12,
-    },
-    locationRow: {
-        flexDirection: "row",
-        alignItems: "center",
-    },
-    locationText: {
-        fontSize: 14,
-        opacity: 0.7,
-        lineHeight: 20,
-    },
-
-    locationIcon: {
-        width: 14,
-        height: 14,
-        marginRight: 2,
-    },
-    timeRow: {
-        flexDirection: "row",
-        alignItems: "center",
-    },
-    timeIcon: {
-        width: 14,
-        height: 14,
-        marginRight: 4,
-    },
-    actions: {
-        width: "100%",
-        flexDirection: "row",
-        justifyContent: "flex-end",
-        paddingHorizontal: 16,
-        paddingVertical: 12,
-    },
-    actionBorder: {
-        position: "absolute",
-        left: 16,
-        width: "100%",
-        borderTopWidth: 1,
-    },
-    actionButton: {
-        flexDirection: "row",
-        alignItems: "center",
-        marginLeft: 16,
-    },
-    actionText: {
-        marginLeft: 4,
-        fontSize: 14,
     },
 });
