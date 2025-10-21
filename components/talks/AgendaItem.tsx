@@ -9,16 +9,17 @@ import { useI18n } from "@/hooks/useI18n";
 import { Talk, Activity } from "@/types";
 import { useThemeColor } from "@/hooks/useThemeColor";
 
-type AgendaItem = (Talk & { itemType: "talk" }) | (Activity & { itemType: "activity" });
+type AgendaItemType = (Talk & { itemType: "talk" }) | (Activity & { itemType: "activity" });
 
 interface AgendaItemProps {
-    item: AgendaItem;
+    item: AgendaItemType;
     activeTalkId: string | null;
     isOtherDay: boolean;
     dateFnsLocale: Locale;
     onTalkPress: (id: string) => void;
     onBookmarkPress: (id: string, isTalk: boolean, wasSelected: boolean) => void;
     onRateTalk: (id: string) => void;
+    onAskQuestion: (id: string, location?: string) => void;
 }
 
 const AgendaItemComponent: React.FC<AgendaItemProps> = ({
@@ -29,6 +30,7 @@ const AgendaItemComponent: React.FC<AgendaItemProps> = ({
     onTalkPress,
     onBookmarkPress,
     onRateTalk,
+    onAskQuestion,
 }) => {
     const { t } = useI18n();
     const tintColor = useThemeColor({}, "tint");
@@ -45,8 +47,17 @@ const AgendaItemComponent: React.FC<AgendaItemProps> = ({
     // Check if talk is in the past
     const isPastTalk = isTalk && item.startTime < new Date();
 
+    // Check if talk is currently running
+    const now = new Date();
+    const isTalkRunning = isTalk && talk?.duration
+        ? now >= item.startTime && now < new Date(item.startTime.getTime() + talk.duration * 60 * 1000)
+        : false;
+
     // Show rate button if: user selected, in the past, and not already rated
     const showRateButton = isTalk && item.isUserSelected && isPastTalk && !talk?.rating;
+
+    // Show ask question button if: talk is currently running
+    const showAskQuestionButton = isTalkRunning;
 
     // Extract hour and minute from startTime
     const timeString = format(item.startTime, "HH:mm", { locale: dateFnsLocale });
@@ -60,6 +71,11 @@ const AgendaItemComponent: React.FC<AgendaItemProps> = ({
     const handleRateTalk = (e: any) => {
         e.stopPropagation();
         onRateTalk(item.id);
+    };
+
+    const handleAskQuestion = (e: any) => {
+        e.stopPropagation();
+        onAskQuestion(item.id, item.location);
     };
 
     const handleTalkPress = () => {
@@ -150,12 +166,20 @@ const AgendaItemComponent: React.FC<AgendaItemProps> = ({
                 </View>
             </View>
 
-            {showRateButton && (
+            {(showRateButton || showAskQuestionButton) && (
                 <View style={[styles.actions]}>
-                    <TouchableOpacity style={styles.actionButton} onPress={handleRateTalk}>
-                        <IconSymbol name="star" size={20} color={iconColor} />
-                        <ThemedText style={styles.actionText}>{t("talks.actions.rateTalk")}</ThemedText>
-                    </TouchableOpacity>
+                    {showAskQuestionButton && (
+                        <TouchableOpacity style={styles.actionButton} onPress={handleAskQuestion}>
+                            <IconSymbol name="questionmark" size={20} color={iconColor} />
+                            <ThemedText style={styles.actionText}>{t("talks.actions.askQuestion")}</ThemedText>
+                        </TouchableOpacity>
+                    )}
+                    {showRateButton && (
+                        <TouchableOpacity style={styles.actionButton} onPress={handleRateTalk}>
+                            <IconSymbol name="star" size={20} color={iconColor} />
+                            <ThemedText style={styles.actionText}>{t("talks.actions.rateTalk")}</ThemedText>
+                        </TouchableOpacity>
+                    )}
                 </View>
             )}
         </TouchableOpacity>
@@ -171,7 +195,8 @@ const areEqual = (prevProps: AgendaItemProps, nextProps: AgendaItemProps) => {
     const callbacksSame =
         prevProps.onTalkPress === nextProps.onTalkPress &&
         prevProps.onBookmarkPress === nextProps.onBookmarkPress &&
-        prevProps.onRateTalk === nextProps.onRateTalk;
+        prevProps.onRateTalk === nextProps.onRateTalk &&
+        prevProps.onAskQuestion === nextProps.onAskQuestion;
 
     const ratingSame = prevProps.item.itemType === "activity" ||
         (prevProps.item as Talk).rating === (nextProps.item as Talk).rating;

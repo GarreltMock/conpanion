@@ -220,6 +220,23 @@ export default function TalksScreen() {
         router.push(`/modals/talk-evaluation?talkId=${talkId}&source=talk-list`);
     }, []);
 
+    const handleAskQuestion = useCallback((talkId: string, location?: string) => {
+        const validSuffixes = ["arena", "studio"];
+        const suffix =
+            location && validSuffixes.includes(location.toLowerCase())
+                ? `-${location.toLowerCase()}`
+                : "-arena";
+
+        router.push({
+            pathname: "/modals/webview",
+            params: {
+                url: `https://l.programmier.bar/pc-qa${suffix}`,
+                title: t("talks.actions.askQuestion"),
+                talkId,
+            },
+        });
+    }, [t]);
+
     // Refs to track scroll position for each list
     const userAgendaScrollY = React.useRef(0);
     const fullAgendaScrollY = React.useRef(0);
@@ -301,6 +318,7 @@ export default function TalksScreen() {
                     onTalkPress={handleTalkPress}
                     onBookmarkPress={handleBookmarkPress}
                     onRateTalk={handleRateTalk}
+                    onAskQuestion={handleAskQuestion}
                 />
             );
         },
@@ -312,6 +330,7 @@ export default function TalksScreen() {
             handleTalkPress,
             handleBookmarkPress,
             handleRateTalk,
+            handleAskQuestion,
         ]
     );
 
