@@ -144,6 +144,9 @@ export default function TalksScreen() {
     // Reload talks when the screen comes into focus
     useFocusEffect(
         useCallback(() => {
+            // Reset scroll flag on focus so we scroll to running talk on each navigation
+            hasScrolledToRunningTalk.current = false;
+
             const loadData = async () => {
                 try {
                     setRefreshing(true);
@@ -161,6 +164,11 @@ export default function TalksScreen() {
             };
         }, [getAllTalks, getAllActivities])
     );
+
+    // Reset scroll flag when switching tabs or days
+    useEffect(() => {
+        hasScrolledToRunningTalk.current = false;
+    }, [index, selectedDay]);
 
     const handleRefresh = useCallback(async () => {
         try {
@@ -220,22 +228,23 @@ export default function TalksScreen() {
         router.push(`/modals/talk-evaluation?talkId=${talkId}&source=talk-list`);
     }, []);
 
-    const handleAskQuestion = useCallback((talkId: string, location?: string) => {
-        const validSuffixes = ["arena", "studio"];
-        const suffix =
-            location && validSuffixes.includes(location.toLowerCase())
-                ? `-${location.toLowerCase()}`
-                : "-arena";
+    const handleAskQuestion = useCallback(
+        (talkId: string, location?: string) => {
+            const validSuffixes = ["arena", "studio"];
+            const suffix =
+                location && validSuffixes.includes(location.toLowerCase()) ? `-${location.toLowerCase()}` : "-arena";
 
-        router.push({
-            pathname: "/modals/webview",
-            params: {
-                url: `https://l.programmier.bar/pc-qa${suffix}`,
-                title: t("talks.actions.askQuestion"),
-                talkId,
-            },
-        });
-    }, [t]);
+            router.push({
+                pathname: "/modals/webview",
+                params: {
+                    url: `https://l.programmier.bar/pc-qa${suffix}`,
+                    title: t("talks.actions.askQuestion"),
+                    talkId,
+                },
+            });
+        },
+        [t]
+    );
 
     // Refs to track scroll position for each list
     const userAgendaScrollY = React.useRef(0);
@@ -243,6 +252,110 @@ export default function TalksScreen() {
     const userAgendaFlatListRef = React.useRef<FlatList>(null);
     const fullAgendaFlatListRef = React.useRef<FlatList>(null);
     const shouldRestoreScroll = React.useRef(false);
+    const hasScrolledToRunningTalk = React.useRef(false);
+
+    // Helper function to check if a talk is currently running
+    const isTalkRunning = useCallback((item: AgendaItem): boolean => {
+        if (item.itemType !== "talk") return false;
+        const talk = item as Talk;
+        if (!talk.duration) return false;
+
+        const now = new Date();
+        return now >= item.startTime && now < new Date(item.startTime.getTime() + talk.duration * 60 * 1000);
+    }, []);
+
+    // Helper function to scroll to running talk in a list
+    const scrollToRunningTalk = useCallback(
+        (agendaData: AgendaItem[], flatListRef: React.RefObject<FlatList>) => {
+            if (hasScrolledToRunningTalk.current) return;
+
+            const runningTalkIndex = agendaData.findIndex(isTalkRunning);
+            if (runningTalkIndex !== -1 && flatListRef.current) {
+                // Small delay to ensure list is rendered
+                setTimeout(() => {
+                    flatListRef.current?.scrollToIndex({
+                        index: runningTalkIndex,
+                        animated: true,
+                        viewPosition: 0.2, // Position at 20% from top for better visibility
+                    });
+                    hasScrolledToRunningTalk.current = true;
+                }, 200);
+            }
+        },
+        [isTalkRunning]
+    );
+
+    // Scroll to running talk after data loads
+    useEffect(() => {
+        if (!refreshing && !hasScrolledToRunningTalk.current && currentConference) {
+            // Get the data for the current tab
+            if (index === 0) {
+                // User Agenda tab
+                const allUserSelectedTalks = getUserSelectedTalks().filter(
+                    (talk) => talk.conferenceId === currentConference.id
+                );
+                const allUserSelectedActivities = getUserSelectedActivities().filter(
+                    (activity) => activity.conferenceId === currentConference.id
+                );
+                const combinedItems = combineAgendaItems(allUserSelectedTalks, allUserSelectedActivities);
+
+                // Filter by selected day
+                let filteredItems = combinedItems;
+                if (conferenceDays.length > 0 && conferenceDays[selectedDay]) {
+                    const selectedConferenceDay = conferenceDays[selectedDay];
+                    if (selectedConferenceDay.isOtherDay) {
+                        filteredItems = combinedItems.filter((item) => {
+                            return !conferenceDays
+                                .filter((day) => !day.isOtherDay && day.date)
+                                .some((day) => day.date && isSameDay(item.startTime, day.date));
+                        });
+                    } else if (selectedConferenceDay.date) {
+                        filteredItems = combinedItems.filter((item) =>
+                            isSameDay(item.startTime, selectedConferenceDay.date!)
+                        );
+                    }
+                }
+
+                scrollToRunningTalk(filteredItems, userAgendaFlatListRef);
+            } else if (index === 1) {
+                // Full Agenda tab
+                const allAgendaTalks = getAgendaTalks();
+                const allAgendaActivities = getAgendaActivities();
+                const combinedItems = combineAgendaItems(allAgendaTalks, allAgendaActivities);
+
+                // Filter by selected day
+                let filteredItems = combinedItems;
+                if (conferenceDays.length > 0 && conferenceDays[selectedDay]) {
+                    const selectedConferenceDay = conferenceDays[selectedDay];
+                    if (selectedConferenceDay.isOtherDay) {
+                        filteredItems = combinedItems.filter((item) => {
+                            return !conferenceDays
+                                .filter((day) => !day.isOtherDay && day.date)
+                                .some((day) => day.date && isSameDay(item.startTime, day.date));
+                        });
+                    } else if (selectedConferenceDay.date) {
+                        filteredItems = combinedItems.filter((item) =>
+                            isSameDay(item.startTime, selectedConferenceDay.date!)
+                        );
+                    }
+                }
+
+                scrollToRunningTalk(filteredItems, fullAgendaFlatListRef);
+            }
+        }
+    }, [
+        refreshing,
+        index,
+        currentConference,
+        selectedDay,
+        conferenceDays,
+        getUserSelectedTalks,
+        getUserSelectedActivities,
+        getAgendaTalks,
+        getAgendaActivities,
+        combineAgendaItems,
+        scrollToRunningTalk,
+    ]);
 
     const renderAgendaList = (
         agendaData: AgendaItem[],
@@ -281,6 +394,16 @@ export default function TalksScreen() {
                     }
                 }}
                 scrollEventThrottle={16}
+                onScrollToIndexFailed={(info) => {
+                    // If scroll to index fails, wait and try scrolling to offset instead
+                    const wait = new Promise((resolve) => setTimeout(resolve, 500));
+                    wait.then(() => {
+                        flatListRef.current?.scrollToOffset({
+                            offset: info.averageItemLength * info.index,
+                            animated: true,
+                        });
+                    });
+                }}
                 onContentSizeChange={(_width, _height) => {
                     if (shouldRestoreScroll.current && isActiveTab) {
                         const savedScrollY = scrollYRef.current;
