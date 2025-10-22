@@ -49,9 +49,10 @@ const AgendaItemComponent: React.FC<AgendaItemProps> = ({
 
     // Check if talk is currently running
     const now = new Date();
-    const isTalkRunning = isTalk && talk?.duration
-        ? now >= item.startTime && now < new Date(item.startTime.getTime() + talk.duration * 60 * 1000)
-        : false;
+    const isTalkRunning =
+        isTalk && talk?.duration
+            ? now >= item.startTime && now < new Date(item.startTime.getTime() + talk.duration * 60 * 1000)
+            : false;
 
     // Show rate button if: user selected, in the past, and not already rated
     const showRateButton = isTalk && item.isUserSelected && isPastTalk && !talk?.rating;
@@ -198,8 +199,8 @@ const areEqual = (prevProps: AgendaItemProps, nextProps: AgendaItemProps) => {
         prevProps.onRateTalk === nextProps.onRateTalk &&
         prevProps.onAskQuestion === nextProps.onAskQuestion;
 
-    const ratingSame = prevProps.item.itemType === "activity" ||
-        (prevProps.item as Talk).rating === (nextProps.item as Talk).rating;
+    const ratingSame =
+        prevProps.item.itemType === "activity" || (prevProps.item as Talk).rating === (nextProps.item as Talk).rating;
 
     const shouldSkipRender = idSame && selectedSame && activeSame && otherDaySame && ratingSame && callbacksSame;
 
@@ -247,12 +248,15 @@ const styles = StyleSheet.create({
     leftCol: {
         padding: 16,
         paddingLeft: 12,
-        flex: 1,
+        paddingRight: 0,
+        flexGrow: 1,
         flexDirection: "column",
         justifyContent: "center",
     },
     middleCol: {
         justifyContent: "center",
+        flexShrink: 1,
+        minWidth: 0,
     },
     titleRow: {
         flexDirection: "row",
@@ -267,7 +271,6 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: "600",
         flex: 1,
-        marginRight: 8,
     },
     talkDate: {
         fontSize: 14,

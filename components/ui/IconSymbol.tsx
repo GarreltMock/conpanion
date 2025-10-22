@@ -21,6 +21,7 @@ const MAPPING = {
     "xmark.circle.fill": "cancel",
     xmark: "close",
     "arrow.up": "arrow-upward",
+    "arrow.right": "arrow-forward",
     "camera.fill": "camera-alt",
     "mic.fill": "mic",
     "text.bubble": "speaker-notes",
