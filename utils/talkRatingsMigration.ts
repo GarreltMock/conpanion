@@ -21,9 +21,7 @@ export const retrackTalkRatings = async (): Promise<void> => {
             conferences.forEach((conf) => conferenceMap.set(conf.id, conf));
 
             // Filter talks that have ratings and feedback with shareConsent
-            const ratedTalks = talks.filter(
-                (talk) => talk.rating && talk.feedback?.shareConsent && talk.feedback?.ratingOverall
-            );
+            const ratedTalks = talks.filter((talk) => talk.rating);
 
             console.log(`[Migration] Found ${ratedTalks.length} talks with ratings to re-track`);
 
@@ -41,10 +39,10 @@ export const retrackTalkRatings = async (): Promise<void> => {
                     conferenceId: talk.conferenceId,
                     conferenceName: conference.name,
                     talkTitle: talk.title,
-                    ratingOverall: talk.feedback?.ratingOverall,
+                    ratingOverall: talk.rating,
                     ratingContent: talk.feedback?.ratingContent,
                     ratingSpeaker: talk.feedback?.ratingSpeaker,
-                    feedback: talk.feedback?.feedback,
+                    feedback: talk.summary,
                     shareConsent: talk.feedback?.shareConsent,
                 });
 
