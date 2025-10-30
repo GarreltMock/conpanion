@@ -144,14 +144,13 @@ export default function TalksScreen() {
     // Reload talks when the screen comes into focus
     useFocusEffect(
         useCallback(() => {
-            // Reset scroll flag on focus so we scroll to running talk on each navigation
-            hasScrolledToRunningTalk.current = false;
-
             const loadData = async () => {
                 try {
                     setRefreshing(true);
                     await getAllTalks();
                     await getAllActivities();
+                    // Set shouldRestoreScroll to preserve scroll position when reloading data
+                    shouldRestoreScroll.current = true;
                 } catch (error) {
                     console.error("Error loading data:", error);
                 } finally {
@@ -285,8 +284,9 @@ export default function TalksScreen() {
         [isTalkRunning]
     );
 
-    // Scroll to running talk after data loads
+    // Scroll to running talk after initial data loads
     useEffect(() => {
+        // Only scroll if we haven't already scrolled to a running talk
         if (!refreshing && !hasScrolledToRunningTalk.current && currentConference) {
             // Get the data for the current tab
             if (index === 0) {
