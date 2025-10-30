@@ -28,6 +28,7 @@ import {
     saveActivity,
     deleteActivity,
 } from "../storage";
+import { retrackTalkRatings } from "../utils/talkRatingsMigration";
 import { generateId } from "@/storage/helper";
 
 interface AppContextType {
@@ -193,6 +194,13 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
                 const storedNotes = await getNotes();
                 setNotes(storedNotes);
+
+                // Run migrations after data is loaded
+                try {
+                    await retrackTalkRatings();
+                } catch (migrationError) {
+                    console.error("Error running migrations:", migrationError);
+                }
             } catch (error) {
                 console.error("Error initializing app:", error);
             } finally {
@@ -448,6 +456,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
                 // Preserve user-added evaluation data
                 rating: existingTalk?.rating,
                 summary: existingTalk?.summary,
+                feedback: existingTalk?.feedback,
             };
         });
 

@@ -122,7 +122,14 @@ export const trackTalkRemovedFromAgenda = async (talkId: string): Promise<void> 
 };
 
 // Track talk rating and summary
-export const trackTalkRated = async (params: { talkId: string } & ProgrammierConFeedback): Promise<void> => {
+export const trackTalkRated = async (
+    params: {
+        talkId: string;
+        conferenceId?: string;
+        conferenceName?: string;
+        talkTitle?: string;
+    } & ProgrammierConFeedback
+): Promise<void> => {
     await trackEvent("talk_rated", params);
 };
 

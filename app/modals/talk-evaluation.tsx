@@ -134,11 +134,19 @@ export default function TalkEvaluationModal() {
     };
 
     const trackEvaluation = async () => {
-        if (!talk) return;
+        if (!talk || !currentConference) return;
 
-        if (shareAllowed) {
-            await trackTalkRated({ talkId: talk.id, ratingOverall, ratingContent, ratingSpeaker, feedback: summary });
-        }
+        await trackTalkRated({
+            talkId: talk.id,
+            conferenceId: talk.conferenceId,
+            conferenceName: currentConference.name,
+            talkTitle: talk.title,
+            ratingOverall,
+            ratingContent,
+            ratingSpeaker,
+            feedback: summary,
+            shareConsent: shareAllowed,
+        });
     };
 
     const handleClose = () => {
